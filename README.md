@@ -1,5 +1,4 @@
 # LITEBot
-Wasted Time
 
 LITEBot is an exercise in wasted time and effort; a terrible idea realized by an amateur attempt at developing a working C/C++ program. The program had a simple purpose of being able to read data on file or in memory and store some basic information about each byte read; the previous byte (if not element 0), the following byte (if not element end) and the encoding of the byte; then store the information in a coherent manner that could be retrieved later.
 
