@@ -50,4 +50,8 @@ Choose 'Compile multiple source code files (simple)'
 
 add '../_includes/_andr/sqlite3.o' ahead of litebot.cpp
 
-Compile and run.
+*If compiling and running from the C4Droid Console, line 50 of litebot.cpp will need to be amended to '../LITEBot/' then choose Compile.  After compiling choose Run.
+
+Use the back arrow to bring up the options menu.  Select 'Export' and using the standard options given click 'OK'.  LITEBot.apk will now be found in the same folder as litebot.h and litebot.cpp
+
+Install the apk and run the program.
