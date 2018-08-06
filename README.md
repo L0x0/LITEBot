@@ -4,7 +4,7 @@ pthreads was chosen for cross-compatibility for Windows and ARM devices.  The pt
 
 SQLITE was chosen as the database solution because of its' simplicity.  The windows version of SQLITE was compiled in the MSVS 2015 dev environment (windows 8.1) with no declared options.  The android version was compiled using gcc from the command line on a rooted ARM device with the option -DHASCHRNULL=0
 
-To compile in MSVS:
+---To compile in MSVS:
 
 Unzip the LITEBot and _includes folder to c:\LITEBot\.
 
@@ -34,7 +34,7 @@ Select both pthreadVC2.lib and sqlite3.lib
 
 The project should now Build and Run successfully.  
 
-To compile on an Android device using C4Droid + GCC plugin (Found on the Google Play Store) :
+---To compile on an Android device using C4Droid + GCC plugin (Found on the Google Play Store) :
 
 Create a folder in 'Device Storage' and in it place the LITEBot and _includes folder 
 
