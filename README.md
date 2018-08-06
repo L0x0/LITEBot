@@ -2,7 +2,7 @@
 
 pthreads was chosen for cross-compatibility for Windows and ARM devices.  The pthreads version used for Windows was obtained and compiled according to instructions found on Sourcefourge.  The android version uses the existing <pthread.h> lib.
 
-SQLITE was chosen as the database solution because of its' simplicity.  The windows version of SQLITE was compiled in the MSVS 2015 dev environment (windows 8.1) with no declared options.  The android version was compiled using gcc from the command line on a rooted ARM device with the option -DHASCHRNULL=0
+SQLITE was chosen as the database solution because of its' simplicity.  The windows version of SQLITE was compiled in the MSVS 2015 dev environment (windows 8.1) with no declared options.  The android version was compiled using gcc command line on a rooted ARM device with the option -DHASCHRNULL=0
 
 ---To compile in MSVS:
 
