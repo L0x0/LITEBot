@@ -54,4 +54,4 @@ add '../_includes/_andr/sqlite3.o' ahead of litebot.cpp
 
 Use the back arrow to bring up the options menu.  Select 'Export' and using the standard options given click 'OK'.  LITEBot.apk will now be found in the same folder as litebot.h and litebot.cpp
 
-Install the apk and run the program.  Startup currently takes significantly longer on an Android device.
+Install the apk and run the program.  Startup currently takes significantly longer (appx 45 seconds) on an Android device as compared to PC
