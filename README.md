@@ -20,6 +20,8 @@ Select 'Add' and select the _includes folder
 
 Select Project Type 'Console Application Project'
 
+No defines are necessary.
+
 Navigate to Project->LITEBot Properties
 
 Navigate to Configuration Properties->Linker->Input
