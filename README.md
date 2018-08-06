@@ -36,6 +36,16 @@ The project should now Build and Run successfully.
 
 To compile on an Android device using C4Droid + GCC plugin (Found on the Google Play Store) :
 
+Create a folder in 'Device Storage' and in it place the LITEBot and _includes folder 
+
 Open C4Droid
 
-Choose 'Open' and select litebot.h
+Choose 'Open' and select the litebot.h file.
+
+Tap and hold 'Compile'
+
+Choose 'Compile multiple source code files (simple)'
+
+add '../_includes/_andr/sqlite3.o' ahead of litebot.cpp
+
+Compile and run.
