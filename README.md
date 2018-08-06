@@ -38,7 +38,7 @@ The project should now Build and Run successfully.
 
 ---To compile on an Android device using C4Droid + GCC plugin (Found on the Google Play Store) :
 
-Create a folder in 'Device Storage' and in it place the LITEBot and _includes folder 
+Create a folder in 'Device Storage' and in it place the LITEBot and _includes folders
 
 Open C4Droid
 
