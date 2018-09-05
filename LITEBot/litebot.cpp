@@ -21805,7 +21805,7 @@ sint machine::GetCommand(BOTCOMMAND *Command_, std::vector<std::string> *conds_)
 	vec.push_back(*Command_);
 	sint xc = GetCommands(&vec);
 
-	if (xc > -1)
+	if (xc > -1 && !vec.empty())
 	{
 		Command_->Renew(&vec[0]);
 	}
@@ -21870,6 +21870,7 @@ sint machine::GetCommands(std::vector<BOTCOMMAND> *Commands_, std::vector<std::s
 
 				stmts.push_back(t);
 			}
+			Commands_->at(x).Clear();
 		}
 	}
 	else
@@ -21917,140 +21918,120 @@ sint machine::GetCommands(std::vector<BOTCOMMAND> *Commands_, std::vector<std::s
 
 		if (odb > -1)
 		{
-			uint s = 0;
 			sint ret = 0;
 			d_con_->o_com = true;
 			rc = UpdMTXPrio();
-			bool sdone = false;
 
-			while (!sdone)
+			for (uint s = 0; s < stmts.size(); s++)
 			{
-				if (stmts[s].stmt.empty() && Commands_->size() == stmts.size())
-				{
-					Commands_->at(s).Clear();
-				}
-				else
-				{
-					c_char* tail;
-					sqlite3_stmt* ppstmt;
-					rc = sqlite3_prepare_v2(d_con_->db_, stmts[s].stmt.c_str(), (sint)stmts[s].stmt.length(), &ppstmt, &tail);
+				c_char* tail;
+				sqlite3_stmt* ppstmt;
+				rc = sqlite3_prepare_v2(d_con_->db_, stmts[s].stmt.c_str(), (sint)stmts[s].stmt.length(), &ppstmt, &tail);
 
-					if (!rc)
+				if (!rc)
+				{
+					bool done = false;
+
+					while (!done)
 					{
-						bool done = false;
+						rc = sqlite3_step(ppstmt);
 
-						while (!done)
+						switch (rc)
 						{
-							rc = sqlite3_step(ppstmt);
-
-							switch (rc)
+						case SQLITE_OK:
+						{
+							if (debug_lvl >= 700 && debug_m)
 							{
-							case SQLITE_OK:
-							{
-								if (debug_lvl >= 700 && debug_m)
-								{
-									rc = SOutput("SQLITE_OK", 2);
-								}
-								break;
+								rc = SOutput("SQLITE_OK", 2);
 							}
-							case SQLITE_DONE:
-							{
-								if (debug_lvl >= 700 && debug_m)
-								{
-									rc = SOutput("SQLITE_DONE", 2);
-								}
-								done = true;
-								break;
-							}
-							case SQLITE_ROW:
-							{
-								if (debug_lvl >= 700 && debug_m)
-								{
-									rc = SOutput("SQLITE_ROW", 2);
-								}
-								
-								rc = FindColumn("PRIV", ppstmt);
-
-								if (rc > -1)
-								{
-									rc = sqlite3_column_int(ppstmt, rc);
-									GetPCliMem(BOT_C_PRIV, &xc);
-
-									if (xc < rc)
-									{
-										if (debug_lvl >= 500 && debug_m)
-										{
-											c_char* output("not enough priv");
-											xc = SOutput(output, 2);
-										}
-
-										if (s < Commands_->size() && Commands_->size() == stmts.size())
-										{
-											Commands_->at(s).Clear();
-										}
-									}
-									else
-									{
-										BOTCOMMAND ncm;
-										Commands_->push_back(ncm);
-										Commands_->at(ret).Clear();
-
-										rc = FindColumn("ID", ppstmt);
-
-										if (rc > -1)
-										{
-											Commands_->at(ret).id = sqlite3_column_int(ppstmt, rc);
-										}
-
-										rc = FindColumn("CMD_ID", ppstmt);
-
-										if (rc > -1)
-										{
-											Commands_->at(ret).cmd_id = sqlite3_column_int(ppstmt, rc);
-										}
-
-										rc = FindColumn("COMMAND", ppstmt);
-
-										if (rc > -1)
-										{
-											if (sqlite3_column_text(ppstmt, rc) != NULL)
-											{
-												Commands_->at(ret).cmd.append(reinterpret_cast <c_char*> (sqlite3_column_text(ppstmt, rc)));
-											}
-										}
-										ret++;
-									}
-								}
-								break;
-							}
-							default:
-							{
-								sdone = true;
-								done = true;
-								rc = Output(GetError().c_str(), 1, 2, -1);
-								break;
-							}
-							}
+							break;
 						}
-
-						rc = sqlite3_finalize(ppstmt);
-
-						if (rc)
+						case SQLITE_DONE:
 						{
+							if (debug_lvl >= 700 && debug_m)
+							{
+								rc = SOutput("SQLITE_DONE", 2);
+							}
+							done = true;
+							break;
+						}
+						case SQLITE_ROW:
+						{
+							if (debug_lvl >= 700 && debug_m)
+							{
+								rc = SOutput("SQLITE_ROW", 2);
+							}
+
+							rc = FindColumn("PRIV", ppstmt);
+
+							if (rc > -1)
+							{
+								rc = sqlite3_column_int(ppstmt, rc);
+								GetPCliMem(BOT_C_PRIV, &xc);
+
+								if (xc < rc)
+								{
+									if (debug_lvl >= 500 && debug_m)
+									{
+										c_char* output("not enough priv");
+										xc = SOutput(output, 2);
+									}
+								}
+								else
+								{
+									while ((sint)Commands_->size() <= ret)
+									{
+										BOTCOMMAND n;
+										Commands_->push_back(n);
+									}
+									rc = FindColumn("ID", ppstmt);
+
+									if (rc > -1)
+									{
+										Commands_->at(ret).id = sqlite3_column_int(ppstmt, rc);
+									}
+
+									rc = FindColumn("CMD_ID", ppstmt);
+
+									if (rc > -1)
+									{
+										Commands_->at(ret).cmd_id = sqlite3_column_int(ppstmt, rc);
+									}
+
+									rc = FindColumn("COMMAND", ppstmt);
+
+									if (rc > -1)
+									{
+										if (sqlite3_column_text(ppstmt, rc) != NULL)
+										{
+											Commands_->at(ret).cmd.append(reinterpret_cast <c_char*> (sqlite3_column_text(ppstmt, rc)));
+										}
+									}
+									ret++;
+								}
+							}
+							break;
+						}
+						default:
+						{
+							done = true;
 							rc = Output(GetError().c_str(), 1, 2, -1);
+							break;
 						}
-
+						}
 					}
-					else
+
+					rc = sqlite3_finalize(ppstmt);
+
+					if (rc)
 					{
 						rc = Output(GetError().c_str(), 1, 2, -1);
 					}
-					s++;
 
-					if (s >= stmts.size())
-					{
-						sdone = true;
-					}
+				}
+				else
+				{
+					rc = Output(GetError().c_str(), 1, 2, -1);
 				}
 			}
 			d_con_->o_com = false;
@@ -22060,6 +22041,7 @@ sint machine::GetCommands(std::vector<BOTCOMMAND> *Commands_, std::vector<std::s
 			{
 				hdb = CloseDB(&dbs, &fdb);
 			}
+			ret = vtool.SortV(Commands_, BOT_VAL_CMD, BOT_CMD_CID);
 			return ret;
 		}
 	}

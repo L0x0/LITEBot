@@ -733,7 +733,7 @@ typedef struct bot_carr_2
 	size_t siz = 2;
 	_char carr[2] = { 0 };
 
-	bot_carr_2(_char ncar[] = 0) { if (ncar) { memcpy((void*)carr, (void*)ncar, siz); } }
+	bot_carr_2(_char ncar[] = 0) { if (ncar) { memcpy((void*)carr, (void*)ncar, siz - 1); } }
 	~bot_carr_2() { bot_strclr(carr); }
 }carr_2;
 
@@ -742,7 +742,7 @@ typedef struct bot_carr_3
 	size_t siz = 3;
 	_char carr[3] = { 0 };
 
-	bot_carr_3(_char ncar[] = 0) { if (ncar) { memcpy((void*)carr, (void*)ncar, siz); } }
+	bot_carr_3(_char ncar[] = 0) { if (ncar) { memcpy((void*)carr, (void*)ncar, siz - 1); } }
 	~bot_carr_3() { bot_strclr(carr); }
 }carr_3;
 
@@ -751,7 +751,7 @@ typedef struct bot_carr_4
 	size_t siz = 4;
 	_char carr[4] = { 0 };
 
-	bot_carr_4(_char ncar[] = 0) { if (ncar) { memcpy((void*)carr, (void*)ncar, siz); } }
+	bot_carr_4(_char ncar[] = 0) { if (ncar) { memcpy((void*)carr, (void*)ncar, siz - 1); } }
 	~bot_carr_4() { bot_strclr(carr); }
 }carr_4;
 
@@ -760,7 +760,7 @@ typedef struct bot_carr_6
 	size_t siz = 6;
 	_char carr[6] = { 0 };
 
-	bot_carr_6(_char ncar[] = 0) { if (ncar) { memcpy((void*)carr, (void*)ncar, siz); } }
+	bot_carr_6(_char ncar[] = 0) { if (ncar) { memcpy((void*)carr, (void*)ncar, siz - 1); } }
 	~bot_carr_6() { bot_strclr(carr); }
 }carr_6;
 
@@ -769,7 +769,7 @@ typedef struct bot_carr_8
 	size_t siz = 8;
 	_char carr[8] = { 0 };
 
-	bot_carr_8(_char ncar[] = 0) { if (ncar) { memcpy((void*)carr, (void*)ncar, siz); } }
+	bot_carr_8(_char ncar[] = 0) { if (ncar) { memcpy((void*)carr, (void*)ncar, siz - 1); } }
 	~bot_carr_8() { bot_strclr(carr); }
 }carr_8;
 
@@ -778,7 +778,7 @@ typedef struct bot_carr_9
 	size_t siz = 9;
 	_char carr[9] = { 0 };
 
-	bot_carr_9(_char ncar[] = 0) { if (ncar) { memcpy((void*)carr, (void*)ncar, siz); } }
+	bot_carr_9(_char ncar[] = 0) { if (ncar) { memcpy((void*)carr, (void*)ncar, siz - 1); } }
 	~bot_carr_9() { bot_strclr(carr); }
 }carr_9;
 
@@ -787,7 +787,7 @@ typedef struct bot_carr_12
 	size_t siz = 12;
 	_char carr[12] = { 0 };
 
-	bot_carr_12(_char ncar[] = 0) { if (ncar) { memcpy((void*)carr, (void*)ncar, siz); } }
+	bot_carr_12(_char ncar[] = 0) { if (ncar) { memcpy((void*)carr, (void*)ncar, siz - 1); } }
 	~bot_carr_12() { bot_strclr(carr); }
 }carr_12;
 
@@ -796,7 +796,7 @@ typedef struct bot_carr_16
 	size_t siz = 16;
 	_char carr[16] = { 0 };
 
-	bot_carr_16(_char ncar[] = 0) { if (ncar) { memcpy((void*)carr, (void*)ncar, siz); } }
+	bot_carr_16(_char ncar[] = 0) { if (ncar) { memcpy((void*)carr, (void*)ncar, siz - 1); } }
 	~bot_carr_16() { bot_strclr(carr); }
 }carr_16;
 
@@ -805,7 +805,7 @@ typedef struct bot_carr_18
 	size_t siz = 18;
 	_char carr[18] = { 0 };
 
-	bot_carr_18(_char ncar[] = 0) { if (ncar) { memcpy((void*)carr, (void*)ncar, siz); } }
+	bot_carr_18(_char ncar[] = 0) { if (ncar) { memcpy((void*)carr, (void*)ncar, siz - 1); } }
 	~bot_carr_18() { bot_strclr(carr); }
 }carr_18;
 
@@ -814,7 +814,7 @@ typedef struct bot_carr_21
 	size_t siz = 21;
 	_char carr[21] = { 0 };
 
-	bot_carr_21(_char ncar[] = 0) { if (ncar) { memcpy((void*)carr, (void*)ncar, siz); } }
+	bot_carr_21(_char ncar[] = 0) { if (ncar) { memcpy((void*)carr, (void*)ncar, siz - 1); } }
 	~bot_carr_21() { bot_strclr(carr); }
 }carr_21;
 
@@ -823,7 +823,7 @@ typedef struct bot_carr_24
 	size_t siz = 24;
 	_char carr[24] = { 0 };
 
-	bot_carr_24(_char ncar[] = 0) { if (ncar) { memcpy((void*)carr, (void*)ncar, siz); } }
+	bot_carr_24(_char ncar[] = 0) { if (ncar) { memcpy((void*)carr, (void*)ncar, siz - 1); } }
 	~bot_carr_24() { bot_strclr(carr); }
 }carr_24;
 
@@ -832,7 +832,7 @@ typedef struct bot_carr_32
 	size_t siz = 32;
 	_char carr[32] = { 0 };
 
-	bot_carr_32(_char ncar[] = 0) { if (ncar) { memcpy((void*)carr, (void*)ncar, siz); } }
+	bot_carr_32(_char ncar[] = 0) { if (ncar) { memcpy((void*)carr, (void*)ncar, siz - 1); } }
 	~bot_carr_32() { bot_strclr(carr); }
 }carr_32;
 
@@ -841,7 +841,7 @@ typedef struct bot_carr_36
 	size_t siz = 36;
 	_char carr[36] = { 0 };
 
-	bot_carr_36(_char ncar[] = 0) { if (ncar) { memcpy((void*)carr, (void*)ncar, siz); } }
+	bot_carr_36(_char ncar[] = 0) { if (ncar) { memcpy((void*)carr, (void*)ncar, siz - 1); } }
 	~bot_carr_36() { bot_strclr(carr); }
 }carr_36;
 
@@ -850,7 +850,7 @@ typedef struct bot_carr_48
 	size_t siz = 48;
 	_char carr[48] = { 0 };
 
-	bot_carr_48(_char ncar[] = 0) { if (ncar) { memcpy((void*)carr, (void*)ncar, siz); } }
+	bot_carr_48(_char ncar[] = 0) { if (ncar) { memcpy((void*)carr, (void*)ncar, siz - 1); } }
 	~bot_carr_48() { bot_strclr(carr); }
 }carr_48;
 
@@ -859,7 +859,7 @@ typedef struct bot_carr_56
 	size_t siz = 56;
 	_char carr[56] = { 0 };
 
-	bot_carr_56(_char ncar[] = 0) { if (ncar) { memcpy((void*)carr, (void*)ncar, siz); } }
+	bot_carr_56(_char ncar[] = 0) { if (ncar) { memcpy((void*)carr, (void*)ncar, siz - 1); } }
 	~bot_carr_56() { bot_strclr(carr); }
 }carr_56;
 
@@ -868,7 +868,7 @@ typedef struct bot_carr_64
 	size_t siz = 64;
 	_char carr[64] = { 0 };
 
-	bot_carr_64(_char ncar[] = 0) { if (ncar) { memcpy((void*)carr, (void*)ncar, siz); } }
+	bot_carr_64(_char ncar[] = 0) { if (ncar) { memcpy((void*)carr, (void*)ncar, siz - 1); } }
 	~bot_carr_64() { bot_strclr(carr); }
 }carr_64;
 
@@ -877,7 +877,7 @@ typedef struct bot_carr_72
 	size_t siz = 72;
 	_char carr[72] = { 0 };
 
-	bot_carr_72(_char ncar[] = 0) { if (ncar) { memcpy((void*)carr, (void*)ncar, siz); } }
+	bot_carr_72(_char ncar[] = 0) { if (ncar) { memcpy((void*)carr, (void*)ncar, siz - 1); } }
 	~bot_carr_72() { bot_strclr(carr); }
 }carr_72;
 
@@ -886,7 +886,7 @@ typedef struct bot_carr_81
 	size_t siz = 81;
 	_char carr[81] = { 0 };
 
-	bot_carr_81(_char ncar[] = 0) { if (ncar) { memcpy((void*)carr, (void*)ncar, siz); } }
+	bot_carr_81(_char ncar[] = 0) { if (ncar) { memcpy((void*)carr, (void*)ncar, siz - 1); } }
 	~bot_carr_81() { bot_strclr(carr); }
 }carr_81;
 
@@ -895,7 +895,7 @@ typedef struct bot_carr_96
 	size_t siz = 96;
 	_char carr[96] = { 0 };
 
-	bot_carr_96(_char ncar[] = 0) { if (ncar) { memcpy((void*)carr, (void*)ncar, siz); } }
+	bot_carr_96(_char ncar[] = 0) { if (ncar) { memcpy((void*)carr, (void*)ncar, siz - 1); } }
 	~bot_carr_96() { bot_strclr(carr); }
 }carr_96;
 
@@ -904,7 +904,7 @@ typedef struct bot_carr_112
 	size_t siz = 112;
 	_char carr[112] = { 0 };
 
-	bot_carr_112(_char ncar[] = 0) { if (ncar) { memcpy((void*)carr, (void*)ncar, siz); } }
+	bot_carr_112(_char ncar[] = 0) { if (ncar) { memcpy((void*)carr, (void*)ncar, siz - 1); } }
 	~bot_carr_112() { bot_strclr(carr); }
 }carr_112;
 
@@ -913,7 +913,7 @@ typedef struct bot_carr_128
 	size_t siz = 128;
 	_char carr[128] = { 0 };
 
-	bot_carr_128(_char ncar[] = 0) { if (ncar) { memcpy((void*)carr, (void*)ncar, siz); } }
+	bot_carr_128(_char ncar[] = 0) { if (ncar) { memcpy((void*)carr, (void*)ncar, siz - 1); } }
 	~bot_carr_128() { bot_strclr(carr); }
 }carr_128;
 
@@ -922,7 +922,7 @@ typedef struct bot_carr_144
 	size_t siz = 144;
 	_char carr[144] = { 0 };
 
-	bot_carr_144(_char ncar[] = 0) { if (ncar) { memcpy((void*)carr, (void*)ncar, siz); } }
+	bot_carr_144(_char ncar[] = 0) { if (ncar) { memcpy((void*)carr, (void*)ncar, siz - 1); } }
 	~bot_carr_144() { bot_strclr(carr); }
 }carr_144;
 
@@ -931,7 +931,7 @@ typedef struct bot_carr_168
 	size_t siz = 168;
 	_char carr[168] = { 0 };
 
-	bot_carr_168(_char ncar[] = 0) { if (ncar) { memcpy((void*)carr, (void*)ncar, siz); } }
+	bot_carr_168(_char ncar[] = 0) { if (ncar) { memcpy((void*)carr, (void*)ncar, siz - 1); } }
 	~bot_carr_168() { bot_strclr(carr); }
 }carr_168;
 
@@ -940,7 +940,7 @@ typedef struct bot_carr_192
 	size_t siz = 192;
 	_char carr[192] = { 0 };
 
-	bot_carr_192(_char ncar[] = 0) { if (ncar) { memcpy((void*)carr, (void*)ncar, siz); } }
+	bot_carr_192(_char ncar[] = 0) { if (ncar) { memcpy((void*)carr, (void*)ncar, siz - 1); } }
 	~bot_carr_192() { bot_strclr(carr); }
 }carr_192;
 
@@ -949,7 +949,7 @@ typedef struct bot_carr_256
 	size_t siz = 256;
 	_char carr[256] = { 0 };
 
-	bot_carr_256(_char ncar[] = 0) { if (ncar) { memcpy((void*)carr, (void*)ncar, siz); } }
+	bot_carr_256(_char ncar[] = 0) { if (ncar) { memcpy((void*)carr, (void*)ncar, siz - 1); } }
 	~bot_carr_256() { bot_strclr(carr); }
 }carr_256;
 
@@ -958,7 +958,7 @@ typedef struct bot_carr_384
 	size_t siz = 384;
 	_char carr[384] = { 0 };
 
-	bot_carr_384(_char ncar[] = 0) { if (ncar) { memcpy((void*)carr, (void*)ncar, siz); } }
+	bot_carr_384(_char ncar[] = 0) { if (ncar) { memcpy((void*)carr, (void*)ncar, siz - 1); } }
 	~bot_carr_384() { bot_strclr(carr); }
 }carr_384;
 
@@ -967,7 +967,7 @@ typedef struct bot_carr_512
 	size_t siz = 512;
 	_char carr[512] = { 0 };
 
-	bot_carr_512(_char ncar[] = 0) { if (ncar) { memcpy((void*)carr, (void*)ncar, siz); } }
+	bot_carr_512(_char ncar[] = 0) { if (ncar) { memcpy((void*)carr, (void*)ncar, siz - 1); } }
 	~bot_carr_512() { bot_strclr(carr); }
 }carr_512;
 
@@ -976,7 +976,7 @@ typedef struct bot_carr_768
 	size_t siz = 768;
 	_char carr[768] = { 0 };
 
-	bot_carr_768(_char ncar[] = 0) { if (ncar) { memcpy((void*)carr, (void*)ncar, siz); } }
+	bot_carr_768(_char ncar[] = 0) { if (ncar) { memcpy((void*)carr, (void*)ncar, siz - 1); } }
 	~bot_carr_768() { bot_strclr(carr); }
 }carr_768;
 
@@ -985,7 +985,7 @@ typedef struct bot_carr_1024
 	size_t siz = 1024;
 	_char carr[1024] = { 0 };
 
-	bot_carr_1024(_char ncar[] = 0) { if (ncar) { memcpy((void*)carr, (void*)ncar, siz); } }
+	bot_carr_1024(_char ncar[] = 0) { if (ncar) { memcpy((void*)carr, (void*)ncar, siz - 1); } }
 	~bot_carr_1024() { bot_strclr(carr); }
 }carr_1024;
 
@@ -994,7 +994,7 @@ typedef struct bot_carr_2048
 	size_t siz = 2048;
 	_char carr[2048] = { 0 };
 
-	bot_carr_2048(_char ncar[] = 0) { if (ncar) { memcpy((void*)carr, (void*)ncar, siz); } }
+	bot_carr_2048(_char ncar[] = 0) { if (ncar) { memcpy((void*)carr, (void*)ncar, siz - 1); } }
 	~bot_carr_2048() { bot_strclr(carr); }
 }carr_2048;
 
@@ -1003,7 +1003,7 @@ typedef struct bot_carr_4096
 	size_t siz = 4096;
 	_char carr[4096] = { 0 };
 
-	bot_carr_4096(_char ncar[] = 0) { if (ncar) { memcpy((void*)carr, (void*)ncar, siz); } }
+	bot_carr_4096(_char ncar[] = 0) { if (ncar) { memcpy((void*)carr, (void*)ncar, siz - 1); } }
 	~bot_carr_4096() { bot_strclr(carr); }
 }carr_4096;
 
@@ -1012,7 +1012,7 @@ typedef struct bot_carr_8192
 	size_t siz = 8192;
 	_char carr[8192] = { 0 };
 
-	bot_carr_8192(_char ncar[] = 0) { if (ncar) { memcpy((void*)carr, (void*)ncar, siz); } }
+	bot_carr_8192(_char ncar[] = 0) { if (ncar) { memcpy((void*)carr, (void*)ncar, siz - 1); } }
 	~bot_carr_8192() { bot_strclr(carr); }
 }carr_8192;
 
@@ -1021,7 +1021,7 @@ typedef struct bot_carr_16384
 	size_t siz = 16384;
 	_char carr[16384] = { 0 };
 
-	bot_carr_16384(_char ncar[] = 0) { if (ncar) { memcpy((void*)carr, (void*)ncar, siz); } }
+	bot_carr_16384(_char ncar[] = 0) { if (ncar) { memcpy((void*)carr, (void*)ncar, siz - 1); } }
 	~bot_carr_16384() { bot_strclr(carr); }
 }carr_16384;
 
@@ -1030,7 +1030,7 @@ typedef struct bot_carr_32768
 	size_t siz = 32768;
 	_char carr[32768] = { 0 };
 
-	bot_carr_32768(_char ncar[] = 0) { if (ncar) { memcpy((void*)carr, (void*)ncar, siz); } }
+	bot_carr_32768(_char ncar[] = 0) { if (ncar) { memcpy((void*)carr, (void*)ncar, siz - 1); } }
 	~bot_carr_32768() { bot_strclr(carr); }
 }carr_32768;
 
@@ -1039,7 +1039,7 @@ typedef struct bot_ucar_2
 	size_t siz = 2;
 	u_char carr[2] = { 0 };
 
-	bot_ucar_2(u_char ncar[] = 0) { if (ncar) { memcpy((void*)carr, (void*)ncar, siz); } }
+	bot_ucar_2(u_char ncar[] = 0) { if (ncar) { memcpy((void*)carr, (void*)ncar, siz - 1); } }
 	~bot_ucar_2() { bot_ustrclr(carr); }
 }ucar_2;
 
@@ -1048,7 +1048,7 @@ typedef struct bot_ucar_4
 	size_t siz = 4;
 	u_char carr[4] = { 0 };
 
-	bot_ucar_4(u_char ncar[] = 0) { if (ncar) { memcpy((void*)carr, (void*)ncar, siz); } }
+	bot_ucar_4(u_char ncar[] = 0) { if (ncar) { memcpy((void*)carr, (void*)ncar, siz - 1); } }
 	~bot_ucar_4() { bot_ustrclr(carr); }
 }ucar_4;
 
@@ -1057,7 +1057,7 @@ typedef struct bot_ucar_8
 	size_t siz = 8;
 	u_char carr[8] = { 0 };
 
-	bot_ucar_8(u_char ncar[] = 0) { if (ncar) { memcpy((void*)carr, (void*)ncar, siz); } }
+	bot_ucar_8(u_char ncar[] = 0) { if (ncar) { memcpy((void*)carr, (void*)ncar, siz - 1); } }
 	~bot_ucar_8() { bot_ustrclr(carr); }
 }ucar_8;
 
@@ -1066,7 +1066,7 @@ typedef struct bot_ucar_16
 	size_t siz = 16;
 	u_char carr[16] = { 0 };
 
-	bot_ucar_16(u_char ncar[] = 0) { if (ncar) { memcpy((void*)carr, (void*)ncar, siz); } }
+	bot_ucar_16(u_char ncar[] = 0) { if (ncar) { memcpy((void*)carr, (void*)ncar, siz - 1); } }
 	~bot_ucar_16() { bot_ustrclr(carr); }
 }ucar_16;
 
@@ -1075,7 +1075,7 @@ typedef struct bot_ucar_32
 	size_t siz = 32;
 	u_char carr[32] = { 0 };
 
-	bot_ucar_32(u_char ncar[] = 0) { if (ncar) { memcpy((void*)carr, (void*)ncar, siz); } }
+	bot_ucar_32(u_char ncar[] = 0) { if (ncar) { memcpy((void*)carr, (void*)ncar, siz - 1); } }
 	~bot_ucar_32() { bot_ustrclr(carr); }
 }ucar_32;
 
@@ -1084,7 +1084,7 @@ typedef struct bot_ucar_64
 	size_t siz = 64;
 	u_char carr[64] = { 0 };
 
-	bot_ucar_64(u_char ncar[] = 0) { if (ncar) { memcpy((void*)carr, (void*)ncar, siz); } }
+	bot_ucar_64(u_char ncar[] = 0) { if (ncar) { memcpy((void*)carr, (void*)ncar, siz - 1); } }
 	~bot_ucar_64() { bot_ustrclr(carr); }
 }ucar_64;
 
@@ -1093,7 +1093,7 @@ typedef struct bot_ucar_128
 	size_t siz = 128;
 	u_char carr[128] = { 0 };
 
-	bot_ucar_128(u_char ncar[] = 0) { if (ncar) { memcpy((void*)carr, (void*)ncar, siz); } }
+	bot_ucar_128(u_char ncar[] = 0) { if (ncar) { memcpy((void*)carr, (void*)ncar, siz - 1); } }
 	~bot_ucar_128() { bot_ustrclr(carr); }
 }ucar_128;
 
@@ -1102,7 +1102,7 @@ typedef struct bot_ucar_256
 	size_t siz = 256;
 	u_char carr[256] = { 0 };
 
-	bot_ucar_256(u_char ncar[] = 0) { if (ncar) { memcpy((void*)carr, (void*)ncar, siz); } }
+	bot_ucar_256(u_char ncar[] = 0) { if (ncar) { memcpy((void*)carr, (void*)ncar, siz - 1); } }
 	~bot_ucar_256() { bot_ustrclr(carr); }
 }ucar_256;
 
@@ -1111,7 +1111,7 @@ typedef struct bot_ucar_512
 	size_t siz = 512;
 	u_char carr[512] = { 0 };
 
-	bot_ucar_512(u_char ncar[] = 0) { if (ncar) { memcpy((void*)carr, (void*)ncar, siz); } }
+	bot_ucar_512(u_char ncar[] = 0) { if (ncar) { memcpy((void*)carr, (void*)ncar, siz - 1); } }
 	~bot_ucar_512() { bot_ustrclr(carr); }
 }ucar_512;
 
@@ -1120,7 +1120,7 @@ typedef struct bot_ucar_1024
 	size_t siz = 1024;
 	u_char carr[1024] = { 0 };
 
-	bot_ucar_1024(u_char ncar[] = 0) { if (ncar) { memcpy((void*)carr, (void*)ncar, siz); } }
+	bot_ucar_1024(u_char ncar[] = 0) { if (ncar) { memcpy((void*)carr, (void*)ncar, siz - 1); } }
 	~bot_ucar_1024() { bot_ustrclr(carr); }
 }ucar_1024;
 
@@ -1129,7 +1129,7 @@ typedef struct bot_ucar_2048
 	size_t siz = 2048;
 	u_char carr[2048] = { 0 };
 
-	bot_ucar_2048(u_char ncar[] = 0) { if (ncar) { memcpy((void*)carr, (void*)ncar, siz); } }
+	bot_ucar_2048(u_char ncar[] = 0) { if (ncar) { memcpy((void*)carr, (void*)ncar, siz - 1); } }
 	~bot_ucar_2048() { bot_ustrclr(carr); }
 }ucar_2048;
 
@@ -1138,7 +1138,7 @@ typedef struct bot_ucar_4096
 	size_t siz = 4096;
 	u_char carr[4096] = { 0 };
 
-	bot_ucar_4096(u_char ncar[] = 0) { if (ncar) { memcpy((void*)carr, (void*)ncar, siz); } }
+	bot_ucar_4096(u_char ncar[] = 0) { if (ncar) { memcpy((void*)carr, (void*)ncar, siz - 1); } }
 	~bot_ucar_4096() { bot_ustrclr(carr); }
 }ucar_4096;
 
@@ -1147,7 +1147,7 @@ typedef struct bot_ucar_8192
 	size_t siz = 8192;
 	u_char carr[8192] = { 0 };
 
-	bot_ucar_8192(u_char ncar[] = 0) { if (ncar) { memcpy((void*)carr, (void*)ncar, siz); } }
+	bot_ucar_8192(u_char ncar[] = 0) { if (ncar) { memcpy((void*)carr, (void*)ncar, siz - 1); } }
 	~bot_ucar_8192() { bot_ustrclr(carr); }
 }ucar_8192;
 
@@ -1156,7 +1156,7 @@ typedef struct bot_ucar_16384
 	size_t siz = 16384;
 	u_char carr[16384] = { 0 };
 
-	bot_ucar_16384(u_char ncar[] = 0) { if (ncar) { memcpy((void*)carr, (void*)ncar, siz); } }
+	bot_ucar_16384(u_char ncar[] = 0) { if (ncar) { memcpy((void*)carr, (void*)ncar, siz - 1); } }
 	~bot_ucar_16384() { bot_ustrclr(carr); }
 }ucar_16384;
 
@@ -1165,7 +1165,7 @@ typedef struct bot_ucar_32768
 	size_t siz = 32768;
 	u_char carr[32768] = { 0 };
 
-	bot_ucar_32768(u_char ncar[] = 0) { if (ncar) { memcpy((void*)carr, (void*)ncar, siz); } }
+	bot_ucar_32768(u_char ncar[] = 0) { if (ncar) { memcpy((void*)carr, (void*)ncar, siz - 1); } }
 	~bot_ucar_32768() { bot_ustrclr(carr); }
 }ucar_32768;
 
@@ -1174,7 +1174,7 @@ typedef struct bot_ucar_65535
 	size_t siz = 65535;
 	u_char carr[65535] = { 0 };
 
-	bot_ucar_65535(u_char ncar[] = 0) { if (ncar) { memcpy((void*)carr, (void*)ncar, siz); } }
+	bot_ucar_65535(u_char ncar[] = 0) { if (ncar) { memcpy((void*)carr, (void*)ncar, siz - 1); } }
 	~bot_ucar_65535() { bot_ustrclr(carr); }
 }ucar_65535;
 
@@ -4214,6 +4214,15 @@ public:
 
 private:
 
+};
+
+enum botcmd_mems
+{
+	BOT_CMD_ID = 0,
+	BOT_CMD_CID = 1,
+	BOT_CMD_PRV = 2,
+	BOT_CMD_CMD = 3,
+	BOT_CMD_MAX = 4
 };
 
 class BOTCOMMAND
@@ -11233,6 +11242,29 @@ private:
 	std::chrono::steady_clock::time_point vtclr;
 };
 
+enum bot_valt
+{
+	BOT_VAL_MTX = 1024,
+	BOT_VAL_HMTX = 1025,
+	BOT_VAL_LRQ = 1026,
+	BOT_VAL_PORT = 1027,
+	BOT_VAL_PLUG = 1028,
+	BOT_VAL_FLD = 1029,
+	BOT_VAL_DRV = 1030,
+	BOT_VAL_DIR = 1031,
+	BOT_VAL_SCR = 1032,
+	BOT_VAL_STMT = 1033,
+	BOT_VAL_DB = 1034,
+	BOT_VAL_USR = 1035,
+	BOT_VAL_CMD = 1036,
+	BOT_VAL_LOG = 1037,
+	BOT_VAL_MICS = 1038,
+	BOT_VAL_MACS = 1039,
+	BOT_VAL_FIL = 1040,
+	BOT_VAL_THR = 1041,
+	BOT_VAL_MAX = 1042
+};
+
 class VTool
 {
 public:
@@ -11598,6 +11630,69 @@ public:
 		return 0;
 	}
 	
+	sint SortV(std::vector<BOTCOMMAND>* vec_ = 0, sint valt = -1, sint mem = -1)
+	{
+		if (!vec_ || valt < 0)
+		{
+			return -1;
+		}
+
+		if (mem < 0)
+		{
+			mem = 0;
+		}
+
+		switch (valt)
+		{
+		case BOT_VAL_CMD:
+		{
+			botcmd_mems cmem = (botcmd_mems)mem;
+
+			switch (cmem)
+			{
+			case BOT_CMD_CID:
+			{
+				for (size_t y = 0; y < vec_->size(); y++)
+				{
+					for (size_t x = y + 1; x < vec_->size(); x++)
+					{
+						if (vec_->at(x).cmd_id < vec_->at(y).cmd_id || vec_->at(y).cmd_id < 0)
+						{
+							BOTCOMMAND xval;
+							xval.Renew(&vec_->at(y));
+							vec_->at(y).Renew(&vec_->at(x));
+							vec_->at(x).Renew(&xval);
+						}
+					}
+				}
+				for (sint y = (sint)vec_->size() - 1; y > -1; y--)
+				{
+					if (vec_->at(y).cmd_id < 0)
+					{
+						vec_->pop_back();
+					}
+					else
+					{
+						y = -1;
+					}
+				}
+				break;
+			}
+			default:
+			{
+				break;
+			}
+			}
+			break;
+		}
+		default:
+		{
+			break;
+		}
+		}
+		return 0;
+	}
+
 	sint VIV(std::vector<carr_2> *vec_ = 0, _char val[2] = 0, sint e_from = 0, bool forw = true) { if (!vec_ || !val) { return -1; } sint vn = -1; sint siz = e_from; if (e_from < 0) { siz = ((sint)vec_->size() + e_from); } if (forw) { while (siz < (sint)vec_->size()) { if (!strcmp(vec_->at(siz).carr, val)) { vn = siz; siz = (sint)vec_->size(); } siz++; } } else { while (siz > -1) { if (!strcmp(vec_->at(siz).carr, val)) { vn = siz; siz = -1; } siz--; } } return vn; }
 	sint VIV(std::vector<carr_4> *vec_ = 0, _char val[4] = 0, sint e_from = 0, bool forw = true) { if (!vec_ || !val) { return -1; } sint vn = -1; sint siz = e_from; if (e_from < 0) { siz = ((sint)vec_->size() + e_from); } if (forw) { while (siz < (sint)vec_->size()) { if (!strcmp(vec_->at(siz).carr, val)) { vn = siz; siz = (sint)vec_->size(); } siz++; } } else { while (siz > -1) { if (!strcmp(vec_->at(siz).carr, val)) { vn = siz; siz = -1; } siz--; } } return vn; }
 	sint VIV(std::vector<carr_8> *vec_ = 0, _char val[8] = 0, sint e_from = 0, bool forw = true) { if (!vec_ || !val) { return -1; } sint vn = -1; sint siz = e_from; if (e_from < 0) { siz = ((sint)vec_->size() + e_from); } if (forw) { while (siz < (sint)vec_->size()) { if (!strcmp(vec_->at(siz).carr, val)) { vn = siz; siz = (sint)vec_->size(); } siz++; } } else { while (siz > -1) { if (!strcmp(vec_->at(siz).carr, val)) { vn = siz; siz = -1; } siz--; } } return vn; }
