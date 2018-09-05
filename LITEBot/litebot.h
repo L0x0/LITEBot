@@ -146,7 +146,6 @@
 #endif
 #endif
 
-
 #ifndef BOT_MAX_RCV
 #define BOT_MAX_RCV 5242880
 #else
@@ -159,9 +158,9 @@
 #endif
 #endif
 
-// How deeply we scan files while scanning directories
+// How deeply we scan folder structure while opening directories
 #ifndef BOT_DIRSCAN_LVL
-#define BOT_DIRSCAN_LVL 0
+#define BOT_DIRSCAN_LVL 1
 #else
 #if (BOT_DIRSCAN_LVL > 2)
 #define BOT_DIRSCAN_LVL 2
@@ -198,7 +197,13 @@
 #endif
 #endif
 
+#ifndef BOT_A_STR
+#define BOT_A_STR "aAbBcCdDeEfFgGhHiIjJkKlLmMnNoOpPqQrRsStTuUvVwWxXyYzZ"
+#endif
 
+#ifndef BOT_N_STR
+#define BOT_N_STR "0123456789.,"
+#endif
 
 #ifdef _WIN32
 #define BOT_NOFLD_V std::vector<std::string>{ "$", ".", "..", "Windows", "WINDOWS", "WINDOWS" }
@@ -314,8 +319,20 @@
 #endif
 #endif
 
+#ifndef BOT_FTRY_MAX
+#define BOT_FTRY_MAX INT32_MAX
+#else
+#if (BOT_FTRY_MAX > INT32_MAX)
+#define BOT_FTRY_MAX INT32_MAX
+#else
+#if (BOT_FTRY_MAX < 1)
+#define BOT_FTRY_MAX 1
+#endif
+#endif
+#endif
+
 #ifndef BOT_ITER_TO
-#define BOT_ITER_TO 100
+#define BOT_ITER_TO 101
 #else
 #if (BOT_ITER_TO > 1000)
 #define BOT_ITER_TO 1000
@@ -366,28 +383,24 @@
 #endif
 #endif
 
-#ifndef BOT_FILE_APPEND
-#define BOT_FILE_APPEND (std::ios::out | std::ios::ate | std::ios::app)
+#ifndef BOT_FILE_APND
+#define BOT_FILE_APND (std::ios::out | std::ios::ate | std::ios::app | std::ios::binary)
 #endif
 
-#ifndef BOT_FILE_OVERW
-#define BOT_FILE_OVERW (std::ios::in | std::ios::out)
+#ifndef BOT_FILE_OVRL
+#define BOT_FILE_OVRL (std::ios::out | std::ios::binary)
 #endif
 
-#ifndef BOT_FILE_W
-#define BOT_FILE_W (std::ios::in | std::ios::out | std::ios::app)
+#ifndef BOT_FILE_INS
+#define BOT_FILE_INS (std::ios::in | std::ios::out | std::ios::binary)
 #endif
 
 #ifndef BOT_FILE_READ
-#define BOT_FILE_READ (std::ios::in)
+#define BOT_FILE_READ (std::ios::in | std::ios::binary)
 #endif
 
 #ifndef BOT_FILE_READATE
-#define BOT_FILE_READATE (std::ios::in | std::ios::ate)
-#endif
-
-#ifndef BOT_FILE_WATE
-#define BOT_FILE_WATE (std::ios::out | std::ios::ate)
+#define BOT_FILE_READATE (std::ios::in | std::ios::ate | std::ios::binary)
 #endif
 
 #ifndef BOT_FILE_TLOCK
@@ -419,7 +432,7 @@
 #endif
 
 #ifndef BOT_FS_LIM
-#define BOT_FS_LIM 15
+#define BOT_FS_LIM 50
 #endif
 
 #ifndef BOT_INCR_STR
@@ -475,7 +488,7 @@
 #endif
 
 #ifndef BOT_REQREST
-#define BOT_REQREST BOT_NANO_REST
+#define BOT_REQREST (BOT_NANO_REST)
 #endif
 
 #ifndef BOT_LOCKREST
@@ -1197,7 +1210,8 @@ enum bot_strt_mtx
 	MTX_STYPE = 16,
 	MTX_PORTS = 17,
 	MTX_PCL = 18,
-	MTX_MAX = 19
+	MTX_FPAD = 19,
+	MTX_MAX = 20
 };
 
 enum bot_thr_qlvl
@@ -5764,20 +5778,20 @@ typedef struct bot_crs
 {
 	sllint fid;
 	sint lid;
-	ullint f;
-	ullint t;
-	ullint w;
+	size_t f;
+	size_t t;
+	size_t w;
 
-	bot_crs(sllint nfid = -1, sint nlid = -1, ullint nf = 0, ullint nt = 0) { lid = nlid; fid = nfid; if (nf <= nt) { f = nf; t = nt; } else { f = nf; t = nf + 1; } w = (t - f) + 1; }
+	bot_crs(sllint nfid = -1, sint nlid = -1, size_t nf = 0, size_t nt = 0) { lid = nlid; fid = nfid; if (nf <= nt) { f = nf; t = nt; } else { f = nf; t = nf + 1; } w = (t - f) + 1; }
 
 }BOT_CRS;
 
 class bot_fstate
 {
 public:
-	ullint e_loc;
-	ullint oa_loc;
-	ullint ia_loc;
+	size_t e_loc;
+	size_t oa_loc;
+	size_t ia_loc;
 	sint exists;
 	_char fbyte;
 	std::vector<MACSYM> seps;
@@ -6150,7 +6164,7 @@ public:
 			sint xc = ReorderVs((sint)x);
 		}
 	}
-	void RenewLocs( ullint ne_loc = 0, ullint noa_loc = 0, ullint nia_loc = 0)
+	void RenewLocs(size_t ne_loc = 0, size_t noa_loc = 0, size_t nia_loc = 0)
 	{
 		e_loc = ne_loc;
 		oa_loc = noa_loc;
@@ -6213,7 +6227,7 @@ public:
 		{
 			ret+=3;
 		}
-		if (memcmp((void*)&filestats.st_dev, (void*)&nstat->st_dev, sizeof(nstat->st_dev)))
+		if (memcmp((void*)&filestats.st_nlink, (void*)&nstat->st_nlink, sizeof(nstat->st_nlink)))
 		{
 			ret+=7;
 		}
@@ -6225,15 +6239,15 @@ public:
 		{
 			ret+=37;
 		}
-		if (memcmp((void*)&filestats.st_mtime, (void*)&nstat->st_mtime, sizeof(nstat->st_mtime)))
+		if (memcmp((void*)&filestats.st_rdev, (void*)&nstat->st_rdev, sizeof(nstat->st_rdev)))
 		{
 			ret+=79;
 		}
-		if (memcmp((void*)&filestats.st_nlink, (void*)&nstat->st_nlink, sizeof(nstat->st_nlink)))
+		if (memcmp((void*)&filestats.st_dev, (void*)&nstat->st_dev, sizeof(nstat->st_dev)))
 		{
 			ret+=167;
 		}
-		if (memcmp((void*)&filestats.st_rdev, (void*)&nstat->st_rdev, sizeof(nstat->st_rdev)))
+		if (memcmp((void*)&filestats.st_mtime, (void*)&nstat->st_mtime, sizeof(nstat->st_mtime)))
 		{
 			ret+=337;
 		}
@@ -6243,7 +6257,7 @@ public:
 		}
 		if (memcmp((void*)&filestats.st_uid, (void*)&nstat->st_uid, sizeof(nstat->st_uid)))
 		{
-			ret+=1117;
+			ret+=1317;
 		}
 		return ret;
 	}
@@ -6322,9 +6336,9 @@ public:
 			return 102;
 		}
 
-		for (uint x = 0; x < compv.size(); x++)
+		for (size_t x = 0; x < compv.size(); x++)
 		{
-			uint y = 0;
+			size_t y = 0;
 
 			while (y < est->compv.size())
 			{
@@ -7201,7 +7215,7 @@ public:
 		loc_in_lin.clear();
 	}
 
-	bot_fstate(ullint ne_loc = 0, ullint noa_loc = 0, ullint nia_loc = 0)
+	bot_fstate(size_t ne_loc = 0, size_t noa_loc = 0, size_t nia_loc = 0)
 	{
 		Clear();
 
@@ -7236,6 +7250,16 @@ enum file_mems
 	BOT_FS_MAX = 17
 };
 
+enum file_funs
+{
+	BOT_FFS_CLR = 0,
+	BOT_FFS_REN = 1,
+	BOT_FFS_SCS = 2,
+	BOT_FFS_GCS = 3,
+	BOT_FFS_RCS = 4,
+	BOT_FFS_
+};
+
 class BOT_FILE
 {
 public:
@@ -7252,7 +7276,7 @@ public:
 	sint c_by;
 	sint cm;
 	sllint bto;
-	ullint dsiz;
+	size_t dsiz;
 	_char* dat;
 
 	void Clear() { fst.Clear(); ClearDat(); bto = -1; encode = cm = lid = c_by = omode = fcon = -1; if (!crsv.empty()) { crsv.clear(); } if (!selv.empty()) { selv.clear(); } if (!path.empty()) { path.clear(); } if (!type.empty()) { type.clear(); } if (!name.empty()) { name.clear(); } }
@@ -7501,7 +7525,7 @@ public:
 			}
 		}
 	}
-	void Renew(c_char* nfn = 0, c_char* nft = 0, c_char* nfp = 0, sint nomode = -1, sint ncm = -1, sint nlid = -1, sint nc_by = -1, sint nencode = -1, sllint nbto = -1, std::vector<std::vector<BOT_CRS>>* ncrsv = 0, std::vector<std::vector<BOT_CRS>>* nselv = 0, bot_fstate* nstate = 0, _char* ndat = 0, ullint ndsiz = 0)
+	void Renew(c_char* nfn = 0, c_char* nft = 0, c_char* nfp = 0, sint nomode = -1, sint ncm = -1, sint nlid = -1, sint nc_by = -1, sint nencode = -1, sllint nbto = -1, std::vector<std::vector<BOT_CRS>>* ncrsv = 0, std::vector<std::vector<BOT_CRS>>* nselv = 0, bot_fstate* nstate = 0, _char* ndat = 0, size_t ndsiz = 0)
 	{
 		if (!nfn || !nft || !nfp)
 		{
@@ -7711,14 +7735,14 @@ public:
 			{
 				if (ncrsv)
 				{
-					for (uint x = 0; x < ncrsv->size(); x++)
+					for (size_t x = 0; x < ncrsv->size(); x++)
 					{
 						if (!ncrsv->at(x).empty())
 						{
 							std::vector<BOT_CRS> nv;
 							crsv.push_back(nv);
 
-							for (uint y = 0; y < ncrsv->at(x).size(); y++)
+							for (size_t y = 0; y < ncrsv->at(x).size(); y++)
 							{
 								crsv[x].push_back(ncrsv->at(x)[y]);
 							}
@@ -7728,14 +7752,14 @@ public:
 
 				if (nselv)
 				{
-					for (uint x = 0; x < nselv->size(); x++)
+					for (size_t x = 0; x < nselv->size(); x++)
 					{
 						if (!nselv->at(x).empty())
 						{
 							std::vector<BOT_CRS> nv;
 							selv.push_back(nv);
 
-							for (uint y = 0; y < nselv->at(x).size(); y++)
+							for (size_t y = 0; y < nselv->at(x).size(); y++)
 							{
 								selv[x].push_back(nselv->at(x)[y]);
 							}
@@ -7779,7 +7803,7 @@ public:
 			}
 			else if (crsv.size() < (size_t)BOT_CRSV_MAX)
 			{
-				uint x = 0;
+				size_t x = 0;
 
 				while (x < crsv.size())
 				{
@@ -7787,7 +7811,7 @@ public:
 					{
 						if (crsv[x][0].fid == ncrs->fid && crsv[x][0].lid == ncrs->lid)
 						{
-							uint y = crsv[x].size() - 1;
+							size_t y = crsv[x].size() - 1;
 
 							if (crsv[x][y].f != ncrs->f || crsv[x][y].t != ncrs->t)
 							{
@@ -7817,7 +7841,7 @@ public:
 			return -1;
 		}
 
-		for (uint x = 0; x < crsv.size(); x++)
+		for (size_t x = 0; x < crsv.size(); x++)
 		{
 			if (!crsv[x].empty())
 			{
@@ -7869,7 +7893,7 @@ public:
 
 		if (!crsv.empty())
 		{
-			for (uint x = crsv.size() - 1; x; x--)
+			for (size_t x = crsv.size() - 1; x; x--)
 			{
 				if (!crsv[x].empty())
 				{
@@ -7910,19 +7934,20 @@ public:
 			}
 		}
 	}
-	size_t Alloc(ullint siz = 0)
+	size_t Alloc(size_t siz = 0)
 	{
 		if (!siz)
 		{
+			ClearDat();
 			return 0;
 		}
 
-		if (siz < (ullint)BOT_FILESIZE_MAX)
+		if (siz < (size_t)BOT_FILESIZE_MAX)
 		{
 			if (dat)
 			{
 				_char* ndat = 0;
-				ndat = (_char*)realloc(dat, (size_t)siz);
+				ndat = (_char*)realloc(dat, siz);
 
 				if (ndat)
 				{
@@ -7931,133 +7956,156 @@ public:
 			}
 			else
 			{
-				dat = (_char*)malloc((size_t)siz);
+				dat = (_char*)malloc(siz);
 			}
 
 			if (dat)
 			{
 				dsiz = siz;
 				_char term = '\0';
-				memcpy((void*)&dat[(size_t)dsiz - 1], (void*)&term, sizeof(_char));
-				return (size_t)dsiz;
+				memcpy((void*)&dat[dsiz - 1], (void*)&term, sizeof(_char));
+				return dsiz;
 			}
 		}
 		return 0;
 	}
-	void SetDat(_char* val_ = 0, ullint siz = 0)
+	void SetDat(_char* val_ = 0, size_t siz = 0)
 	{
 		if (!val_)
 		{
 			return;
 		}
 
-		if (fst.filestats.st_size > 0)
+		if (!siz)
 		{
-			_char* ndat = 0;
-			ndat = (_char*)realloc(dat, fst.filestats.st_size + 1);
+			siz = bot_strlen(val_);
+		}
 
-			if (ndat)
+		if (!siz)
+		{
+			ClearDat();
+		}
+
+		if (dsiz != siz)
+		{
+			if (!Alloc(siz))
 			{
-				dat = ndat;
-				dsiz = fst.filestats.st_size + 1;
-				_char term = '\0';
-
-				for (ullint x = 0; x < (ullint)fst.filestats.st_size; x++)
-				{
-					memcpy((void*)&dat[x], (void*)val_[x], sizeof(_char));
-
-					if (!memcmp((void*)&val_, (void*)&term, sizeof(_char)))
-					{
-						x = (ullint)fst.filestats.st_size;
-					}
-				}
-				memcpy((void*)&dat[fst.filestats.st_size], (void*)&term, sizeof(_char));
+				return;
 			}
+		}
+
+		if (dat)
+		{
+			_char term = '\0';
+
+			for (size_t x = 0; x < siz; x++)
+			{
+				memcpy((void*)&dat[x], (void*)val_[x], sizeof(_char));
+			}
+			memcpy((void*)&dat[siz], (void*)&term, sizeof(_char));
 		}
 	}
-	void AddDat(_char* val_ = 0, ullint f = 0, ullint to = 0)
+	size_t AddDat(_char* val_ = 0, size_t f = 0)
 	{
-		if (f >= to || !val_)
+		if (!val_)
 		{
-			return;
+			return 0;
 		}
 
+		size_t ret = 0;
+		size_t len = bot_strlen(val_);
 		_char term = '\0';
-		ullint ne = fst.e_loc;
 
-		if (to > fst.e_loc)
+		if (omode == BOT_FILE_OVRL)
 		{
-			ne = to;
-		}
-
-		ullint nor = fst.ia_loc;
-
-		if (f < fst.ia_loc)
-		{
-			nor = f;
-		}
-
-		_char* tmp = (_char*)malloc((size_t)(ne - nor) + 1);
-
-		if (tmp)
-		{
-			ullint fsiz = (ullint)abs((sllint)fst.ia_loc - (sllint)f);
-
-			if (fsiz)
+			if (f + len > dsiz)
 			{
-				if (fst.ia_loc < f)
-				{
-					for (ullint x = 0; x < f - nor; x++)
-					{
-						memcpy((void*)&tmp[x], (void*)&dat[x], sizeof(_char));
-					}
-				}
+				_char* tmp = (_char*)malloc(((f + len) - dsiz) + 1);
 
-				for (ullint x = f - nor; x < to - nor; x++)
+				if (tmp)
 				{
-					memcpy((void*)&tmp[x], (void*)&val_[x], sizeof(_char));
-				}
+					memcpy((void*)tmp, (void*)&dat[f], (f + len) - dsiz);
+					memcpy((void*)&tmp[len], (void*)&term, sizeof(_char));
+					size_t osiz = dsiz;
 
-				if (fst.ia_loc > to)
-				{
-					for (ullint x = fst.ia_loc - nor; x < fst.e_loc - nor; x++)
+					if (Alloc(f + len))
 					{
-						memcpy((void*)&tmp[x], (void*)&dat[x], sizeof(_char));
+						memcpy((void*)&dat[f], (void*)val_, len);
+						memcpy((void*)&dat[f + len], (void*)tmp, (f + len) - osiz);
+						memcpy((void*)&dat[dsiz - 1], (void*)&term, sizeof(_char));
+						ret = f + len;
 					}
+					free(tmp);
 				}
-				else if (fst.e_loc > to)
-				{
-					for (ullint x = to - nor; x < fst.e_loc - nor; x++)
-					{
-						memcpy((void*)&tmp[x], (void*)&dat[x], sizeof(_char));
-					}
-				}
-				else {}
 			}
-			memcpy((void*)&tmp[ne - nor], (void*)&term, sizeof(term));
-		}
-
-		_char* ndat = 0;
-		ndat = (_char*)realloc(dat, (size_t)(ne - nor) + 1);
-		
-		if (ndat)
-		{
-			dat = ndat;
-			dsiz = (ne - nor) + 1;
-
-			for (ullint x = 0; x < ne - nor; x++)
+			else
 			{
-				memcpy((void*)&dat[x], (void*)&tmp[x], sizeof(_char));
+				memcpy((void*)&dat[f], (void*)val_, len);
+				memcpy((void*)&dat[dsiz - 1], (void*)&term, sizeof(_char));
 			}
-			memcpy((void*)&dat[ne - nor], (void*)&term, sizeof(_char));
 		}
-		free(tmp);
+		else if (omode == BOT_FILE_APND || omode == BOT_FILE_INS)
+		{
+			if (dsiz - f > 1024)
+			{
+				_char* tmp = (_char*)malloc(len + 1);
+
+				if (tmp)
+				{
+					memcpy((void*)&tmp[len], (void*)&term, sizeof(_char));
+					size_t osiz = dsiz;
+
+					if (Alloc(osiz + len))
+					{
+						size_t x = f;
+
+						while (x < osiz)
+						{
+							memcpy((void*)tmp, (void*)&dat[x], len);
+							memcpy((void*)&dat[x], (void*)val_, len);
+							memcpy((void*)val_, (void*)tmp, len);
+							x += len;
+						}
+
+						if (x != osiz)
+						{
+							memcpy((void*)&dat[x], (void*)tmp, x - osiz);
+						}
+						memcpy((void*)&dat[dsiz - 1], (void*)&term, sizeof(_char));
+						ret = f + len;
+					}
+					free(tmp);
+				}
+			}
+			else
+			{
+				_char* tmp = (_char*)malloc((dsiz - f) + 1);
+
+				if (tmp)
+				{
+					memcpy((void*)tmp, (void*)&dat[f], dsiz - f);
+					memcpy((void*)tmp[dsiz - f], (void*)&term, sizeof(_char));
+					size_t osiz = dsiz;
+
+					if (Alloc(osiz + len))
+					{
+						memcpy((void*)&dat[f], (void*)val_, len);
+						memcpy((void*)&dat[f + len], (void*)tmp, osiz - f);
+						memcpy((void*)&dat[dsiz - 1], (void*)&term, sizeof(_char));
+						ret = f + len;
+					}
+					free(tmp);
+				}
+			}
+		}
+		else {}
+		return ret;
 	}
 	void ClearDat()
 	{
 		if (dat && dsiz)
 		{
-			ullint nsiz = dsiz - 1;
+			size_t nsiz = dsiz - 1;
 
 			while (nsiz)
 			{
@@ -8073,7 +8121,7 @@ public:
 				if (ndat)
 				{
 					dat = ndat;
-					dat[0] = 0;
+					dat[0] = 1;
 					dsiz = 1;
 				}
 				else
@@ -8095,7 +8143,7 @@ public:
 			dsiz = 0;
 		}
 	}
-	BOT_FILE(c_char* nfn = "", c_char* nft = "", c_char* nfp = "", sint nomode = -1, sint ncm = -1, sint nlid = -1, sint nc_by = -1, sllint nbto = -1, sint nencode = -1, std::vector<std::vector<BOT_CRS>>* ncrsv = 0, std::vector<std::vector<BOT_CRS>>* nselv = 0, bot_fstate* nfst = 0, ullint ndsiz = 0)
+	BOT_FILE(c_char* nfn = "", c_char* nft = "", c_char* nfp = "", sint nomode = -1, sint ncm = -1, sint nlid = -1, sint nc_by = -1, sllint nbto = -1, sint nencode = -1, std::vector<std::vector<BOT_CRS>>* ncrsv = 0, std::vector<std::vector<BOT_CRS>>* nselv = 0, bot_fstate* nfst = 0, size_t ndsiz = 0)
 	{
 		if (nfn && nft && nfp)
 		{
@@ -8352,7 +8400,7 @@ public:
 		}
 	}
 	
-	~BOT_FILE()
+	/*~BOT_FILE()
 	{
 		Clear();
 
@@ -8360,7 +8408,7 @@ public:
 		{
 			FreeDat();
 		}
-	}
+	}*/
 	
 private:
 };
@@ -8384,7 +8432,7 @@ public:
 	sint cm;
 	_char* datp;
 	sllint bto;
-	ullint dsiz;
+	size_t dsiz;
 
 	void Clear() { crss = sels = 0; crsv.clear(); datp = 0; dsiz = 0; fst.ClearStats(); bto = -1; encode = cm = lid = c_by = omode = fcon = -1; if (!path.empty()) { path.clear(); } if (!type.empty()) { type.clear(); } if (!name.empty()) { name.clear(); } }
 	void Renew(BOT_FILE_M* nf_ = 0)
@@ -8636,7 +8684,7 @@ public:
 
 					if (!memcmp((void*)&nf_->type[0], (void*)&term, sizeof(_char)))
 					{
-						for (uint x = 1; x < tlen; x++)
+						for (size_t x = 1; x < tlen; x++)
 						{
 							type.push_back(nf_->type[x]);
 						}
@@ -8828,7 +8876,7 @@ public:
 
 					if (crss)
 					{
-						for (uint x = 0; x < nf_->crsv.size(); x++)
+						for (size_t x = 0; x < nf_->crsv.size(); x++)
 						{
 							if (!nf_->crsv[x].empty())
 							{
@@ -8850,7 +8898,7 @@ public:
 			}
 		}
 	}
-	void Renew(c_char* nfn = "", c_char* nft = "", c_char* nfp = "", sint nomode = -1, sint ncm = -1, sint nlid = -1, sint nc_by = -1, sllint nbto = -1, sint nencode = -1, size_t ncrss = 0, size_t nsels = 0, bot_fstate* nfst = 0, ullint ndsiz = 0, _char* ndatp = 0)
+	void Renew(c_char* nfn = "", c_char* nft = "", c_char* nfp = "", sint nomode = -1, sint ncm = -1, sint nlid = -1, sint nc_by = -1, sllint nbto = -1, sint nencode = -1, size_t ncrss = 0, size_t nsels = 0, bot_fstate* nfst = 0, size_t ndsiz = 0, _char* ndatp = 0)
 	{
 		if (!nfn || !nft || !nfp)
 		{
@@ -9099,7 +9147,7 @@ public:
 
 		sint ret = -1;
 
-		if (ncrs->t - ncrs->f < (ullint)BOT_FILESIZE_MAX)
+		if (ncrs->t - ncrs->f < (size_t)BOT_FILESIZE_MAX)
 		{
 			if (crsv.empty())
 			{
@@ -9107,7 +9155,7 @@ public:
 			}
 			else if (crsv.size() < (size_t)BOT_CRSV_MAX)
 			{
-				for (uint x = 0; x < crsv.size(); x++)
+				for (size_t x = 0; x < crsv.size(); x++)
 				{
 					if (crsv[x].fid == ncrs->fid && crsv[x].lid == ncrs->lid)
 					{
@@ -9129,7 +9177,7 @@ public:
 			return -1;
 		}
 
-		for (uint x = 0; x < crsv.size(); x++)
+		for (size_t x = 0; x < crsv.size(); x++)
 		{
 			if (crsv[x].fid == ncrs->fid && crsv[x].lid == ncrs->lid)
 			{
@@ -9148,11 +9196,11 @@ public:
 
 		sint ret = -1;
 
-		for (uint x = 0; x < crsv.size(); x++)
+		for (size_t x = 0; x < crsv.size(); x++)
 		{
 			if (crsv[x].fid == ncrs->fid && crsv[x].lid == ncrs->lid &&crsv[x].f == ncrs->f && crsv[x].t == ncrs->t)
 			{
-				for (uint y = x + 1; y < crsv.size(); y++)
+				for (size_t y = x + 1; y < crsv.size(); y++)
 				{
 					crsv[y - 1] = crsv[y];
 				}
@@ -9167,11 +9215,11 @@ public:
 	{
 		sint ret = -1;
 
-		for (uint x = 0; x < crsv.size(); x++)
+		for (size_t x = 0; x < crsv.size(); x++)
 		{
 			if (crsv[x].fid == fid && crsv[x].lid == lid)
 			{
-				for (uint y = x + 1; y < crsv.size(); y++)
+				for (size_t y = x + 1; y < crsv.size(); y++)
 				{
 					crsv[y - 1] = crsv[y];
 				}
@@ -9181,7 +9229,7 @@ public:
 		}
 		return ret;
 	}
-	BOT_FILE_M(c_char* nfn = "", c_char* nft = "", c_char* nfp = "", sint nomode = -1, sint ncm = -1, sint nlid = -1, sint nc_by = -1, sllint nbto = -1, sint nencode = -1, size_t ncrss = 0, size_t nsels = 0, bot_fstate* nfst = 0, ullint ndsiz = 0, _char* ndatp = 0)
+	BOT_FILE_M(c_char* nfn = "", c_char* nft = "", c_char* nfp = "", sint nomode = -1, sint ncm = -1, sint nlid = -1, sint nc_by = -1, sllint nbto = -1, sint nencode = -1, size_t ncrss = 0, size_t nsels = 0, bot_fstate* nfst = 0, size_t ndsiz = 0, _char* ndatp = 0)
 	{
 		if (nfn && nft && nfp)
 		{
@@ -9199,7 +9247,7 @@ public:
 
 					if (!memcmp((void*)&nft[0], (void*)&term, sizeof(_char)))
 					{
-						for (uint x = 1; x < tlen; x++)
+						for (size_t x = 1; x < tlen; x++)
 						{
 							type.push_back(nft[x]);
 						}
@@ -13114,7 +13162,7 @@ public:
 			else if (memb == BOT_FS_BTO) { sllint* val_ = reinterpret_cast<sllint*>(val); vec_->at(ele).bto = *val_; }
 			else if (memb == BOT_FS_DAT) { _char* val_ = reinterpret_cast<_char*>(val); vec_->at(ele).SetDat(val_); }
 			else if (memb == BOT_FS_DATP) { _char* val_ = reinterpret_cast<_char*>(val); vec_->at(ele).dat = val_; }
-			else if (memb == BOT_FS_DSIZ) { ullint* val_ = reinterpret_cast<ullint*>(val); vec_->at(ele).dsiz = *val_; }
+			else if (memb == BOT_FS_DSIZ) { size_t* val_ = reinterpret_cast<size_t*>(val); vec_->at(ele).dsiz = *val_; }
 			else if (memb == BOT_FS_CRS) { BOT_CRS* val_ = reinterpret_cast<BOT_CRS*>(val); vec_->at(ele).SetCrs(val_); }
 			else if (memb == BOT_FS_CRSV) { std::vector<std::vector<BOT_CRS>>* val_ = reinterpret_cast<std::vector<std::vector<BOT_CRS>>*>(val); vec_->at(ele).crsv.clear(); for (uint x = 0; x < val_->size(); x++) { for (uint y = 0; y < val_->at(x).size(); y++) { vec_->at(ele).crsv[x].push_back(val_->at(x)[y]); } } }
 			else if (memb == BOT_FS_SELV) { std::vector<std::vector<BOT_CRS>>* val_ = reinterpret_cast<std::vector<std::vector<BOT_CRS>>*>(val); vec_->at(ele).selv.clear(); for (uint x = 0; x < val_->size(); x++) { for (uint y = 0; y < val_->at(x).size(); y++) { vec_->at(ele).selv[x].push_back(val_->at(x)[y]); } } }
@@ -13156,7 +13204,7 @@ public:
 			else if (memb == BOT_FS_CM) { sint* val_ = reinterpret_cast<sint*>(val); if (val_) { vec_->at(ele).cm = *val_; } }
 			else if (memb == BOT_FS_FCON) { sint* val_ = reinterpret_cast<sint*>(val); if (val_) { vec_->at(ele).fcon = *val_; } }
 			else if (memb == BOT_FS_BTO) { sllint* val_ = reinterpret_cast<sllint*>(val); if (val_) { vec_->at(ele).bto = *val_; } }
-			else if (memb == BOT_FS_DSIZ) { ullint* val_ = reinterpret_cast<ullint*>(val); if (val_) { vec_->at(ele).dsiz = *val_; } }
+			else if (memb == BOT_FS_DSIZ) { size_t* val_ = reinterpret_cast<size_t*>(val); if (val_) { vec_->at(ele).dsiz = *val_; } }
 			else if (memb == BOT_FS_DATP) { _char* val_ = reinterpret_cast<_char*>(val); if (val_) { vec_->at(ele).datp = val_; } }
 			else if (memb == BOT_FS_CRS) { BOT_CRS* val_ = reinterpret_cast<BOT_CRS*>(val); if (val_) { vec_->at(ele).SetCrs(val_); } }
 			else if (memb == BOT_FS_CRSV) { size_t* val_ = reinterpret_cast<size_t*>(val); if (val_) { vec_->at(ele).crss = *val_; } }
@@ -14138,6 +14186,24 @@ public:
 			else if (memb == BOT_FS_SELV)
 			{
 				ret = ele;
+			}
+			else if (memb == BOT_FS_DAT)
+			{
+				if (opt == 1)
+				{
+					_char* val_ = reinterpret_cast<_char*>(val);
+
+					if (val_)
+					{
+						size_t len = bot_strlen(val_);
+						size_t xret = vec_->at(ele).Alloc(len);
+						
+						if (xret)
+						{
+							ret = ele;
+						}
+					}
+				}
 			}
 			else {}
 		}
@@ -15857,27 +15923,29 @@ private:
 	std::string BOTFileStr(BOT_FILE_M* file_ = 0);
 	sint BOTConnMethod(BOT_FILE_M* val_ = 0);
 	sint GetOFConn(BOT_FILE_M* val_ = 0, sint* was_open = 0);
-	sint GetFConn(BOT_FILE_M* val_ = 0, sint* was_open = 0);
+	sint GetFConn(BOT_FILE_M* val_ = 0, sint* was_open = 0, slint mt = BOT_FTRY_MAX);
 	sint CloseFConn(BOT_FILE_M* xfile_ = 0, bool clear_conn = true);
 	sint BOTScanFileSyms(BOT_FILE_M *file_ = 0);
 	sint DetSep(BOT_FILE_M* file_ = 0);
 	sint BOTRendFileSyms(BOT_FILE_M *file_ = 0);
 	sint BOTKnownFormat(BOT_FILE_M* file_ = 0);
-	sint BOTFileStats(BOT_FILE_M *file_ = 0, bool doscan = false, sint scan_lvl = BOT_FSCAN_LVL);
+	sint BOTFileStats(BOT_FILE_M *file_ = 0, bool doscan = false, sint scan_lvl = -1);
 	sint BOTCreateFile(BOT_FILE_M* file_ = 0, sint* was_open = 0);
 	sint BOTRemoveFile(BOT_FILE_M *xfile_ = 0);
+	sint BOTRenameFile(BOT_FILE_M *xfile_ = 0, c_char* nnm = 0);
 	sint BOTOpenFile(sint flid = -1, sint *was_open = 0, bool cine = false, bool r_to_st = false, bool dtp = false);
 	sint BOTOpenFile(BOT_FILE_M* mfile_ = 0, sint *was_open = 0, bool cine = false, bool r_to_st = false, bool dtp = false);
-	sint BOTFindInFile(BOT_FILE_M* file_ = 0, ullint f = 0, ullint t = 0, void* f_ = 0, ullint len = 0);
-	sint BOTFileOUT(BOT_FILE_M* file_ = 0, ullint f = 0, bool to_fdat = false, ...);
-	sint BOTFileIN(BOT_FILE_M* file_ = 0, bool f_fdat = false, ullint from = -1, ullint to = -1, ...);
+	sint BOTFindInFile(BOT_FILE_M* file_ = 0, bool indat = false, size_t f = 0, size_t t = 0, void* f_ = 0, size_t len = 0);
+	sint BOTFileOUT(BOT_FILE_M* file_ = 0, size_t f = 0, bool to_fdat = false, ...);
+	sint BOTFileIN(BOT_FILE_M* file_ = 0, bool f_fdat = false, size_t from = -1, size_t to = -1, ...);
 	sint BOTCloseFile(sint flid = -1, bool clear_conn = true, bool del = false, bool clear_dat = false);
 	sint BOTCloseFile(BOT_FILE_M* xfile_ = 0, bool clear_conn = true, bool del = false, bool clear_dat = false);
+	sint BOTSaveFile(BOT_FILE_M* xfile_ = 0, c_char* to_ = 0, bool ow = false);
 	sint BotOpenError(sint err_id, std::string* err_str = 0);
 
 	// Sleep Functions
 
-	void Nanosleep(slint dur = BOT_NANO_REST);
+	void Nanosleep(sllint dur = BOT_NANO_REST);
 	sllint nsRest(sllint i = (sllint)BOT_NANO_REST, bool keep_mtx = false);
 	sllint Rest(sllint i = (sllint)BOT_MILLI_REST, bool keep_mtx = false);
 
@@ -15902,6 +15970,7 @@ private:
 	sint InterpretInput(std::string *input_ = 0);
 	std::string DetermineOutput();
 	sint BOTConsole();
+	sint ArgSep(std::vector <std::string>* ret_ = 0, c_char* val = 0, size_t f = 0, size_t t = 0, carr_4* sep = 0);
 	sint ArgSep(std::vector <std::string>* ret_ = 0, c_char* val = 0, carr_4* sep = 0);
 	sint ArgSep(std::vector <std::string>* ret_ = 0, c_char* val = 0, ...);
 
@@ -15931,7 +16000,7 @@ private:
 	std::string GetError();
 	sint FindColumn(c_char *str_ = "", sqlite3_stmt* ppstmt = 0);
 	sint GetODBConn(BOT_DB_M *db_ = 0);
-	sint GetDBConn(BOT_DB_M* val_ = 0);
+	sint GetDBConn(BOT_DB_M* val_ = 0, slint mt = (slint)BOT_FTRY_MAX);
 	sint CloseDBConn(BOT_DB_M* db_ = 0);
 	sint OpenOpt(sint opt = -1);
 	sint OpenDB(sint db_lid = -1, sint x = -1, sint* was_open = 0, sint* fwas_locked = 0, bool r_to_st = true);
@@ -15965,7 +16034,7 @@ private:
 	// Pthreads Functions
 
 	sint StartThread(sint* thr_opt = 0);
-	sint ThreadRest(slint dur = BOT_MILLI_REST, sint qt_lvl = -1);
+	sint ThreadRest(sllint dur = BOT_MILLI_REST, sint qt_lvl = -1);
 	sint ThreadEnd(std::vector<ullint>* rvals_ = 0);
 	sint PThreadErr(_char in_chr[], sint err);
 	sint IncrThreads();

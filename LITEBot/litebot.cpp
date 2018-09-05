@@ -39,6 +39,9 @@ bot_strt_up bot_strt;
 // MTX_FCON
 BOTF_CONN FCON[BOT_FS_LIM];
 
+// MTX_FPAD
+_char* fpad[BOT_FS_LIM];
+
 // MTX_BTIM
 std::chrono::steady_clock::time_point bot_strt_tim;
 
@@ -56,11 +59,9 @@ BOT_DIR bot_dmap("c:\\");
 #endif
 
 // MTX_FTYPE
-
 std::vector<c_char*> bot_code_types;
 
 // MTX_STYPE
-
 std::vector<c_char*> bot_symbol_types
 {
 	"",
@@ -84,14 +85,12 @@ std::vector<c_char*> bot_symbol_types
 };
 
 // MTX_PORTS
-
 bot_port_counter bot_prts;
 
 // MTX_PCL
-
 BOT_CLIENT pcli;
 
-/* --------------------------------------------------------------------------------*/
+/* -------------------------------------------------------------------------------- */
 sint main()
 {
 	sint xc = 0;
@@ -102,7 +101,7 @@ sint main()
 	return xc;
 	pthread_exit(0);
 }
-/* --------------------------------------------------------------------------------*/
+/* -------------------------------------------------------------------------------- */
 
 bool bot_sisn(c_char* val, sint slen)
 {
@@ -111,7 +110,7 @@ bool bot_sisn(c_char* val, sint slen)
 		return false;
 	}
 	sint x = 0;
-	c_char* nstr = "0123456789";
+	c_char* nstr = BOT_N_STR;
 
 	for (slen--; slen > -1; slen--)
 	{
@@ -140,7 +139,7 @@ sint bot_shasn(c_char* val, sint slen)
 		return -1;
 	}
 	uint x = 0;
-	c_char* nstr = "0123456789";
+	c_char* nstr = BOT_N_STR;
 
 	for (slen--; slen > -1; slen--)
 	{
@@ -161,7 +160,7 @@ bool bot_sisa(c_char* val, sint slen)
 		return false;
 	}
 	sint x = 0;
-	c_char* nstr = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz";
+	c_char* nstr = BOT_A_STR;
 
 	for (slen--; slen > -1; slen--)
 	{
@@ -190,7 +189,7 @@ sint bot_shasa(c_char* val, sint slen)
 		return -1;
 	}
 	uint x = 0;
-	c_char* nstr = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz";
+	c_char* nstr = BOT_A_STR;
 
 	for (slen--; slen > -1; slen--)
 	{
@@ -644,7 +643,7 @@ sint bot_sprintf(_char inchr[], size_t in_siz, c_char* fstr, ...)
 		return -1;
 	}
 
-	uint strsiz = bot_strlen(inchr);
+	size_t strsiz = bot_strlen(inchr);
 
 	if (strsiz)
 	{
@@ -653,20 +652,20 @@ sint bot_sprintf(_char inchr[], size_t in_siz, c_char* fstr, ...)
 	sint ret = -1;
 	strsiz = strlen(fstr);
 	std::vector<std::string> fspecs;
-	std::vector<uint> locs;
+	std::vector<size_t> locs;
 	std::string formspec;
 	_char frm = '%';
 	_char spec = '.';
 	_char term = '\0';
 
-	for (uint siz = 0; siz < strsiz; siz++)
+	for (size_t siz = 0; siz < strsiz; siz++)
 	{
 		if (!memcmp((void*)&fstr[siz], (void*)&frm, 1))
 		{
 			formspec.push_back(fstr[siz]);
 			bool mustnum = false;
 
-			for (uint nsiz = 1; siz + nsiz < strsiz; )
+			for (size_t nsiz = 1; siz + nsiz < strsiz; )
 			{
 				if (!memcmp((void*)&fstr[siz + nsiz], (void*)&spec, 1))
 				{
@@ -765,7 +764,6 @@ sint bot_sprintf(_char inchr[], size_t in_siz, c_char* fstr, ...)
 					{
 						if (!mustnum)
 						{
-							sint done = 0;
 							formspec.push_back(fstr[siz + nsiz]);
 							nsiz++;
 
@@ -775,19 +773,16 @@ sint bot_sprintf(_char inchr[], size_t in_siz, c_char* fstr, ...)
 								{
 									formspec.push_back(fstr[siz + nsiz]);
 
-									while (siz + nsiz < strsiz)
+									for (size_t xsiz = siz + nsiz + 1; xsiz < strsiz; xsiz++)
 									{
+										formspec.push_back(fstr[xsiz]);
 										nsiz++;
 
-										if (siz + nsiz < strsiz)
+										if (!memcmp((void*)&fstr[xsiz], (void*)&spec, sizeof(spec)))
 										{
-											formspec.push_back(fstr[siz + nsiz]);
-
-											if (!memcmp((void*)&fstr[siz + nsiz], (void*)&spec, sizeof(spec)))
-											{
-												locs.push_back(siz);
-												fspecs.push_back(formspec);
-											}
+											locs.push_back(siz);
+											fspecs.push_back(formspec);
+											xsiz = strsiz;
 										}
 									}
 								}
@@ -820,15 +815,15 @@ sint bot_sprintf(_char inchr[], size_t in_siz, c_char* fstr, ...)
 
 	if (!fspecs.empty())
 	{
-		uint siz = 0;
-		uint at_inchr = 0;
+		size_t siz = 0;
+		size_t at_inchr = 0;
 		va_list args;
 		va_start(args, fstr);
 
 		for (siz = 0; siz < fspecs.size() && at_inchr < in_siz; siz++)
 		{
-			uint hlong = 0;
-			uint sloc = 0;
+			size_t hlong = 0;
+			size_t sloc = 0;
 
 			if (siz)
 			{
@@ -845,13 +840,13 @@ sint bot_sprintf(_char inchr[], size_t in_siz, c_char* fstr, ...)
 			if (fspecs[siz].length() > 1)
 			{
 				sint isiz = 0;
-				uint nsiz = 1;
+				size_t nsiz = 1;
 
 				if (!memcmp((void*)&fspecs[siz][nsiz], (void*)&spec, sizeof(spec)))
 				{
 					_char fchr[3]{ 0 };
 					nsiz++;
-					uint fsiz = 0;
+					size_t fsiz = 0;
 
 					while (fsiz < 3 && nsiz < fspecs[siz].length())
 					{
@@ -1105,7 +1100,7 @@ sint bot_sprintf(_char inchr[], size_t in_siz, c_char* fstr, ...)
 						{
 							_char sep[4]{ 0 };
 							_char fspec[4]{ 0 };
-							uint nct = 0;
+							size_t nct = 0;
 
 							while (nsiz < fspecs[siz].length() && nct < 3)
 							{
@@ -1155,7 +1150,7 @@ sint bot_sprintf(_char inchr[], size_t in_siz, c_char* fstr, ...)
 							}
 							if (nsiz < fspecs[siz].length())
 							{
-								for (uint x = 0; x < sizeof(sep) && nsiz < fspecs[siz].length(); x++)
+								for (size_t x = 0; x < sizeof(sep) && nsiz < fspecs[siz].length(); x++)
 								{
 									if (memcmp((void*)&fspecs[siz][nsiz], (void*)&spec, sizeof(spec)))
 									{
@@ -1182,14 +1177,14 @@ sint bot_sprintf(_char inchr[], size_t in_siz, c_char* fstr, ...)
 								{
 									std::vector<_char>* inv = va_arg(args, std::vector<_char>*);
 
-									for (uint x = 0; x < inv->size(); x++)
+									for (size_t x = 0; x < inv->size(); x++)
 									{
 										if (at_inchr < in_siz)
 										{
 											memcpy((void*)&inchr[at_inchr], (void*)&inv->at(x), sizeof(inv->at(x)));
 											at_inchr++;
 										}
-										if (slen)
+										if (slen && x < (inv->size() -1))
 										{
 											for (sloc = 0; sloc < strlen(sep) && at_inchr < in_siz; sloc++)
 											{
@@ -1205,16 +1200,16 @@ sint bot_sprintf(_char inchr[], size_t in_siz, c_char* fstr, ...)
 									/*when specifying %v.<type><sep>. <type> = 's' we use a vector of std::string instead of a vector of c_char* */
 									std::vector<std::string>* strv = va_arg(args, std::vector<std::string>*);
 
-									for (uint x = 0; x < strv->size(); x++)
+									for (size_t x = 0; x < strv->size(); x++)
 									{
 										for (sloc = 0; sloc < strv->at(x).length() && at_inchr < in_siz; sloc++)
 										{
 											memcpy((void*)&inchr[at_inchr], (void*)&strv->at(x)[sloc], sizeof(strv->at(x)[sloc]));
 											at_inchr++;
 										}
-										if (slen)
+										if (slen && x < (strv->size() - 1))
 										{
-											for (uint y = 0; y < strlen(sep) && at_inchr < in_siz; y++)
+											for (size_t y = 0; y < strlen(sep) && at_inchr < in_siz; y++)
 											{
 												memcpy((void*)&inchr[at_inchr], (void*)&sep[y], sizeof(sep[y]));
 												at_inchr++;
@@ -1227,7 +1222,7 @@ sint bot_sprintf(_char inchr[], size_t in_siz, c_char* fstr, ...)
 								{
 									std::vector<float>* fvec = va_arg(args, std::vector<float>*);
 
-									for (uint x = 0; x < fvec->size(); x++)
+									for (size_t x = 0; x < fvec->size(); x++)
 									{
 										_char ci[64]{ 0 };
 										sint xc = snprintf(ci, 64, fspecs[siz].c_str(), fvec->at(x));
@@ -1238,9 +1233,9 @@ sint bot_sprintf(_char inchr[], size_t in_siz, c_char* fstr, ...)
 											memcpy((void*)&inchr[at_inchr], (void*)&ci[sloc], sizeof(ci[sloc]));
 											at_inchr++;
 										}
-										if (slen)
+										if (slen && x < (fvec->size() - 1))
 										{
-											for (uint y = 0; y < strlen(sep) && at_inchr < in_siz; y++)
+											for (size_t y = 0; y < strlen(sep) && at_inchr < in_siz; y++)
 											{
 												memcpy((void*)&inchr[at_inchr], (void*)&sep[y], sizeof(sep[y]));
 												at_inchr++;
@@ -1255,7 +1250,7 @@ sint bot_sprintf(_char inchr[], size_t in_siz, c_char* fstr, ...)
 									{
 										std::vector<double>* fvec = va_arg(args, std::vector<double>*);
 
-										for (uint x = 0; x < fvec->size(); x++)
+										for (size_t x = 0; x < fvec->size(); x++)
 										{
 											_char ci[64]{ 0 };
 											sint xc = snprintf(ci, 64, fspecs[siz].c_str(), fvec->at(x));
@@ -1266,9 +1261,9 @@ sint bot_sprintf(_char inchr[], size_t in_siz, c_char* fstr, ...)
 												memcpy((void*)&inchr[at_inchr], (void*)&ci[sloc], sizeof(ci[sloc]));
 												at_inchr++;
 											}
-											if (slen)
+											if (slen && x < (fvec->size() - 1))
 											{
-												for (uint y = 0; y < strlen(sep) && at_inchr < in_siz; y++)
+												for (size_t y = 0; y < strlen(sep) && at_inchr < in_siz; y++)
 												{
 													memcpy((void*)&inchr[at_inchr], (void*)&sep[y], sizeof(sep[y]));
 													at_inchr++;
@@ -1280,7 +1275,7 @@ sint bot_sprintf(_char inchr[], size_t in_siz, c_char* fstr, ...)
 									{
 										std::vector<long double>* fvec = va_arg(args, std::vector<long double>*);
 
-										for (uint x = 0; x < fvec->size(); x++)
+										for (size_t x = 0; x < fvec->size(); x++)
 										{
 											_char ci[64]{ 0 };
 											sint xc = snprintf(ci, 64, fspecs[siz].c_str(), fvec->at(x));
@@ -1291,9 +1286,9 @@ sint bot_sprintf(_char inchr[], size_t in_siz, c_char* fstr, ...)
 												memcpy((void*)&inchr[at_inchr], (void*)&ci[sloc], sizeof(ci[sloc]));
 												at_inchr++;
 											}
-											if (slen)
+											if (slen && x < (fvec->size() - 1))
 											{
-												for (uint y = 0; y < strlen(sep) && at_inchr < in_siz; y++)
+												for (size_t y = 0; y < strlen(sep) && at_inchr < in_siz; y++)
 												{
 													memcpy((void*)&inchr[at_inchr], (void*)&sep[y], sizeof(sep[y]));
 													at_inchr++;
@@ -1310,7 +1305,7 @@ sint bot_sprintf(_char inchr[], size_t in_siz, c_char* fstr, ...)
 									{
 										std::vector<sint>* fvec = va_arg(args, std::vector<sint>*);
 
-										for (uint x = 0; x < fvec->size(); x++)
+										for (size_t x = 0; x < fvec->size(); x++)
 										{
 											_char ci[21]{ 0 };
 											sint xc = snprintf(ci, 21, fspecs[siz].c_str(), fvec->at(x));
@@ -1321,9 +1316,9 @@ sint bot_sprintf(_char inchr[], size_t in_siz, c_char* fstr, ...)
 												memcpy((void*)&inchr[at_inchr], (void*)&ci[sloc], sizeof(ci[sloc]));
 												at_inchr++;
 											}
-											if (slen)
+											if (slen && x < (fvec->size() - 1))
 											{
-												for (uint y = 0; y < strlen(sep) && at_inchr < in_siz; y++)
+												for (size_t y = 0; y < strlen(sep) && at_inchr < in_siz; y++)
 												{
 													memcpy((void*)&inchr[at_inchr], (void*)&sep[y], sizeof(sep[y]));
 													at_inchr++;
@@ -1335,7 +1330,7 @@ sint bot_sprintf(_char inchr[], size_t in_siz, c_char* fstr, ...)
 									{
 										std::vector<slint>* fvec = va_arg(args, std::vector<slint>*);
 
-										for (uint x = 0; x < fvec->size(); x++)
+										for (size_t x = 0; x < fvec->size(); x++)
 										{
 											_char ci[21]{ 0 };
 											sint xc = snprintf(ci, 21, fspecs[siz].c_str(), fvec->at(x));
@@ -1346,9 +1341,9 @@ sint bot_sprintf(_char inchr[], size_t in_siz, c_char* fstr, ...)
 												memcpy((void*)&inchr[at_inchr], (void*)&ci[sloc], sizeof(ci[sloc]));
 												at_inchr++;
 											}
-											if (slen)
+											if (slen && x < (fvec->size() - 1))
 											{
-												for (uint y = 0; y < strlen(sep) && at_inchr < in_siz; y++)
+												for (size_t y = 0; y < strlen(sep) && at_inchr < in_siz; y++)
 												{
 													memcpy((void*)&inchr[at_inchr], (void*)&sep[y], sizeof(sep[y]));
 													at_inchr++;
@@ -1360,7 +1355,7 @@ sint bot_sprintf(_char inchr[], size_t in_siz, c_char* fstr, ...)
 									{
 										std::vector<sllint>* fvec = va_arg(args, std::vector<sllint>*);
 
-										for (uint x = 0; x < fvec->size(); x++)
+										for (size_t x = 0; x < fvec->size(); x++)
 										{
 											_char ci[21]{ 0 };
 											sint xc = snprintf(ci, 21, fspecs[siz].c_str(), fvec->at(x));
@@ -1371,9 +1366,9 @@ sint bot_sprintf(_char inchr[], size_t in_siz, c_char* fstr, ...)
 												memcpy((void*)&inchr[at_inchr], (void*)&ci[sloc], sizeof(ci[sloc]));
 												at_inchr++;
 											}
-											if (slen)
+											if (slen && x < (fvec->size() - 1))
 											{
-												for (uint y = 0; y < strlen(sep) && at_inchr < in_siz; y++)
+												for (size_t y = 0; y < strlen(sep) && at_inchr < in_siz; y++)
 												{
 													memcpy((void*)&inchr[at_inchr], (void*)&sep[y], sizeof(sep[y]));
 													at_inchr++;
@@ -1390,7 +1385,7 @@ sint bot_sprintf(_char inchr[], size_t in_siz, c_char* fstr, ...)
 									{
 										std::vector<uint>* fvec = va_arg(args, std::vector<uint>*);
 
-										for (uint x = 0; x < fvec->size(); x++)
+										for (size_t x = 0; x < fvec->size(); x++)
 										{
 											_char ci[21]{ 0 };
 											sint xc = snprintf(ci, 21, fspecs[siz].c_str(), fvec->at(x));
@@ -1401,9 +1396,9 @@ sint bot_sprintf(_char inchr[], size_t in_siz, c_char* fstr, ...)
 												memcpy((void*)&inchr[at_inchr], (void*)&ci[sloc], sizeof(ci[sloc]));
 												at_inchr++;
 											}
-											if (slen)
+											if (slen && x < (fvec->size() - 1))
 											{
-												for (uint y = 0; y < strlen(sep) && at_inchr < in_siz; y++)
+												for (size_t y = 0; y < strlen(sep) && at_inchr < in_siz; y++)
 												{
 													memcpy((void*)&inchr[at_inchr], (void*)&sep[y], sizeof(sep[y]));
 													at_inchr++;
@@ -1415,7 +1410,7 @@ sint bot_sprintf(_char inchr[], size_t in_siz, c_char* fstr, ...)
 									{
 										std::vector<ulint>* fvec = va_arg(args, std::vector<ulint>*);
 
-										for (uint x = 0; x < fvec->size(); x++)
+										for (size_t x = 0; x < fvec->size(); x++)
 										{
 											_char ci[21]{ 0 };
 											sint xc = snprintf(ci, 21, fspecs[siz].c_str(), fvec->at(x));
@@ -1426,9 +1421,9 @@ sint bot_sprintf(_char inchr[], size_t in_siz, c_char* fstr, ...)
 												memcpy((void*)&inchr[at_inchr], (void*)&ci[sloc], sizeof(ci[sloc]));
 												at_inchr++;
 											}
-											if (slen)
+											if (slen && x < (fvec->size() - 1))
 											{
-												for (uint y = 0; y < strlen(sep) && at_inchr < in_siz; y++)
+												for (size_t y = 0; y < strlen(sep) && at_inchr < in_siz; y++)
 												{
 													memcpy((void*)&inchr[at_inchr], (void*)&sep[y], sizeof(sep[y]));
 													at_inchr++;
@@ -1440,7 +1435,7 @@ sint bot_sprintf(_char inchr[], size_t in_siz, c_char* fstr, ...)
 									{
 										std::vector<ullint>* fvec = va_arg(args, std::vector<ullint>*);
 
-										for (uint x = 0; x < fvec->size(); x++)
+										for (size_t x = 0; x < fvec->size(); x++)
 										{
 											_char ci[21]{ 0 };
 											sint xc = snprintf(ci, 21, fspecs[siz].c_str(), fvec->at(x));
@@ -1451,9 +1446,9 @@ sint bot_sprintf(_char inchr[], size_t in_siz, c_char* fstr, ...)
 												memcpy((void*)&inchr[at_inchr], (void*)&ci[sloc], sizeof(ci[sloc]));
 												at_inchr++;
 											}
-											if (slen)
+											if (slen && x < (fvec->size() - 1))
 											{
-												for (uint y = 0; y < strlen(sep) && at_inchr < in_siz; y++)
+												for (size_t y = 0; y < strlen(sep) && at_inchr < in_siz; y++)
 												{
 													memcpy((void*)&inchr[at_inchr], (void*)&sep[y], sizeof(sep[y]));
 													at_inchr++;
@@ -1468,7 +1463,7 @@ sint bot_sprintf(_char inchr[], size_t in_siz, c_char* fstr, ...)
 								{
 									std::vector<u_char>* inv = va_arg(args, std::vector<u_char>*);
 
-									for (uint x = 0; x < inv->size(); x++)
+									for (size_t x = 0; x < inv->size(); x++)
 									{
 										const size_t usiz = (sizeof(inv->at(x)) * 2) + 1;
 
@@ -1483,9 +1478,9 @@ sint bot_sprintf(_char inchr[], size_t in_siz, c_char* fstr, ...)
 												memcpy((void*)&inchr[at_inchr], (void*)&ci[sloc], sizeof(ci[sloc]));
 												at_inchr++;
 
-												if (slen)
+												if (slen && x < (inv->size() - 1))
 												{
-													for (uint y = 0; y < strlen(sep) && at_inchr < in_siz; y++)
+													for (size_t y = 0; y < strlen(sep) && at_inchr < in_siz; y++)
 													{
 														memcpy((void*)&inchr[at_inchr], (void*)&sep[y], sizeof(sep[y]));
 														at_inchr++;
@@ -1545,7 +1540,7 @@ sint bot_sprintf(_char inchr[], size_t in_siz, c_char* fstr, ...)
 	}
 	else
 	{
-		uint siz = 0;
+		size_t siz = 0;
 
 		while (siz < in_siz && siz < strsiz)
 		{
@@ -1572,7 +1567,7 @@ sint bot_sprintf(c_char inchr[], size_t in_siz, c_char* fstr, ...)
 		return -1;
 	}
 
-	uint strsiz = bot_cstrlen(inchr);
+	size_t strsiz = bot_cstrlen(inchr);
 
 	if (strsiz)
 	{
@@ -1582,20 +1577,20 @@ sint bot_sprintf(c_char inchr[], size_t in_siz, c_char* fstr, ...)
 	sint ret = -1;
 	strsiz = strlen(fstr);
 	std::vector<std::string> fspecs;
-	std::vector<uint> locs;
+	std::vector<size_t> locs;
 	std::string formspec;
 	_char frm = '%';
 	_char spec = '.';
 	_char term = '\0';
 
-	for (uint siz = 0; siz < strsiz; siz++)
+	for (size_t siz = 0; siz < strsiz; siz++)
 	{
 		if (!memcmp((void*)&fstr[siz], (void*)&frm, 1))
 		{
 			formspec.push_back(fstr[siz]);
 			bool mustnum = false;
 
-			for (uint nsiz = 1; siz + nsiz < strsiz; )
+			for (size_t nsiz = 1; siz + nsiz < strsiz; )
 			{
 				if (!memcmp((void*)&fstr[siz + nsiz], (void*)&spec, 1))
 				{
@@ -1694,7 +1689,6 @@ sint bot_sprintf(c_char inchr[], size_t in_siz, c_char* fstr, ...)
 					{
 						if (!mustnum)
 						{
-							sint done = 0;
 							formspec.push_back(fstr[siz + nsiz]);
 							nsiz++;
 
@@ -1704,19 +1698,16 @@ sint bot_sprintf(c_char inchr[], size_t in_siz, c_char* fstr, ...)
 								{
 									formspec.push_back(fstr[siz + nsiz]);
 
-									while (siz + nsiz < strsiz)
+									for (size_t xsiz = siz + nsiz + 1; xsiz < strsiz; xsiz++)
 									{
+										formspec.push_back(fstr[xsiz]);
 										nsiz++;
 
-										if (siz + nsiz < strsiz)
+										if (!memcmp((void*)&fstr[xsiz], (void*)&spec, sizeof(spec)))
 										{
-											formspec.push_back(fstr[siz + nsiz]);
-
-											if (!memcmp((void*)&fstr[siz + nsiz], (void*)&spec, sizeof(spec)))
-											{
-												locs.push_back(siz);
-												fspecs.push_back(formspec);
-											}
+											locs.push_back(siz);
+											fspecs.push_back(formspec);
+											xsiz = strsiz;
 										}
 									}
 								}
@@ -1749,15 +1740,15 @@ sint bot_sprintf(c_char inchr[], size_t in_siz, c_char* fstr, ...)
 
 	if (!fspecs.empty())
 	{
-		uint siz = 0;
-		uint at_inchr = 0;
+		size_t siz = 0;
+		size_t at_inchr = 0;
 		va_list args;
 		va_start(args, fstr);
 
 		for (siz = 0; siz < fspecs.size() && at_inchr < in_siz; siz++)
 		{
-			uint hlong = 0;
-			uint sloc = 0;
+			size_t hlong = 0;
+			size_t sloc = 0;
 
 			if (siz)
 			{
@@ -1774,13 +1765,13 @@ sint bot_sprintf(c_char inchr[], size_t in_siz, c_char* fstr, ...)
 			if (fspecs[siz].length() > 1)
 			{
 				sint isiz = 0;
-				uint nsiz = 1;
+				size_t nsiz = 1;
 
 				if (!memcmp((void*)&fspecs[siz][nsiz], (void*)&spec, sizeof(spec)))
 				{
 					_char fchr[3]{ 0 };
 					nsiz++;
-					uint fsiz = 0;
+					size_t fsiz = 0;
 
 					while (fsiz < 3 && nsiz < fspecs[siz].length())
 					{
@@ -2034,7 +2025,7 @@ sint bot_sprintf(c_char inchr[], size_t in_siz, c_char* fstr, ...)
 						{
 							_char sep[4]{ 0 };
 							_char fspec[4]{ 0 };
-							uint nct = 0;
+							size_t nct = 0;
 
 							while (nsiz < fspecs[siz].length() && nct < 3)
 							{
@@ -2084,7 +2075,7 @@ sint bot_sprintf(c_char inchr[], size_t in_siz, c_char* fstr, ...)
 							}
 							if (nsiz < fspecs[siz].length())
 							{
-								for (uint x = 0; x < sizeof(sep) && nsiz < fspecs[siz].length(); x++)
+								for (size_t x = 0; x < sizeof(sep) && nsiz < fspecs[siz].length(); x++)
 								{
 									if (memcmp((void*)&fspecs[siz][nsiz], (void*)&spec, sizeof(spec)))
 									{
@@ -2111,14 +2102,14 @@ sint bot_sprintf(c_char inchr[], size_t in_siz, c_char* fstr, ...)
 								{
 									std::vector<_char>* inv = va_arg(args, std::vector<_char>*);
 
-									for (uint x = 0; x < inv->size(); x++)
+									for (size_t x = 0; x < inv->size(); x++)
 									{
 										if (at_inchr < in_siz)
 										{
 											memcpy((void*)&inchr[at_inchr], (void*)&inv->at(x), sizeof(inv->at(x)));
 											at_inchr++;
 										}
-										if (slen)
+										if (slen && x < (inv->size() - 1))
 										{
 											for (sloc = 0; sloc < strlen(sep) && at_inchr < in_siz; sloc++)
 											{
@@ -2134,16 +2125,16 @@ sint bot_sprintf(c_char inchr[], size_t in_siz, c_char* fstr, ...)
 									/*when specifying %v.<type><sep>. <type> = 's' we use a vector of std::string instead of a vector of c_char* */
 									std::vector<std::string>* strv = va_arg(args, std::vector<std::string>*);
 
-									for (uint x = 0; x < strv->size(); x++)
+									for (size_t x = 0; x < strv->size(); x++)
 									{
 										for (sloc = 0; sloc < strv->at(x).length() && at_inchr < in_siz; sloc++)
 										{
 											memcpy((void*)&inchr[at_inchr], (void*)&strv->at(x)[sloc], sizeof(strv->at(x)[sloc]));
 											at_inchr++;
 										}
-										if (slen)
+										if (slen && x < (strv->size() - 1))
 										{
-											for (uint y = 0; y < strlen(sep) && at_inchr < in_siz; y++)
+											for (size_t y = 0; y < strlen(sep) && at_inchr < in_siz; y++)
 											{
 												memcpy((void*)&inchr[at_inchr], (void*)&sep[y], sizeof(sep[y]));
 												at_inchr++;
@@ -2156,7 +2147,7 @@ sint bot_sprintf(c_char inchr[], size_t in_siz, c_char* fstr, ...)
 								{
 									std::vector<float>* fvec = va_arg(args, std::vector<float>*);
 
-									for (uint x = 0; x < fvec->size(); x++)
+									for (size_t x = 0; x < fvec->size(); x++)
 									{
 										_char ci[64]{ 0 };
 										sint xc = snprintf(ci, 64, fspecs[siz].c_str(), fvec->at(x));
@@ -2167,9 +2158,9 @@ sint bot_sprintf(c_char inchr[], size_t in_siz, c_char* fstr, ...)
 											memcpy((void*)&inchr[at_inchr], (void*)&ci[sloc], sizeof(ci[sloc]));
 											at_inchr++;
 										}
-										if (slen)
+										if (slen && x < (fvec->size() - 1))
 										{
-											for (uint y = 0; y < strlen(sep) && at_inchr < in_siz; y++)
+											for (size_t y = 0; y < strlen(sep) && at_inchr < in_siz; y++)
 											{
 												memcpy((void*)&inchr[at_inchr], (void*)&sep[y], sizeof(sep[y]));
 												at_inchr++;
@@ -2184,7 +2175,7 @@ sint bot_sprintf(c_char inchr[], size_t in_siz, c_char* fstr, ...)
 									{
 										std::vector<double>* fvec = va_arg(args, std::vector<double>*);
 
-										for (uint x = 0; x < fvec->size(); x++)
+										for (size_t x = 0; x < fvec->size(); x++)
 										{
 											_char ci[64]{ 0 };
 											sint xc = snprintf(ci, 64, fspecs[siz].c_str(), fvec->at(x));
@@ -2195,9 +2186,9 @@ sint bot_sprintf(c_char inchr[], size_t in_siz, c_char* fstr, ...)
 												memcpy((void*)&inchr[at_inchr], (void*)&ci[sloc], sizeof(ci[sloc]));
 												at_inchr++;
 											}
-											if (slen)
+											if (slen && x < (fvec->size() - 1))
 											{
-												for (uint y = 0; y < strlen(sep) && at_inchr < in_siz; y++)
+												for (size_t y = 0; y < strlen(sep) && at_inchr < in_siz; y++)
 												{
 													memcpy((void*)&inchr[at_inchr], (void*)&sep[y], sizeof(sep[y]));
 													at_inchr++;
@@ -2209,7 +2200,7 @@ sint bot_sprintf(c_char inchr[], size_t in_siz, c_char* fstr, ...)
 									{
 										std::vector<long double>* fvec = va_arg(args, std::vector<long double>*);
 
-										for (uint x = 0; x < fvec->size(); x++)
+										for (size_t x = 0; x < fvec->size(); x++)
 										{
 											_char ci[64]{ 0 };
 											sint xc = snprintf(ci, 64, fspecs[siz].c_str(), fvec->at(x));
@@ -2220,9 +2211,9 @@ sint bot_sprintf(c_char inchr[], size_t in_siz, c_char* fstr, ...)
 												memcpy((void*)&inchr[at_inchr], (void*)&ci[sloc], sizeof(ci[sloc]));
 												at_inchr++;
 											}
-											if (slen)
+											if (slen && x < (fvec->size() - 1))
 											{
-												for (uint y = 0; y < strlen(sep) && at_inchr < in_siz; y++)
+												for (size_t y = 0; y < strlen(sep) && at_inchr < in_siz; y++)
 												{
 													memcpy((void*)&inchr[at_inchr], (void*)&sep[y], sizeof(sep[y]));
 													at_inchr++;
@@ -2239,7 +2230,7 @@ sint bot_sprintf(c_char inchr[], size_t in_siz, c_char* fstr, ...)
 									{
 										std::vector<sint>* fvec = va_arg(args, std::vector<sint>*);
 
-										for (uint x = 0; x < fvec->size(); x++)
+										for (size_t x = 0; x < fvec->size(); x++)
 										{
 											_char ci[21]{ 0 };
 											sint xc = snprintf(ci, 21, fspecs[siz].c_str(), fvec->at(x));
@@ -2250,9 +2241,9 @@ sint bot_sprintf(c_char inchr[], size_t in_siz, c_char* fstr, ...)
 												memcpy((void*)&inchr[at_inchr], (void*)&ci[sloc], sizeof(ci[sloc]));
 												at_inchr++;
 											}
-											if (slen)
+											if (slen && x < (fvec->size() - 1))
 											{
-												for (uint y = 0; y < strlen(sep) && at_inchr < in_siz; y++)
+												for (size_t y = 0; y < strlen(sep) && at_inchr < in_siz; y++)
 												{
 													memcpy((void*)&inchr[at_inchr], (void*)&sep[y], sizeof(sep[y]));
 													at_inchr++;
@@ -2264,7 +2255,7 @@ sint bot_sprintf(c_char inchr[], size_t in_siz, c_char* fstr, ...)
 									{
 										std::vector<slint>* fvec = va_arg(args, std::vector<slint>*);
 
-										for (uint x = 0; x < fvec->size(); x++)
+										for (size_t x = 0; x < fvec->size(); x++)
 										{
 											_char ci[21]{ 0 };
 											sint xc = snprintf(ci, 21, fspecs[siz].c_str(), fvec->at(x));
@@ -2275,9 +2266,9 @@ sint bot_sprintf(c_char inchr[], size_t in_siz, c_char* fstr, ...)
 												memcpy((void*)&inchr[at_inchr], (void*)&ci[sloc], sizeof(ci[sloc]));
 												at_inchr++;
 											}
-											if (slen)
+											if (slen && x < (fvec->size() - 1))
 											{
-												for (uint y = 0; y < strlen(sep) && at_inchr < in_siz; y++)
+												for (size_t y = 0; y < strlen(sep) && at_inchr < in_siz; y++)
 												{
 													memcpy((void*)&inchr[at_inchr], (void*)&sep[y], sizeof(sep[y]));
 													at_inchr++;
@@ -2289,7 +2280,7 @@ sint bot_sprintf(c_char inchr[], size_t in_siz, c_char* fstr, ...)
 									{
 										std::vector<sllint>* fvec = va_arg(args, std::vector<sllint>*);
 
-										for (uint x = 0; x < fvec->size(); x++)
+										for (size_t x = 0; x < fvec->size(); x++)
 										{
 											_char ci[21]{ 0 };
 											sint xc = snprintf(ci, 21, fspecs[siz].c_str(), fvec->at(x));
@@ -2300,9 +2291,9 @@ sint bot_sprintf(c_char inchr[], size_t in_siz, c_char* fstr, ...)
 												memcpy((void*)&inchr[at_inchr], (void*)&ci[sloc], sizeof(ci[sloc]));
 												at_inchr++;
 											}
-											if (slen)
+											if (slen && x < (fvec->size() - 1))
 											{
-												for (uint y = 0; y < strlen(sep) && at_inchr < in_siz; y++)
+												for (size_t y = 0; y < strlen(sep) && at_inchr < in_siz; y++)
 												{
 													memcpy((void*)&inchr[at_inchr], (void*)&sep[y], sizeof(sep[y]));
 													at_inchr++;
@@ -2319,7 +2310,7 @@ sint bot_sprintf(c_char inchr[], size_t in_siz, c_char* fstr, ...)
 									{
 										std::vector<uint>* fvec = va_arg(args, std::vector<uint>*);
 
-										for (uint x = 0; x < fvec->size(); x++)
+										for (size_t x = 0; x < fvec->size(); x++)
 										{
 											_char ci[21]{ 0 };
 											sint xc = snprintf(ci, 21, fspecs[siz].c_str(), fvec->at(x));
@@ -2330,9 +2321,9 @@ sint bot_sprintf(c_char inchr[], size_t in_siz, c_char* fstr, ...)
 												memcpy((void*)&inchr[at_inchr], (void*)&ci[sloc], sizeof(ci[sloc]));
 												at_inchr++;
 											}
-											if (slen)
+											if (slen && x < (fvec->size() - 1))
 											{
-												for (uint y = 0; y < strlen(sep) && at_inchr < in_siz; y++)
+												for (size_t y = 0; y < strlen(sep) && at_inchr < in_siz; y++)
 												{
 													memcpy((void*)&inchr[at_inchr], (void*)&sep[y], sizeof(sep[y]));
 													at_inchr++;
@@ -2344,7 +2335,7 @@ sint bot_sprintf(c_char inchr[], size_t in_siz, c_char* fstr, ...)
 									{
 										std::vector<ulint>* fvec = va_arg(args, std::vector<ulint>*);
 
-										for (uint x = 0; x < fvec->size(); x++)
+										for (size_t x = 0; x < fvec->size(); x++)
 										{
 											_char ci[21]{ 0 };
 											sint xc = snprintf(ci, 21, fspecs[siz].c_str(), fvec->at(x));
@@ -2355,9 +2346,9 @@ sint bot_sprintf(c_char inchr[], size_t in_siz, c_char* fstr, ...)
 												memcpy((void*)&inchr[at_inchr], (void*)&ci[sloc], sizeof(ci[sloc]));
 												at_inchr++;
 											}
-											if (slen)
+											if (slen && x < (fvec->size() - 1))
 											{
-												for (uint y = 0; y < strlen(sep) && at_inchr < in_siz; y++)
+												for (size_t y = 0; y < strlen(sep) && at_inchr < in_siz; y++)
 												{
 													memcpy((void*)&inchr[at_inchr], (void*)&sep[y], sizeof(sep[y]));
 													at_inchr++;
@@ -2369,7 +2360,7 @@ sint bot_sprintf(c_char inchr[], size_t in_siz, c_char* fstr, ...)
 									{
 										std::vector<ullint>* fvec = va_arg(args, std::vector<ullint>*);
 
-										for (uint x = 0; x < fvec->size(); x++)
+										for (size_t x = 0; x < fvec->size(); x++)
 										{
 											_char ci[21]{ 0 };
 											sint xc = snprintf(ci, 21, fspecs[siz].c_str(), fvec->at(x));
@@ -2380,9 +2371,9 @@ sint bot_sprintf(c_char inchr[], size_t in_siz, c_char* fstr, ...)
 												memcpy((void*)&inchr[at_inchr], (void*)&ci[sloc], sizeof(ci[sloc]));
 												at_inchr++;
 											}
-											if (slen)
+											if (slen && x < (fvec->size() - 1))
 											{
-												for (uint y = 0; y < strlen(sep) && at_inchr < in_siz; y++)
+												for (size_t y = 0; y < strlen(sep) && at_inchr < in_siz; y++)
 												{
 													memcpy((void*)&inchr[at_inchr], (void*)&sep[y], sizeof(sep[y]));
 													at_inchr++;
@@ -2397,7 +2388,7 @@ sint bot_sprintf(c_char inchr[], size_t in_siz, c_char* fstr, ...)
 								{
 									std::vector<u_char>* inv = va_arg(args, std::vector<u_char>*);
 
-									for (uint x = 0; x < inv->size(); x++)
+									for (size_t x = 0; x < inv->size(); x++)
 									{
 										const size_t usiz = (sizeof(inv->at(x)) * 2) + 1;
 
@@ -2412,9 +2403,9 @@ sint bot_sprintf(c_char inchr[], size_t in_siz, c_char* fstr, ...)
 												memcpy((void*)&inchr[at_inchr], (void*)&ci[sloc], sizeof(ci[sloc]));
 												at_inchr++;
 
-												if (slen)
+												if (slen && x < (inv->size() - 1))
 												{
-													for (uint y = 0; y < strlen(sep) && at_inchr < in_siz; y++)
+													for (size_t y = 0; y < strlen(sep) && at_inchr < in_siz; y++)
 													{
 														memcpy((void*)&inchr[at_inchr], (void*)&sep[y], sizeof(sep[y]));
 														at_inchr++;
@@ -2474,7 +2465,7 @@ sint bot_sprintf(c_char inchr[], size_t in_siz, c_char* fstr, ...)
 	}
 	else
 	{
-		uint siz = 0;
+		size_t siz = 0;
 
 		while (siz < in_siz && siz < strsiz)
 		{
@@ -2506,22 +2497,22 @@ sint bot_sprintfs(std::string* str_, bool clear_str, c_char* fstr, ...)
 		str_->clear();
 	}
 
-	uint strsiz = strlen(fstr);
+	size_t strsiz = strlen(fstr);
 	std::vector<std::string> fspecs;
-	std::vector<uint> locs;
+	std::vector<size_t> locs;
 	std::string formspec;
 	_char frm = '%';
 	_char spec = '.';
 	_char term = '\0';
 
-	for (uint siz = 0; siz < strsiz; siz++)
+	for (size_t siz = 0; siz < strsiz; siz++)
 	{
 		if (!memcmp((void*)&fstr[siz], (void*)&frm, 1))
 		{
 			formspec.push_back(fstr[siz]);
 			bool mustnum = false;
 
-			for (uint nsiz = 1; siz + nsiz < strsiz; )
+			for (size_t nsiz = 1; siz + nsiz < strsiz; )
 			{
 				if (!memcmp((void*)&fstr[siz + nsiz], (void*)&spec, 1))
 				{
@@ -2619,7 +2610,6 @@ sint bot_sprintfs(std::string* str_, bool clear_str, c_char* fstr, ...)
 					{
 						if (!mustnum)
 						{
-							sint done = 0;
 							formspec.push_back(fstr[siz + nsiz]);
 							nsiz++;
 
@@ -2629,19 +2619,16 @@ sint bot_sprintfs(std::string* str_, bool clear_str, c_char* fstr, ...)
 								{
 									formspec.push_back(fstr[siz + nsiz]);
 
-									while (siz + nsiz < strsiz)
+									for (size_t xsiz = siz + nsiz + 1; xsiz < strsiz; xsiz++)
 									{
+										formspec.push_back(fstr[xsiz]);
 										nsiz++;
 
-										if (siz + nsiz < strsiz)
+										if (!memcmp((void*)&fstr[xsiz], (void*)&spec, sizeof(spec)))
 										{
-											formspec.push_back(fstr[siz + nsiz]);
-
-											if (!memcmp((void*)&fstr[siz + nsiz], (void*)&spec, sizeof(spec)))
-											{
-												locs.push_back(siz);
-												fspecs.push_back(formspec);
-											}
+											locs.push_back(siz);
+											fspecs.push_back(formspec);
+											xsiz = strsiz;
 										}
 									}
 								}
@@ -2672,14 +2659,14 @@ sint bot_sprintfs(std::string* str_, bool clear_str, c_char* fstr, ...)
 
 	if (!fspecs.empty())
 	{
-		uint siz = 0;
+		size_t siz = 0;
 		va_list args;
 		va_start(args, fstr);
 
 		for (siz = 0; siz < fspecs.size(); siz++)
 		{
-			uint hlong = 0;
-			uint sloc = 0;
+			size_t hlong = 0;
+			size_t sloc = 0;
 
 			if (siz)
 			{
@@ -2695,13 +2682,13 @@ sint bot_sprintfs(std::string* str_, bool clear_str, c_char* fstr, ...)
 			if (fspecs[siz].length() > 1)
 			{
 				sint isiz = 0;
-				uint nsiz = 1;
+				size_t nsiz = 1;
 
 				if (!memcmp((void*)&fspecs[siz][nsiz], (void*)&spec, sizeof(spec)))
 				{
 					_char fchr[3]{ 0 };
 					nsiz++;
-					uint fsiz = 0;
+					size_t fsiz = 0;
 
 					while (fsiz < 3 && nsiz < fspecs[siz].length())
 					{
@@ -2814,7 +2801,7 @@ sint bot_sprintfs(std::string* str_, bool clear_str, c_char* fstr, ...)
 
 					xc = bot_strchk(ci, 21);
 
-					if ((str_->length() + strlen(ci)) < (uint)BOT_STRLEN_MAX)
+					if ((str_->length() + strlen(ci)) < (size_t)BOT_STRLEN_MAX)
 					{
 						str_->append(ci);
 					}
@@ -2844,7 +2831,7 @@ sint bot_sprintfs(std::string* str_, bool clear_str, c_char* fstr, ...)
 
 					xc = bot_strchk(ci, 21);
 
-					if ((str_->length() + strlen(ci)) < (uint)BOT_STRLEN_MAX)
+					if ((str_->length() + strlen(ci)) < (size_t)BOT_STRLEN_MAX)
 					{
 						str_->append(ci);
 					}
@@ -2858,7 +2845,7 @@ sint bot_sprintfs(std::string* str_, bool clear_str, c_char* fstr, ...)
 					sint xc = snprintf(ci, 64, fspecs[siz].c_str(), inv);
 					xc = bot_strchk(ci, 64);
 
-					if ((str_->length() + strlen(ci)) < (uint)BOT_STRLEN_MAX)
+					if ((str_->length() + strlen(ci)) < (size_t)BOT_STRLEN_MAX)
 					{
 						str_->append(ci);
 					}
@@ -2871,7 +2858,7 @@ sint bot_sprintfs(std::string* str_, bool clear_str, c_char* fstr, ...)
 					sint xc = snprintf(ci, 64, fspecs[siz].c_str(), inv);
 					xc = bot_strchk(ci, 64);
 
-					if ((str_->length() + strlen(ci)) < (uint)BOT_STRLEN_MAX)
+					if ((str_->length() + strlen(ci)) < (size_t)BOT_STRLEN_MAX)
 					{
 						str_->append(ci);
 					}
@@ -2883,7 +2870,7 @@ sint bot_sprintfs(std::string* str_, bool clear_str, c_char* fstr, ...)
 					_char cmp = '\0';
 					sloc = 0;
 
-					for (sloc = 0; (sloc + str_->length()) < (uint)BOT_STRLEN_MAX; sloc++)
+					for (sloc = 0; (sloc + str_->length()) < (size_t)BOT_STRLEN_MAX; sloc++)
 					{
 						if (memcmp(&str[sloc], &cmp, 1))
 						{
@@ -2913,7 +2900,7 @@ sint bot_sprintfs(std::string* str_, bool clear_str, c_char* fstr, ...)
 #endif
 					const size_t usiz = (sizeof(inv_) * 2) + 1;
 
-					if ((usiz + str_->length()) <= (uint)BOT_STRLEN_MAX)
+					if ((usiz + str_->length()) <= (size_t)BOT_STRLEN_MAX)
 					{
 						_char ci[usiz]{ 0 };
 						sint xc = snprintf(ci, sizeof(ci), fspecs[siz].c_str(), (uint)inv_);
@@ -2931,7 +2918,7 @@ sint bot_sprintfs(std::string* str_, bool clear_str, c_char* fstr, ...)
 						{
 							_char sep[4]{ 0 };
 							_char fspec[4]{ 0 };
-							uint nct = 0;
+							size_t nct = 0;
 
 							while (nsiz < fspecs[siz].length() && nct < 3)
 							{
@@ -2981,7 +2968,7 @@ sint bot_sprintfs(std::string* str_, bool clear_str, c_char* fstr, ...)
 							}
 							if (nsiz < fspecs[siz].length())
 							{
-								for (uint x = 0; x < sizeof(sep) && nsiz < fspecs[siz].length(); x++)
+								for (size_t x = 0; x < sizeof(sep) && nsiz < fspecs[siz].length(); x++)
 								{
 									if (memcmp((void*)&fspecs[siz][nsiz], (void*)&spec, sizeof(spec)))
 									{
@@ -3008,13 +2995,13 @@ sint bot_sprintfs(std::string* str_, bool clear_str, c_char* fstr, ...)
 								{
 									std::vector<_char>* inv = va_arg(args, std::vector<_char>*);
 
-									for (uint x = 0; x < inv->size() && str_->length() < (uint)BOT_STRLEN_MAX; x++)
+									for (size_t x = 0; x < inv->size() && str_->length() < (size_t)BOT_STRLEN_MAX; x++)
 									{
 										str_->push_back(inv->at(x));
 
-										if (slen)
+										if (slen && x < (inv->size() - 1))
 										{
-											for (sloc = 0; sloc < strlen(sep) && str_->length() < (uint)BOT_STRLEN_MAX; sloc++)
+											for (sloc = 0; sloc < strlen(sep) && str_->length() < (size_t)BOT_STRLEN_MAX; sloc++)
 											{
 												str_->push_back(sep[sloc]);
 											}
@@ -3027,15 +3014,15 @@ sint bot_sprintfs(std::string* str_, bool clear_str, c_char* fstr, ...)
 									/*when specifying %v.<type><sep>. <type> = 's' we use a vector of std::string instead of a vector of c_char* */
 									std::vector<std::string>* strv = va_arg(args, std::vector<std::string>*);
 
-									for (uint x = 0; x < strv->size() && str_->length() < (uint)BOT_STRLEN_MAX; x++)
+									for (size_t x = 0; x < strv->size() && str_->length() < (size_t)BOT_STRLEN_MAX; x++)
 									{
 										for (sloc = 0; sloc < strv->at(x).length(); sloc++)
 										{
 											str_->push_back(strv->at(x)[sloc]);
 										}
-										if (slen)
+										if (slen && x < (strv->size() - 1))
 										{
-											for (uint y = 0; y < strlen(sep) && str_->length() < (uint)BOT_STRLEN_MAX; y++)
+											for (size_t y = 0; y < strlen(sep) && str_->length() < (size_t)BOT_STRLEN_MAX; y++)
 											{
 												str_->push_back(sep[y]);
 											}
@@ -3047,19 +3034,19 @@ sint bot_sprintfs(std::string* str_, bool clear_str, c_char* fstr, ...)
 								{
 									std::vector<float>* fvec = va_arg(args, std::vector<float>*);
 
-									for (uint x = 0; x < fvec->size(); x++)
+									for (size_t x = 0; x < fvec->size(); x++)
 									{
 										_char ci[64]{ 0 };
 										sint xc = snprintf(ci, 64, fspecs[siz].c_str(), fvec->at(x));
 										xc = bot_strchk(ci, 64);
 
-										for (sloc = 0; (sint)sloc < xc && str_->length() < (uint)BOT_STRLEN_MAX; sloc++)
+										for (sloc = 0; (sint)sloc < xc && str_->length() < (size_t)BOT_STRLEN_MAX; sloc++)
 										{
 											str_->push_back(ci[sloc]);
 										}
-										if (slen)
+										if (slen && x < (fvec->size() - 1))
 										{
-											for (uint y = 0; y < strlen(sep) && str_->length() < (uint)BOT_STRLEN_MAX; y++)
+											for (size_t y = 0; y < strlen(sep) && str_->length() < (size_t)BOT_STRLEN_MAX; y++)
 											{
 												str_->push_back(sep[y]);
 											}
@@ -3073,19 +3060,19 @@ sint bot_sprintfs(std::string* str_, bool clear_str, c_char* fstr, ...)
 									{
 										std::vector<double>* fvec = va_arg(args, std::vector<double>*);
 
-										for (uint x = 0; x < fvec->size(); x++)
+										for (size_t x = 0; x < fvec->size(); x++)
 										{
 											_char ci[64]{ 0 };
 											sint xc = snprintf(ci, 64, fspecs[siz].c_str(), fvec->at(x));
 											xc = bot_strchk(ci, 64);
 
-											for (sloc = 0; (sint)sloc < xc && str_->length() < (uint)BOT_STRLEN_MAX; sloc++)
+											for (sloc = 0; (sint)sloc < xc && str_->length() < (size_t)BOT_STRLEN_MAX; sloc++)
 											{
 												str_->push_back(ci[sloc]);
 											}
-											if (slen)
+											if (slen && x < (fvec->size() - 1))
 											{
-												for (uint y = 0; y < strlen(sep) && str_->length() < (uint)BOT_STRLEN_MAX; y++)
+												for (size_t y = 0; y < strlen(sep) && str_->length() < (size_t)BOT_STRLEN_MAX; y++)
 												{
 													str_->push_back(sep[y]);
 												}
@@ -3096,19 +3083,19 @@ sint bot_sprintfs(std::string* str_, bool clear_str, c_char* fstr, ...)
 									{
 										std::vector<long double>* fvec = va_arg(args, std::vector<long double>*);
 
-										for (uint x = 0; x < fvec->size(); x++)
+										for (size_t x = 0; x < fvec->size(); x++)
 										{
 											_char ci[64]{ 0 };
 											sint xc = snprintf(ci, 64, fspecs[siz].c_str(), fvec->at(x));
 											xc = bot_strchk(ci, 64);
 
-											for (sloc = 0; (sint)sloc < xc && str_->length() < (uint)BOT_STRLEN_MAX; sloc++)
+											for (sloc = 0; (sint)sloc < xc && str_->length() < (size_t)BOT_STRLEN_MAX; sloc++)
 											{
 												str_->push_back(ci[sloc]);
 											}
-											if (slen)
+											if (slen && x < (fvec->size() - 1))
 											{
-												for (uint y = 0; y < strlen(sep) && str_->length() < (uint)BOT_STRLEN_MAX; y++)
+												for (size_t y = 0; y < strlen(sep) && str_->length() < (size_t)BOT_STRLEN_MAX; y++)
 												{
 													str_->push_back(sep[y]);
 												}
@@ -3124,19 +3111,19 @@ sint bot_sprintfs(std::string* str_, bool clear_str, c_char* fstr, ...)
 									{
 										std::vector<sint>* fvec = va_arg(args, std::vector<sint>*);
 
-										for (uint x = 0; x < fvec->size(); x++)
+										for (size_t x = 0; x < fvec->size(); x++)
 										{
 											_char ci[21]{ 0 };
 											sint xc = snprintf(ci, 21, fspecs[siz].c_str(), fvec->at(x));
 											xc = bot_strchk(ci, 21);
 
-											for (sloc = 0; (sint)sloc < xc && str_->length() < (uint)BOT_STRLEN_MAX; sloc++)
+											for (sloc = 0; (sint)sloc < xc && str_->length() < (size_t)BOT_STRLEN_MAX; sloc++)
 											{
 												str_->push_back(ci[sloc]);
 											}
-											if (slen)
+											if (slen && x < (fvec->size() - 1))
 											{
-												for (uint y = 0; y < strlen(sep) && str_->length() < (uint)BOT_STRLEN_MAX; y++)
+												for (size_t y = 0; y < strlen(sep) && str_->length() < (size_t)BOT_STRLEN_MAX; y++)
 												{
 													str_->push_back(sep[y]);
 												}
@@ -3147,19 +3134,19 @@ sint bot_sprintfs(std::string* str_, bool clear_str, c_char* fstr, ...)
 									{
 										std::vector<slint>* fvec = va_arg(args, std::vector<slint>*);
 
-										for (uint x = 0; x < fvec->size(); x++)
+										for (size_t x = 0; x < fvec->size(); x++)
 										{
 											_char ci[21]{ 0 };
 											sint xc = snprintf(ci, 21, fspecs[siz].c_str(), fvec->at(x));
 											xc = bot_strchk(ci, 21);
 
-											for (sloc = 0; (sint)sloc < xc && str_->length() < (uint)BOT_STRLEN_MAX; sloc++)
+											for (sloc = 0; (sint)sloc < xc && str_->length() < (size_t)BOT_STRLEN_MAX; sloc++)
 											{
 												str_->push_back(ci[sloc]);
 											}
-											if (slen)
+											if (slen && x < (fvec->size() - 1))
 											{
-												for (uint y = 0; y < strlen(sep) && str_->length() < (uint)BOT_STRLEN_MAX; y++)
+												for (size_t y = 0; y < strlen(sep) && str_->length() < (size_t)BOT_STRLEN_MAX; y++)
 												{
 													str_->push_back(sep[y]);
 												}
@@ -3170,19 +3157,19 @@ sint bot_sprintfs(std::string* str_, bool clear_str, c_char* fstr, ...)
 									{
 										std::vector<sllint>* fvec = va_arg(args, std::vector<sllint>*);
 
-										for (uint x = 0; x < fvec->size(); x++)
+										for (size_t x = 0; x < fvec->size(); x++)
 										{
 											_char ci[21]{ 0 };
 											sint xc = snprintf(ci, 21, fspecs[siz].c_str(), fvec->at(x));
 											xc = bot_strchk(ci, 21);
 
-											for (sloc = 0; (sint)sloc < xc && str_->length() < (uint)BOT_STRLEN_MAX; sloc++)
+											for (sloc = 0; (sint)sloc < xc && str_->length() < (size_t)BOT_STRLEN_MAX; sloc++)
 											{
 												str_->push_back(ci[sloc]);
 											}
-											if (slen)
+											if (slen && x < (fvec->size() - 1))
 											{
-												for (uint y = 0; y < strlen(sep) && str_->length() < (uint)BOT_STRLEN_MAX; y++)
+												for (size_t y = 0; y < strlen(sep) && str_->length() < (size_t)BOT_STRLEN_MAX; y++)
 												{
 													str_->push_back(sep[y]);
 												}
@@ -3198,19 +3185,19 @@ sint bot_sprintfs(std::string* str_, bool clear_str, c_char* fstr, ...)
 									{
 										std::vector<uint>* fvec = va_arg(args, std::vector<uint>*);
 
-										for (uint x = 0; x < fvec->size(); x++)
+										for (size_t x = 0; x < fvec->size(); x++)
 										{
 											_char ci[21]{ 0 };
 											sint xc = snprintf(ci, 21, fspecs[siz].c_str(), fvec->at(x));
 											xc = bot_strchk(ci, 21);
 
-											for (sloc = 0; (sint)sloc < xc && str_->length() < (uint)BOT_STRLEN_MAX; sloc++)
+											for (sloc = 0; (sint)sloc < xc && str_->length() < (size_t)BOT_STRLEN_MAX; sloc++)
 											{
 												str_->push_back(ci[sloc]);
 											}
-											if (slen)
+											if (slen && x < (fvec->size() - 1))
 											{
-												for (uint y = 0; y < strlen(sep) && str_->length() < (uint)BOT_STRLEN_MAX; y++)
+												for (size_t y = 0; y < strlen(sep) && str_->length() < (size_t)BOT_STRLEN_MAX; y++)
 												{
 													str_->push_back(sep[y]);
 												}
@@ -3221,19 +3208,19 @@ sint bot_sprintfs(std::string* str_, bool clear_str, c_char* fstr, ...)
 									{
 										std::vector<ulint>* fvec = va_arg(args, std::vector<ulint>*);
 
-										for (uint x = 0; x < fvec->size(); x++)
+										for (size_t x = 0; x < fvec->size(); x++)
 										{
 											_char ci[21]{ 0 };
 											sint xc = snprintf(ci, 21, fspecs[siz].c_str(), fvec->at(x));
 											xc = bot_strchk(ci, 21);
 
-											for (sloc = 0; (sint)sloc < xc && str_->length() < (uint)BOT_STRLEN_MAX; sloc++)
+											for (sloc = 0; (sint)sloc < xc && str_->length() < (size_t)BOT_STRLEN_MAX; sloc++)
 											{
 												str_->push_back(ci[sloc]);
 											}
-											if (slen)
+											if (slen && x < (fvec->size() - 1))
 											{
-												for (uint y = 0; y < strlen(sep) && str_->length() < (uint)BOT_STRLEN_MAX; y++)
+												for (size_t y = 0; y < strlen(sep) && str_->length() < (size_t)BOT_STRLEN_MAX; y++)
 												{
 													str_->push_back(sep[y]);
 												}
@@ -3244,19 +3231,19 @@ sint bot_sprintfs(std::string* str_, bool clear_str, c_char* fstr, ...)
 									{
 										std::vector<ullint>* fvec = va_arg(args, std::vector<ullint>*);
 
-										for (uint x = 0; x < fvec->size(); x++)
+										for (size_t x = 0; x < fvec->size(); x++)
 										{
 											_char ci[21]{ 0 };
 											sint xc = snprintf(ci, 21, fspecs[siz].c_str(), fvec->at(x));
 											xc = bot_strchk(ci, 21);
 
-											for (sloc = 0; (sint)sloc < xc && str_->length() < (uint)BOT_STRLEN_MAX; sloc++)
+											for (sloc = 0; (sint)sloc < xc && str_->length() < (size_t)BOT_STRLEN_MAX; sloc++)
 											{
 												str_->push_back(ci[sloc]);
 											}
-											if (slen)
+											if (slen && x < (fvec->size() - 1))
 											{
-												for (uint y = 0; y < strlen(sep) && str_->length() < (uint)BOT_STRLEN_MAX; y++)
+												for (size_t y = 0; y < strlen(sep) && str_->length() < (size_t)BOT_STRLEN_MAX; y++)
 												{
 													str_->push_back(sep[y]);
 												}
@@ -3270,23 +3257,23 @@ sint bot_sprintfs(std::string* str_, bool clear_str, c_char* fstr, ...)
 								{
 									std::vector<u_char>* inv = va_arg(args, std::vector<u_char>*);
 
-									for (uint x = 0; x < inv->size(); x++)
+									for (size_t x = 0; x < inv->size(); x++)
 									{
 										const size_t usiz = (sizeof(inv->at(x)) * 2) + 1;
 
-										if (usiz + str_->length() < (uint)BOT_STRLEN_MAX)
+										if (usiz + str_->length() < (size_t)BOT_STRLEN_MAX)
 										{
 											_char ci[usiz]{ 0 };
-											sint xc = snprintf(ci, sizeof(ci), fspecs[siz].c_str(), (uint)inv->at(x));
+											sint xc = snprintf(ci, sizeof(ci), fspecs[siz].c_str(), (size_t)inv->at(x));
 											xc = bot_strchk(ci, sizeof(ci));
 
-											for (sloc = 0; ((sint)sloc < xc && str_->length() < (uint)BOT_STRLEN_MAX); sloc++)
+											for (sloc = 0; ((sint)sloc < xc && str_->length() < (size_t)BOT_STRLEN_MAX); sloc++)
 											{
 												str_->push_back(ci[sloc]);
 
-												if (slen)
+												if (slen && x < (inv->size() - 1))
 												{
-													for (uint y = 0; y < strlen(sep) && str_->length() < (uint)BOT_STRLEN_MAX; y++)
+													for (size_t y = 0; y < strlen(sep) && str_->length() < (size_t)BOT_STRLEN_MAX; y++)
 													{
 														str_->push_back(sep[y]);
 													}
@@ -3336,7 +3323,7 @@ sint bot_sprintfs(std::string* str_, bool clear_str, c_char* fstr, ...)
 	}
 	else
 	{
-		if (strsiz < (uint)BOT_STRLEN_MAX)
+		if (strsiz < (size_t)BOT_STRLEN_MAX)
 		{
 			str_->append(fstr);
 		}
@@ -3549,33 +3536,10 @@ sint machine::LITEBot(carr_256 *ncar_, bool do_start_up)
 
 	/*if (do_start_up)
 	{
-	sint xc = ProcVINs(2, BOT_MOD_PATH, "error032418", ".txt", "27", "04", "03/25/2018", "237", "08");
-	xc = ProcVINs(3, BOT_MOD_PATH, "error032418", ".txt", "27", "04", "03/25/2018", "237", "03/25/2018");
-	xc = ProcErrLog(3, BOT_MOD_PATH, "error032418", ".txt", "27", "04", "03/25/2018", "237", "03/24/2018");
-
-		if (xc)
-		{
-			sint e = -1;
-		}
+	
 	}*/
 
-	//TINFO tts(0, ptn.c_str(), NULL, 0);
-	//tts.lid = lid;
-	//tts.fin = (sint)BOT_THR_RUN;
-	//tts.t_I = std::chrono::steady_clock::now();
-	//sint xc = PushToVec(&tts, MTX_TTS, true, true, false);
-
-	//std::chrono::steady_clock::time_point tI = std::chrono::steady_clock::now();
-	//sint xc = BOTFindHomeDir();
-	//std::chrono::steady_clock::time_point tII = std::chrono::steady_clock::now();
-	//std::chrono::duration<slint, std::milli> durI = std::chrono::duration_cast<std::chrono::duration<slint, std::milli>>(tII - tI);
-	//tI = std::chrono::steady_clock::now();
 	xc = BOTFindHomeDir();
-	//tII = std::chrono::steady_clock::now();
-	//std::chrono::duration<slint, std::milli> durII = std::chrono::duration_cast<std::chrono::duration<slint, std::milli>>(tII - tI);
-	//carr_128 ncar;
-	//rc = bot_sprintf(ncar.carr, ncar.siz, "BOTFindHomeDir() eta = %li | BOTInitFDir(%u) eta = %li", (slint)durI.count(), (uint)1, (slint)durII.count());
-	//rc = BotOut(ncar.carr);
 
 	if (xc)
 	{
@@ -3616,7 +3580,7 @@ sint machine::LockReq()
 #if BOT_FILE_TLOCK > 0
 	for (p = pthread_mutex_trylock(&req_mtx.mtx); p != 0; p = pthread_mutex_trylock(&req_mtx.mtx))
 	{
-		sllint rst = nsRest(BOT_REQREST, true);
+		sllint rst = nsRest((sllint)BOT_REQREST, true);
 	}
 #else
 	p = pthread_mutex_lock(&req_mtx.mtx);
@@ -6209,6 +6173,7 @@ sint machine::ClearVecEle(sint g_opt, sint ele, bool is_meta)
 				case MTX_FO:
 				{
 					ret = vtool.CEFV(&fileo_vec.d_vec, ele);
+					fileo_vec.d_vec[ele].FreeDat();
 					sint cl = vtool.CLNV(&fileo_vec.d_vec);
 
 					if (ret > -1)
@@ -6978,12 +6943,14 @@ sint machine::LogPut(c_char* msg_, sint option)
 			{
 				str.append("[Q]");
 				str.append(msg_);
+				str.push_back('\n');
 				u_logs[uc].log_q.push_back(str);
 			}
 			return 0;
 		}
 
 		str.append(msg_);
+		str.push_back('\n');
 		u_logs[uc].log_q.push_back(str);
 		BOT_LOGDET_M Current_m(nam.carr, dat.carr, option);
 		xc = GetInVec(&Current_m, MTX_LOG);
@@ -7030,12 +6997,14 @@ sint machine::LogPut(c_char* msg_, sint option)
 			{
 				str.append("[Q]");
 				str.append(msg_);
+				str.push_back('\n');
 				u_logs[uc].log_q.push_back(str);
 			}
 			return 0;
 		}
 
 		str.append(msg_);
+		str.push_back('\n');
 		u_logs[uc].log_q.push_back(str);
 		BOT_LOGDET_M Current_m(nam.carr, dat.carr, option);
 		xc = GetInVec(&Current_m, MTX_LOG);
@@ -7189,8 +7158,7 @@ sint machine::Command(std::vector<std::string> *vec_)
 
 					if (!strcmp(astr.c_str(), bstr.c_str()))
 					{
-						
-						carr_512 xcar;
+						carr_1024 xcar;
 						carr_128 ncar;
 						sint oc = bot_sprintf(ncar.carr, ncar.siz, "%i %s", vec[x].cmd_id, vec[x].cmd.c_str());
 
@@ -7199,14 +7167,12 @@ sint machine::Command(std::vector<std::string> *vec_)
 						case 1:
 						{
 							oc = bot_sprintf(xcar.carr, xcar.siz, "%s" \
-								"\nusage: /#quit" \
 								"\nquit program.", ncar.carr);
 							break;
 						}
 						case 2:
 						{
 							oc = bot_sprintf(xcar.carr, xcar.siz, "%s" \
-								"\nusage: /#login [a] [b]" \
 								"\na: login name" \
 								"\nb: password" \
 								"\nSpace separated login", ncar.carr);
@@ -7223,14 +7189,12 @@ sint machine::Command(std::vector<std::string> *vec_)
 						case 4:
 						{
 							oc = bot_sprintf(xcar.carr, xcar.siz, "%s" \
-								"\nusage: /#logout" \
 								"\nLogout current user", ncar.carr);
 							break;
 						}
 						case 5:
 						{
 							oc = bot_sprintf(xcar.carr, xcar.siz, "%s" \
-								"\nusage: /#debuglevel [a] [b]" \
 								"\n(optional)a: new level 0-UINT_MAX - If arg(a) set the current level. debug_level restricts debug messages by 'approximate' level within code where more basic functions debug messages are a higher level." \
 								"\n(optional)b: new mode 0-UINT_MAX - If arg(b) set the current mode 0: no debug output, 1: debug output to logs only, 2: debug to console and logs" \
 								"\nIf 0 args: show current level and mode", ncar.carr);
@@ -7238,85 +7202,51 @@ sint machine::Command(std::vector<std::string> *vec_)
 						}
 						case 6:
 						{
-							oc = bot_sprintf(xcar.carr, xcar.siz, "%s" \
-								"\nusage: " \
-								"\n", ncar.carr);
 							break;
 						}
 						case 7:
 						{
-							oc = bot_sprintf(xcar.carr, xcar.siz, "%s" \
-								"\nusage: " \
-								"\n", ncar.carr);
 							break;
 						}
 						case 8:
 						{
-							oc = bot_sprintf(xcar.carr, xcar.siz, "%s" \
-								"\nusage: " \
-								"\n", ncar.carr);
 							break;
 						}
 						case 9:
 						{
-							oc = bot_sprintf(xcar.carr, xcar.siz, "%s" \
-								"\nusage: " \
-								"\n", ncar.carr);
 							break;
 						}
 						case 10:
 						{
-							oc = bot_sprintf(xcar.carr, xcar.siz, "%s" \
-								"\nusage: " \
-								"\n", ncar.carr);
 							break;
 						}
 						case 11:
 						{
-							oc = bot_sprintf(xcar.carr, xcar.siz, "%s" \
-								"\nusage: " \
-								"\n", ncar.carr);
 							break;
 						}
 						case 12:
 						{
-							oc = bot_sprintf(xcar.carr, xcar.siz, "%s" \
-								"\nusage: " \
-								"\n", ncar.carr);
 							break;
 						}
 						case 13:
 						{
-							oc = bot_sprintf(xcar.carr, xcar.siz, "%s" \
-								"\nusage: " \
-								"\n", ncar.carr);
 							break;
 						}
 						case 14:
 						{
-							oc = bot_sprintf(xcar.carr, xcar.siz, "%s" \
-								"\nusage: " \
-								"\n", ncar.carr);
 							break;
 						}
 						case 15:
 						{
-							oc = bot_sprintf(xcar.carr, xcar.siz, "%s" \
-								"\nusage: " \
-								"\n", ncar.carr);
 							break;
 						}
 						case 16:
 						{
-							oc = bot_sprintf(xcar.carr, xcar.siz, "%s" \
-								"\nusage: " \
-								"\n", ncar.carr);
 							break;
 						}
 						case 17:
 						{
 							oc = bot_sprintf(xcar.carr, xcar.siz, "%s" \
-								"\nusage: /#addcommand [a] [b]" \
 								"\na: command name" \
 								"\nb: privlege level 0-UINT_MAX" \
 								"\nAdd a command to the db", ncar.carr);
@@ -7324,30 +7254,18 @@ sint machine::Command(std::vector<std::string> *vec_)
 						}
 						case 18:
 						{
-							oc = bot_sprintf(xcar.carr, xcar.siz, "%s" \
-								"\nusage: " \
-								"\n", ncar.carr);
 							break;
 						}
 						case 19:
 						{
-							oc = bot_sprintf(xcar.carr, xcar.siz, "%s" \
-								"\nusage: " \
-								"\n", ncar.carr);
 							break;
 						}
 						case 20:
 						{
-							oc = bot_sprintf(xcar.carr, xcar.siz, "%s" \
-								"\nusage: " \
-								"\n", ncar.carr);
 							break;
 						}
 						case 21:
 						{
-							oc = bot_sprintf(xcar.carr, xcar.siz, "%s" \
-								"\nusage: " \
-								"\n", ncar.carr);
 							break;
 						}
 						case 96:
@@ -7358,7 +7276,6 @@ sint machine::Command(std::vector<std::string> *vec_)
 						case 98:
 						{
 							oc = bot_sprintf(xcar.carr, xcar.siz, "%s" \
-								"\nusage: /#addscript [a] [b] [c] [d] [e]" \
 								"\na: mode" \
 								"\nb: encoding" \
 								"\nc: name" \
@@ -7370,7 +7287,6 @@ sint machine::Command(std::vector<std::string> *vec_)
 						case 99:
 						{
 							oc = bot_sprintf(xcar.carr, xcar.siz, "%s" \
-								"\nusage: /#runscript [a]" \
 								"\na: script name or id" \
 								"\nAttempt to run script with a call to system(c_char*)", ncar.carr);
 							break;
@@ -7378,15 +7294,15 @@ sint machine::Command(std::vector<std::string> *vec_)
 						case 100:
 						{
 							oc = bot_sprintf(xcar.carr, xcar.siz, "%s" \
-								"\nusage: /#gips"
 								"\nGet host i.p. addresses", ncar.carr);
 							break;
 						}
 						case 101:
 						{
-							oc = bot_sprintf(xcar.carr, xcar.siz, "%s" \
-								"\nusage: " \
-								"\n", ncar.carr);
+							break;
+						}
+						case 1000:
+						{
 							break;
 						}
 						default:
@@ -7444,7 +7360,6 @@ sint machine::Command(std::vector<std::string> *vec_)
 		{
 			carr_512 xcar;
 			sint oc = bot_sprintf(xcar.carr, xcar.siz,
-				"\nusage: /#debuglevel [a] [b]" \
 				"\n(optional)a: new level 0-UINT_MAX - If arg(a) set the current level. debug_level restricts debug messages by 'approximate' level within code where more basic functions debug messages are a higher level." \
 				"\n(optional)b: new mode 0-UINT_MAX - If arg(b) set the current mode 0: no debug output, 1: debug output to logs only, 2: debug output to console and logs" \
 				"\nIf 0 args: show current level and mode");
@@ -7521,15 +7436,15 @@ sint machine::Command(std::vector<std::string> *vec_)
 
 					if (!resp.empty())
 					{
-						if (resp.length() > 1024)
+						if (resp.length() > 999)
 						{
-							xc = bot_sprintf(xcar.carr, xcar.siz, "Length exceeds 1024 characters");
+							xc = bot_sprintf(xcar.carr, xcar.siz, "Length exceeds 999 characters");
 						}
 						else if (!strcmp(Uppercase(resp.c_str()).c_str(), "EXIT"))
 						{
 							return 0;
 						}
-						else
+						else if (resp.length() > 2)
 						{
 							if (na < 21)
 							{
@@ -7538,11 +7453,11 @@ sint machine::Command(std::vector<std::string> *vec_)
 								xc = bot_sprintf(xcar.carr, xcar.siz, "Required arg(%i): [desc] || empty to continue || EXIT to exit", na + 1);
 							}
 						}
+						else {}
 					}
 					resp.clear();
 				}
 				
-				nargs.push_back(resp);
 				xc = bot_sprintf(xcar.carr, xcar.siz, "Optional arg(%i): [desc] || empty to continue || EXIT to exit", na + no + 1);
 
 				while (strlen(xcar.carr))
@@ -7558,15 +7473,15 @@ sint machine::Command(std::vector<std::string> *vec_)
 
 					if (!resp.empty())
 					{
-						if (resp.length() > 1024)
+						if (resp.length() > 999)
 						{
-							xc = bot_sprintf(xcar.carr, xcar.siz, "Length exceeds 1024 characters");
+							xc = bot_sprintf(xcar.carr, xcar.siz, "Length exceeds 999 characters");
 						}
 						else if (!strcmp(Uppercase(resp.c_str()).c_str(), "EXIT"))
 						{
 							return 0;
 						}
-						else
+						else if (resp.length() > 2)
 						{
 							if (no + na < 41)
 							{
@@ -7575,11 +7490,11 @@ sint machine::Command(std::vector<std::string> *vec_)
 								xc = bot_sprintf(xcar.carr, xcar.siz, "Optional arg(%i): [desc] || empty to continue || EXIT to exit", na + no + 1);
 							}
 						}
+						else {}
 					}
 					resp.clear();
 				}
 
-				nargs.push_back(resp);
 				xc = bot_sprintf(xcar.carr, xcar.siz, "Description: [desc] || empty to continue || EXIT to exit");
 
 				while (strlen(xcar.carr))
@@ -7595,18 +7510,19 @@ sint machine::Command(std::vector<std::string> *vec_)
 
 					if (!resp.empty())
 					{
-						if (resp.length() > 1024)
+						if (resp.length() > 999)
 						{
-							xc = bot_sprintf(xcar.carr, xcar.siz, "Length exceeds 1024 characters");
+							xc = bot_sprintf(xcar.carr, xcar.siz, "Length exceeds 999 characters");
 						}
 						else if (!strcmp(Uppercase(resp.c_str()).c_str(), "EXIT"))
 						{
 							return 0;
 						}
-						else
+						else if (resp.length() > 2)
 						{
 							nargs.push_back(resp);
 						}
+						else {}
 					}
 					resp.clear();
 				}
@@ -7622,76 +7538,236 @@ sint machine::Command(std::vector<std::string> *vec_)
 
 				if (xc > -1)
 				{
-					BOT_FILE_M hfile("litebot", ".cpp", BOTPathS().c_str(), BOT_FILE_W, BOT_F_CON, -1, lid);
+					BOT_FILE_M hfile("litebot", ".cpp", BOTPathS(BOT_MOD_NM).c_str(), BOT_FILE_INS, BOT_F_CON, -1, lid);
 					ox = -1;
 					xc = BOTOpenFile(&hfile, &ox, false, false, true);
 
-					if (xc > -1)
+					if (xc < 0)
 					{
-						BOT_CRS crs(0, lid);
-						carr_32 ccar("sint machine::Command(std::");
-						xc = BOTFindInFile(&hfile, 0, 0, ccar.carr, bot_strlen(ccar.carr));
+						BOT_FILE_M xfile("litebot", ".cpp", BOTPathS().c_str(), BOT_FILE_INS, BOT_F_CON, -1, lid);
+						sint nx = -1;
+						xc = BOTOpenFile(&xfile, &nx, false, false, true);
 
 						if (xc > -1)
 						{
+							xc = BOTSaveFile(&xfile, BOTPathS(BOT_MOD_NM).c_str());
+
+							if (!nx)
+							{
+								nx = BOTCloseFile(&xfile, true, false, true);
+							}
+
+							hfile.lid = -1;
+							xc = BOTOpenFile(&hfile, &ox, false, false, true);
+						}
+					}
+
+					if (xc > -1)
+					{
+						carr_32 ccar("\nsint machine::Command(std::");
+						xc = BOTFindInFile(&hfile, true, 0, 0, ccar.carr, bot_strlen(ccar.carr));
+
+						if (xc > -1)
+						{
+							BOT_CRS crs(0, lid);
 							xc = hfile.GetCrs(&crs);
-							xc = bot_sprintf(ccar.carr, ccar.siz, "case 3:");
-							xc = BOTFindInFile(&hfile, crs.t, hfile.fst.e_loc, ccar.carr, bot_strlen(ccar.carr));
+							xc = bot_sprintf(ccar.carr, ccar.siz, "\n\tswitch (Command.cmd_id)\n\t{");
+							xc = BOTFindInFile(&hfile, true, crs.t, hfile.fst.e_loc, ccar.carr, bot_strlen(ccar.carr));
+							xc = hfile.GetCrs(&crs);
+							carr_16 lcara("\n\tdefault:\n\t{");
+							xc = BOTFindInFile(&hfile, true, crs.t, hfile.fst.e_loc, lcara.carr, bot_strlen(lcara.carr));
 
 							if (xc > -1)
 							{
-								sint rc = 4;
+								sint nx = (sint)atoi(vec_->at(2).c_str());
+								xc = bot_sprintf(ccar.carr, ccar.siz, "\tcase %i:", nx);
+								BOT_CRS lcrsa(0, lid);
+								xc = hfile.GetCrs(&lcrsa);
+								sint ct = 0;
 
-								while (rc > -1)
-								{								
-									xc = hfile.GetCrs(&crs);
-									rc++;
-									xc = bot_sprintf(ccar.carr, ccar.siz, "case %i:", rc);
-									xc = BOTFindInFile(&hfile, crs.t, hfile.fst.e_loc, ccar.carr, bot_strlen(ccar.carr));
+								while (ct < 2)
+								{
+									sint rc = 4;
 
-									if (xc > -1)
+									while (rc > -1 && rc < 1000)
 									{
-										xc = hfile.GetCrs(&crs);
-										sint nx = (sint)atoi(vec_->at(2).c_str());
-
-										if (rc == nx)
+										if (rc > 4)
 										{
-											xc = bot_sprintf(ccar.carr, ccar.siz, "{");
-											BOT_CRS ncs(0, lid);
-											xc = BOTFindInFile(&hfile, crs.t, hfile.fst.e_loc, ccar.carr, bot_strlen(ccar.carr));
-											xc = hfile.GetCrs(&ncs);
-											std::string fstr;
-											xc = bot_sprintf(ccar.carr, ccar.siz, " ");
-											BOT_CRS mkc(0, lid);
-
-											for (xc = BOTFindInFile(&hfile, crs.t + 1, ncs.f, ccar.carr, bot_strlen(ccar.carr)); xc > -1; xc = BOTFindInFile(&hfile, mkc.t + 1, ncs.f, ccar.carr, bot_strlen(ccar.carr)))
-											{
-												xc = hfile.GetCrs(&mkc);
-												fstr.append(ccar.carr);
-											}
-
-											xc = bot_sprintf(ccar.carr, ccar.siz, "\t");
-
-											for (xc = BOTFindInFile(&hfile, crs.t + 1, ncs.f, ccar.carr, bot_strlen(ccar.carr)); xc > -1; xc = BOTFindInFile(&hfile, mkc.t + 1, ncs.f, ccar.carr, bot_strlen(ccar.carr)))
-											{
-												xc = hfile.GetCrs(&mkc);
-												fstr.append(ccar.carr);
-											}
-
-											//carr_4 scar("\n");
-											//std::vector<std::string> xvec;
-											//rc = ArgSep(&xvec, hfile.datp, &scar);
-
-											rc = -1;
+											xc = hfile.GetCrs(&crs);
 										}
-										else if (rc > nx)
+										rc++;
+										xc = bot_sprintf(ccar.carr, ccar.siz, "case %i:", rc);
+										xc = BOTFindInFile(&hfile, true, crs.t, lcrsa.f, ccar.carr, bot_strlen(ccar.carr));
+
+										if (xc > -1)
 										{
+											xc = hfile.GetCrs(&crs);
 
-											rc = -1;
+											if (rc >= nx)
+											{
+												xc = bot_sprintf(ccar.carr, ccar.siz, "{");
+												BOT_CRS ncs(0, lid);
+												xc = BOTFindInFile(&hfile, true, crs.t, lcrsa.f, ccar.carr, bot_strlen(ccar.carr));
+												xc = hfile.GetCrs(&ncs);
+												std::string fstr;
+												xc = bot_sprintf(ccar.carr, ccar.siz, " ");
+												BOT_CRS mkc(0, lid);
+
+												for (xc = BOTFindInFile(&hfile, true, crs.t + 1, ncs.f, ccar.carr, bot_strlen(ccar.carr)); xc > -1 && fstr.length() < 1024; xc = BOTFindInFile(&hfile, true, mkc.t + 1, ncs.f, ccar.carr, bot_strlen(ccar.carr)))
+												{
+													xc = hfile.GetCrs(&mkc);
+													fstr.append(ccar.carr);
+												}
+
+												xc = bot_sprintf(ccar.carr, ccar.siz, "\t");
+
+												for (xc = BOTFindInFile(&hfile, true, crs.t + 1, ncs.f, ccar.carr, bot_strlen(ccar.carr)); xc > -1 && fstr.length() < 1024; xc = BOTFindInFile(&hfile, true, mkc.t + 1, ncs.f, ccar.carr, bot_strlen(ccar.carr)))
+												{
+													xc = hfile.GetCrs(&mkc);
+													fstr.append(ccar.carr);
+												}
+
+												xc = bot_sprintf(ccar.carr, ccar.siz, "\n");
+												xc = BOTFindInFile(&hfile, true, ncs.t + 1, lcrsa.f, ccar.carr, bot_strlen(ccar.carr));
+
+												if (xc > -1)
+												{
+													if (rc > nx)
+													{
+														std::string scar("case ");
+														scar.append(vec_->at(2).c_str());
+														scar.append(":\n");
+														scar.append(fstr.c_str());
+														scar.append("{\n");
+														scar.append(fstr.c_str());
+
+														if (ct < 1)
+														{
+															scar.append("\toc = bot_sprintf(xcar.carr, xcar.siz, \"%s\"");
+															carr_1024 ocar;
+
+															for (size_t c = 0; c < nargs.size(); c++)
+															{
+																if (c == nargs.size() - 1)
+																{
+																	xc = bot_sprintf(ocar.carr, ocar.siz, " \\ \n\t\t%s\"\\n%s\"", fstr.c_str(), nargs[c].c_str());
+																}
+																else if (c < (size_t)na)
+																{
+																	xc = bot_sprintf(ocar.carr, ocar.siz, " \\ \n\t\t%s\"\\n%u: %s\"", fstr.c_str(), c + 1, nargs[c].c_str());
+																}
+																else if (c < nargs.size() - 1)
+																{
+																	xc = bot_sprintf(ocar.carr, ocar.siz, " \\ \n\t\t%s\"\\n(optional)%u: %s\"", fstr.c_str(), c + 1, nargs[c].c_str());
+																}
+																else {}
+																scar.append(ocar.carr);
+															}
+															scar.append(", ncar.carr);\n");
+														}
+														else
+														{
+															carr_1024 ocar;
+															xc = bot_sprintf(ocar.carr, ocar.siz, "\tif (vec_->size() > %u)\n%s\t{\n%s\t\tif (debug_lvl >= 1000 && debug_m)\n%s\t\t{\n%s\t\t\tsint oc = SOutput(\"Found BOTCOMMAND id %s\", 2);\n%s\t\t}\n%s\t\t/*CMD*/\n%s\t}\n%s\telse\n%s\t{\n%s\t\toc = bot_sprintf(xcar.carr, xcar.siz, \"%s\"", na, fstr.c_str(), fstr.c_str(), fstr.c_str(), fstr.c_str(), vec_->at(2).c_str(), fstr.c_str(), fstr.c_str(), fstr.c_str(), fstr.c_str(), fstr.c_str(), fstr.c_str(), "%s");
+															scar.append(ocar.carr);
+
+															for (size_t c = 0; c < nargs.size(); c++)
+															{
+																if (c == nargs.size() - 1)
+																{
+																	xc = bot_sprintf(ocar.carr, ocar.siz, " \\ \n\t\t\t%s\"\\n%s\"", fstr.c_str(), nargs[c].c_str());
+																}
+																else if (c <= (size_t)na)
+																{
+																	xc = bot_sprintf(ocar.carr, ocar.siz, " \\ \n\t\t\t%s\"\\n%u: %s\"", fstr.c_str(), c + 1, nargs[c].c_str());
+																}
+																else if (c < nargs.size() - 1)
+																{
+																	xc = bot_sprintf(ocar.carr, ocar.siz, " \\ \n\t\t\t%s\"\\n(optional)%u: %s\"", fstr.c_str(), c + 1, nargs[c].c_str());
+																}
+																else {}
+																scar.append(ocar.carr);
+															}
+															scar.append(", ncar.carr);\n");
+															scar.append(fstr.c_str());
+															scar.append("\t}\n");
+														}
+
+														scar.append(fstr.c_str());
+														scar.append("\tbreak;\n");
+														scar.append(fstr.c_str());
+														scar.append("}\n");
+														scar.append(fstr.c_str());
+														xc = BOTFileOUT(&hfile, crs.f, true, BOT_RTV_STR, &scar, BOT_RTV_MAX);
+													}
+													else
+													{
+														std::string scar(ccar.carr);
+														scar.append(fstr.c_str());
+
+														if (ct < 1)
+														{
+															scar.append("\toc = bot_sprintf(xcar.carr, xcar.siz, \"%s\"");
+															carr_1024 ocar;
+
+															for (size_t c = 0; c < nargs.size(); c++)
+															{
+																if (c == nargs.size() - 1)
+																{
+																	xc = bot_sprintf(ocar.carr, ocar.siz, " \\ \n\t\t%s\"\\n%s\"", fstr.c_str(), nargs[c].c_str());
+																}
+																else if (c <= (size_t)na)
+																{
+																	xc = bot_sprintf(ocar.carr, ocar.siz, " \\ \n\t\t%s\"\\n%u: %s\"", fstr.c_str(), c + 1, nargs[c].c_str());
+																}
+																else if (c < nargs.size() - 1)
+																{
+																	xc = bot_sprintf(ocar.carr, ocar.siz, " \\ \n\t\t%s\"\\n(optional)%u: %s\"", fstr.c_str(), c + 1, nargs[c].c_str());
+																}
+																else {}
+																scar.append(ocar.carr);
+															}
+															scar.append(", ncar.carr);");
+														}
+														else
+														{
+															carr_1024 ocar;
+															xc = bot_sprintf(ocar.carr, ocar.siz, "\tif (vec_->size() > %u)\n%s\t{\n%s\t\tif (debug_lvl >= 1000 && debug_m)\n%s\t\t{\n%s\t\t\tsint oc = SOutput(\"Found BOTCOMMAND id %s\", 2);\n%s\t\t}\n%s\t\t/*CMD*/\n%s\t}\n%s\telse\n%s\t{\n%s\t\toc = bot_sprintf(xcar.carr, xcar.siz, \"%s\"", nargs.size() - 1, fstr.c_str(), fstr.c_str(), fstr.c_str(), fstr.c_str(), vec_->at(2).c_str(), fstr.c_str(), fstr.c_str(), fstr.c_str(), fstr.c_str(), fstr.c_str(), fstr.c_str(), "%s");
+															scar.append(ocar.carr);
+
+															for (size_t c = 0; c < nargs.size(); c++)
+															{
+																if (c == nargs.size() - 1)
+																{
+																	xc = bot_sprintf(ocar.carr, ocar.siz, " \\ \n\t\t\t%s\"\\n%s\"", fstr.c_str(), nargs[c].c_str());
+																}
+																else if (c <= (size_t)na)
+																{
+																	xc = bot_sprintf(ocar.carr, ocar.siz, " \\ \n\t\t\t%s\"\\n%u: %s\"", fstr.c_str(), c + 1, nargs[c].c_str());
+																}
+																else if (c < nargs.size() - 1)
+																{
+																	xc = bot_sprintf(ocar.carr, ocar.siz, " \\ \n\t\t\t%s\"\\n(optional)%u: %s\"", fstr.c_str(), c + 1, nargs[c].c_str());
+																}
+																else {}
+																scar.append(ocar.carr);
+															}
+															scar.append(", ncar.carr);\n");
+															scar.append(fstr.c_str());
+															scar.append("\t}\n");
+														}
+														xc = BOTFileOUT(&hfile, ncs.f + 1, true, BOT_RTV_STR, &scar, BOT_RTV_MAX);
+													}
+													xc = hfile.GetCrs(&crs);
+												}
+												rc = -1;
+											}
 										}
-										else {}
 									}
+									ct++;
+
 								}
+								xc = BOTSaveFile(&hfile, 0, true);
 							}
 						}
 						if (!ox)
@@ -7708,7 +7784,6 @@ sint machine::Command(std::vector<std::string> *vec_)
 		{
 			carr_128 xcar;
 			sint oc = bot_sprintf(xcar.carr, xcar.siz,
-				"\nusage: /#addcommand [a] [b] [c] [d]" \
 				"\na: command name" \
 				"\nb: id 0-UINT_MAX" \
 				"\nc: privlege level 0-UINT_MAX" \
@@ -7727,7 +7802,6 @@ sint machine::Command(std::vector<std::string> *vec_)
 		}
 		carr_48 xcar;
 		sint oc = bot_sprintf(xcar.carr, xcar.siz,
-			"\nusage: /#readfile [a]" \
 			"\n!DISABLED!");
 		oc = Output(xcar.carr, 2, 0);
 		xc = 0;
@@ -7741,7 +7815,7 @@ sint machine::Command(std::vector<std::string> *vec_)
 		}
 		if (vec_->size() == 6)
 		{
-			BOT_FILE_M scp(vec_->at(3).c_str(), vec_->at(4).c_str(), vec_->at(5).c_str(), BOT_FILE_APPEND, BOT_F_CON);
+			BOT_FILE_M scp(vec_->at(3).c_str(), vec_->at(4).c_str(), vec_->at(5).c_str(), BOT_FILE_APND, BOT_F_CON);
 			sint ox = -1;
 			sint rc = BOTOpenFile(&scp, &ox);
 
@@ -7841,7 +7915,6 @@ sint machine::Command(std::vector<std::string> *vec_)
 		{
 			carr_192 xcar;
 			sint oc = bot_sprintf(xcar.carr, xcar.siz,
-				"\nusage: /#addscript [a] [b] [c] [d] [e]" \
 				"\na: mode" \
 				"\nb: encoding" \
 				"\nc: name" \
@@ -7891,7 +7964,6 @@ sint machine::Command(std::vector<std::string> *vec_)
 		{
 			carr_192 xcar;
 			sint oc = bot_sprintf(xcar.carr, xcar.siz,
-				"\nusage: /#runscript [a]" \
 				"\na: script name or id" \
 				"\nAttempt to run script with a call to system(c_char*)");
 			oc = Output(xcar.carr, 2, 0);
@@ -7908,6 +7980,10 @@ sint machine::Command(std::vector<std::string> *vec_)
 		sint rc = InitThread(&tts, &xc);
 		break;
 	}
+	case 1000:
+	{
+		break;
+	}
 	default:
 	{
 		return 1;
@@ -7915,6 +7991,268 @@ sint machine::Command(std::vector<std::string> *vec_)
 	}
 	}
 	return 0;
+}
+
+sint machine::ArgSep(std::vector <std::string>* ret_, c_char* val, size_t f, size_t t, carr_4* sep)
+{
+	if (!ret_ || !val || !sep)
+	{
+		return -1;
+	}
+	sint ret = bot_cstrchk(val);
+	ret = bot_strchk(sep->carr);
+	size_t sl = bot_strlen(sep->carr);
+	size_t vl = bot_cstrlen(val);
+	ret = -1;
+
+	if (sl && vl && sl < (size_t)BOT_STRLEN_MAX && vl < (size_t)BOT_STRLEN_MAX)
+	{
+		slint lign = -1;
+		slint lit = -1;
+		slint litloc = 0;
+		std::vector<size_t> ord;
+		std::vector<size_t> ordl;
+		std::string rstr;
+		size_t mk = 0;
+		_char ig = '\\';
+
+		for (size_t x = f; x < t + 1; x++)
+		{
+			if (lit > -1)
+			{
+				for (size_t xl = 0; xl < nrts_lit.size(); xl++)
+				{
+					if (!memcmp((void*)&nrts_lit[xl], (void*)&val[x], sizeof(_char)))
+					{
+						if (memcmp((void*)&ig, (void*)&val[x - 1], sizeof(_char)))
+						{
+							if (lit == (slint)xl)
+							{
+								lit = -1;
+								litloc = (slint)x;
+							}
+							xl = nrts_lit.size();
+						}
+						else
+						{
+							if (x > 1)
+							{
+								if (!memcmp((void*)&ig, (void*)&val[x - 2], sizeof(_char)))
+								{
+									if (lit == (slint)xl)
+									{
+										lit = -1;
+										litloc = (slint)x;
+									}
+									xl = nrts_lit.size();
+								}
+							}
+						}
+					}
+				}
+			}
+			else
+			{
+				if (lign > -1)
+				{
+					for (size_t yl = 0; yl < nrts_lign_.size(); yl++)
+					{
+						if (!memcmp((void*)&nrts_lign_[yl][0], (void*)&val[x], sizeof(_char)))
+						{
+							size_t zl = 1;
+							size_t ll = bot_cstrlen(nrts_lign_[yl]);
+
+							while (zl < ll && zl < vl)
+							{
+								if (memcmp((void*)&nrts_lign_[yl][zl], (void*)&val[x + zl], sizeof(_char)))
+								{
+									zl = ll;
+								}
+								zl++;
+							}
+
+							if (zl == ll)
+							{
+								if (lign == (slint)yl)
+								{
+									lign = -1;
+									yl = nrts_lign_.size();
+								}
+							}
+						}
+					}
+				}
+				if (lign < 0)
+				{
+					for (size_t xl = 0; xl < nrts_lit.size(); xl++)
+					{
+						if (!memcmp((void*)&nrts_lit[xl], (void*)&val[x], sizeof(_char)))
+						{
+							lit = (slint)xl;
+							litloc = (slint)x;
+							xl = nrts_lit.size();
+						}
+					}
+					if (lit < 0)
+					{
+						if (lign < 0)
+						{
+							for (size_t yl = 0; yl < nrts_lign.size(); yl++)
+							{
+								if (!memcmp((void*)&nrts_lign[yl][0], (void*)&val[x], sizeof(_char)))
+								{
+									size_t zl = 1;
+									size_t ll = bot_cstrlen(nrts_lign[yl]);
+
+									while (zl < ll && zl < vl)
+									{
+										if (memcmp((void*)&nrts_lign[yl][zl], (void*)&val[x + zl], sizeof(_char)))
+										{
+											zl = ll;
+										}
+										zl++;
+									}
+
+									if (zl == ll)
+									{
+										lign = (slint)yl;
+										yl = nrts_lign.size();
+									}
+								}
+							}
+							if (lign < 0)
+							{
+								for (size_t xl = 0; xl < nrts_ord.size(); xl++)
+								{
+									if (!memcmp((void*)&nrts_ord[xl], (void*)&val[x], sizeof(_char)))
+									{
+										ord.push_back(xl);
+										ordl.push_back(x);
+										xl = nrts_ord.size();
+									}
+								}
+								if (!ord.empty())
+								{
+									for (size_t xl = 0; xl < nrts_ord_.size(); xl++)
+									{
+										if (!memcmp((void*)&nrts_ord_[xl], (void*)&val[x], sizeof(_char)))
+										{
+											if (ord[ord.size() - 1] == xl)
+											{
+												ord.pop_back();
+												ordl.pop_back();
+											}
+											xl = nrts_ord_.size();
+										}
+									}
+								}
+								else
+								{
+									if (!memcmp((void*)&val[x], (void*)&sep->carr[0], sizeof(_char)))
+									{
+										if (memcmp((void*)&ig, (void*)&val[x - 1], sizeof(_char)))
+										{
+											if (x > 1)
+											{
+												if (memcmp((void*)&ig, (void*)&val[x - 2], sizeof(_char)))
+												{
+													size_t y = 1;
+
+													while (y < sl && x + y < vl)
+													{
+														if (memcmp((void*)&val[x + y], &sep->carr[y], sizeof(_char)))
+														{
+															y = sl;
+														}
+														y++;
+													}
+
+													if (y == sl)
+													{
+														for (; mk < x; mk++)
+														{
+															rstr.push_back(val[mk]);
+														}
+														x += sl;
+														mk = x;
+														ret_->push_back(rstr);
+														rstr.clear();
+													}
+												}
+											}
+											else
+											{
+												size_t y = 1;
+
+												while (y < sl && x + y < vl)
+												{
+													if (memcmp((void*)&val[x + y], &sep->carr[y], sizeof(_char)))
+													{
+														y = sl;
+													}
+													y++;
+												}
+
+												if (y == sl)
+												{
+													for (; mk < x; mk++)
+													{
+														rstr.push_back(val[mk]);
+													}
+													x += sl;
+													mk = x;
+													ret_->push_back(rstr);
+													rstr.clear();
+												}
+											}
+										}
+									}
+								}
+							}
+						}
+					}
+				}
+			}
+		}
+
+		for (; mk < vl; mk++)
+		{
+			rstr.push_back(val[mk]);
+		}
+		if (!rstr.empty())
+		{
+			ret_->push_back(rstr);
+		}
+		if (lit > -1)
+		{
+			carr_64 ncar;
+			ret = bot_sprintf(ncar.carr, ncar.siz, "Open literal '%c' at: %u", nrts_lit[lit], (uint)litloc);
+			std::string rstr(ncar.carr);
+			ret_->push_back(rstr);
+			ret = -1;
+		}
+		else if (!ord.empty())
+		{
+			carr_64 ncar;
+			ret = bot_sprintf(ncar.carr, ncar.siz, "Open bracket '%c' at: %u", nrts_ord[ord[0]], (uint)ordl[0]);
+			std::string rstr(ncar.carr);
+			ret_->push_back(rstr);
+			ret = -1;
+		}
+		else
+		{
+			ret = 0;
+		}
+	}
+	else
+	{
+		carr_64 ncar;
+		ret = bot_sprintf(ncar.carr, ncar.siz, "Bad Size: sl: %u, vl: %u", (uint)sl, (uint)vl);
+		std::string rstr(ncar.carr);
+		ret_->push_back(rstr);
+		ret = -1;
+	}
+	return ret;
 }
 
 sint machine::ArgSep(std::vector <std::string>* ret_ , c_char* val, carr_4* sep)
@@ -8394,11 +8732,26 @@ std::string machine::BOTPathS(c_char* spath_)
 	if (p > -1)
 	{
 		str.append(bot_dmap.bot_home_path.c_str());
+		p = str.find(":", 1);
+
+		if (p > (sint)str.length() - 2)
+		{
+			_char dmk = '\\';
+			p = str.find(dmk, p + 1);
+
+			if (p < 0)
+			{
+				str.push_back(dmk);
+			}
+			str.append(BOT_HMD);
+		}
 
 		if (spath_)
 		{
 			if (strlen(spath_) < 256)
 			{
+				_char dmk = '\\';
+				str.push_back(dmk);
 				str.append(spath_);
 			}
 		}
@@ -8458,16 +8811,9 @@ sint machine::BOTOpenDir(c_char* dest_, DIR** dir_)
 	{
 		return -1;
 	}
-
-	BOT_FILE_M xfile(dest_, "", "", 0, BOT_DIR_CON);
-	sint xc = BOTFileStats(&xfile);
-
-	if (!xc)
+	if ((*dir_ = opendir(dest_)) != NULL)
 	{
-		if ((*dir_ = opendir(dest_)) != NULL)
-		{
-			return 0;
-		}
+		return 0;
 	}
 	return -1;
 }
@@ -8477,21 +8823,22 @@ sint machine::BOTCloseDir(DIR** dir_)
 	{
 		return -1;
 	}
-
 	closedir(*dir_);
 	return 0;
 }
 sint machine::BOTReadDir(std::vector<BOT_FILE_M>* flds_, c_char* dest_)
 {
-	if (!flds_ || !dest_)
+	if (!dest_)
 	{
 		return -1;
 	}
 
+	sint ret = -1;
 	DIR* dir_ = 0;
 
-	if (!BOTOpenDir(dest_, &dir_))
+	if ((dir_ = opendir(dest_)) != NULL)
 	{
+		BOT_FILE_M xfile;
 		std::vector<std::string> cvec = BOT_NOFLD_V;
 		struct dirent* dp_ = 0;
 
@@ -8521,27 +8868,25 @@ sint machine::BOTReadDir(std::vector<BOT_FILE_M>* flds_, c_char* dest_)
 
 			if (x == cvec.size())
 			{
-				BOT_FILE_M xfile(dp_->d_name, "", dest_, 0);
+				xfile.Renew(dp_->d_name, "", dest_, 0);
+				ret = BOTFileStats(&xfile);
 
-#ifdef _WIN32
-				sint xc = BOTFileStats(&xfile, true);
-#else
-				sint xc = BOTFileStats(&xfile, true);
-#endif
-
-				if (!xc)
+				if (ret > -1)
 				{
 					if (S_ISDIR(xfile.fst.filestats.st_mode))
 					{
-						xc = vtool.AVTV(flds_, &xfile, true, true);
+						if (flds_)
+						{
+							flds_->push_back(xfile);
+						}
 					}
 				}
 			}
 		}
-		sint xc = BOTCloseDir(&dir_);
-		return xc;
+		closedir(dir_);
+		return ret;
 	}
-	return -1;
+	return ret;
 }
 sint machine::BOTFindHomeDir()
 {
@@ -8549,7 +8894,7 @@ sint machine::BOTFindHomeDir()
 	{
 		sint oc = SOutput("::BOTFindHomeDir()", 2);
 	}
-	_char dmk = '\\';
+
 	_char crf[128]{ 0 };
 	sint xc = bot_randstr(crf, 128);
 
@@ -8559,12 +8904,19 @@ sint machine::BOTFindHomeDir()
 	}
 
 	sint of = -1;
-	BOT_FILE_M hmdir(crf, "", "", 0, BOT_DIR_CON);
-	xc = BOTOpenFile(&hmdir, &of, true);
+	BOT_FILE_M ndir(crf, "", "", 0, BOT_DIR_CON);
+	xc = BOTOpenFile(&ndir, &of, true);
 
 	if (xc < 0)
 	{
 		return -1;
+	}
+	else
+	{
+		if (!of)
+		{
+			xc = BOTCloseFile(&ndir);
+		}
 	}
 
 	sint h = -1;
@@ -8572,58 +8924,44 @@ sint machine::BOTFindHomeDir()
 
 	if (p > -1)
 	{
-		for (uint x = 0; x < bot_dmap.drvs.size(); x++)
+		for (size_t x = 0; x < bot_dmap.drvs.size(); x++)
 		{
-			if (strlen(bot_dmap.drvs[x].drv.c_str()) < 256)
+			if (strlen(bot_dmap.drvs[x].drv.c_str()) < 1024)
 			{
 				BOT_FILE_M hmd(BOT_HMD, "", bot_dmap.drvs[x].drv.c_str(), 0, BOT_DIR_CON);
 				std::vector<BOT_FILE_M> ndrcs;
-				xc = vtool.AVTV(&ndrcs, &hmd, true, true);
-				uint y = 0;
-				uint z = 0;
+				ndrcs.push_back(hmd);
 
-				while (!ndrcs.empty())
+				if (!BOTReadDir(&ndrcs, BOTFileStr(&hmd).c_str()))
 				{
-					if (!BOTReadDir(&ndrcs, BOTFileStr(&ndrcs[z]).c_str()))
+					for (size_t y = 1; y < ndrcs.size(); y++)
 					{
-						for (y++; y < ndrcs.size(); y++)
+						if (!strcmp(ndrcs[y].name.c_str(), crf))
 						{
-							if (!strcmp(ndrcs[y].name.c_str(), crf))
+							bot_dmap.bot_home_path.clear();
+							bot_dmap.bot_home_path.append(ndrcs[y].path.c_str());
+							of = -1;
+							p = BOTOpenFile(&ndir, &of);
+
+							if (p > -1)
 							{
-								bot_dmap.bot_home_path.clear();
-								bot_dmap.bot_home_path.append(ndrcs[y].path.c_str());
-
-								if (!of)
-								{
-									xc = BOTCloseFile(&ndrcs[y], true, true);
-								}
-
-								if (!h)
-								{
-									p = UnlockGMutex(MTX_DMAP);
-								}
-								return 0;
+								x = bot_dmap.drvs.size();
+								xc = BOTCloseFile(&ndir, true, true);
 							}
 						}
-
-						z++;
-
-						if (z >= ndrcs.size())
+						else
 						{
-							ndrcs.clear();
+							p = BOTReadDir(&ndrcs, BOTFileStr(&ndrcs[y]).c_str());
 						}
-					}
-					else
-					{
-						ndrcs.clear();
 					}
 				}
 			}
 		}
 		if (!h)
 		{
-			p = UnlockGMutex(MTX_DMAP);
+			h = UnlockGMutex(MTX_DMAP);
 		}
+		return xc;
 	}
 	return -1;
 }
@@ -9023,20 +9361,19 @@ sint machine::BOTConnMethod(BOT_FILE_M* val_)
 	if (val_->type.empty())
 	{
 		val_->cm = BOT_DIR_CON;
-		return 0;
 	}
-	if (val_->type.length() < 2)
-	{
-		return -1;
-	}
-
-	if (!strcmp(val_->type.c_str(), ".db"))
+	else if (!strcmp(val_->type.c_str(), ".db"))
 	{
 		val_->cm = BOT_DB_CON;
 	}
 	else
 	{
 		val_->cm = BOT_F_CON;
+	}
+
+	if (val_->lid > -1)
+	{
+		sint xc = SetVecEleMem((void*)&val_->cm, MTX_FO, val_->lid, BOT_FS_CM, false);
 	}
 	return 0;
 }
@@ -9063,7 +9400,7 @@ sint machine::GetOFConn(BOT_FILE_M* val_, sint* was_open)
 	}
 	case BOT_F_CON:
 	{
-		for (sint siz = 0; siz < (sint)f_con.size(); siz++)
+		for (size_t siz = 0; siz < f_con.size(); siz++)
 		{
 			if (f_con[siz])
 			{
@@ -9093,12 +9430,12 @@ sint machine::GetOFConn(BOT_FILE_M* val_, sint* was_open)
 	}
 	return -1;
 }
-sint machine::GetFConn(BOT_FILE_M* val_, sint* was_open)
+sint machine::GetFConn(BOT_FILE_M* val_, sint* was_open, slint mt)
 {
 	if (debug_lvl >= 600 && debug_m)
 	{
 		carr_96 ncar;
-		sint oc = bot_sprintf(ncar.carr, ncar.siz, "::GetFConn(BOT_FILE_M *val_(%i)), sint* was_open(%i))", (sint)val_, sint(was_open));
+		sint oc = bot_sprintf(ncar.carr, ncar.siz, "::GetFConn(BOT_FILE_M *val_(%i)), sint* was_open(%i), sllint mt(%li))", (sint)val_, sint(was_open), mt);
 		oc = SOutput(ncar.carr, 2);
 	}
 
@@ -9106,11 +9443,11 @@ sint machine::GetFConn(BOT_FILE_M* val_, sint* was_open)
 	{
 		return -1;
 	}
-
 	if (val_->omode < 0)
 	{
 		return -1;
 	}
+
 	sint ret = -1;
 
 	if (val_->cm < 0)
@@ -9121,8 +9458,6 @@ sint machine::GetFConn(BOT_FILE_M* val_, sint* was_open)
 		{
 			return -1;
 		}
-
-		ret = SetVecEleMem((void*)&val_->cm, MTX_FO, val_->lid, BOT_FS_CM, false);
 	}
 
 	ret = GetOFConn(val_, was_open);
@@ -9145,48 +9480,56 @@ sint machine::GetFConn(BOT_FILE_M* val_, sint* was_open)
 		{
 			BOT_DB_M ndb(val_->name.c_str());
 			ndb.omode = val_->omode;
-			ret = GetDBConn(&ndb);
+			ret = GetDBConn(&ndb, mt);
 			break;
 		}
 		case BOT_F_CON:
 		{
-			sint h = -1;
-			sint p = LockGMutex(MTX_FCON, &h);
+			sllint rst = -1;
 
-			if (p > -1)
+			while (mt > -1)
 			{
-				for (sint siz = 0; siz < BOT_FO_MAX; siz++)
+				sint h = -1;
+				ret = LockGMutex(MTX_FCON, &h);
+
+				if (ret > -1)
 				{
-					sint xh = -1;
-					sint xc = LockElement(MTX_FCON, siz, &xh, false, false);
-
-					if (!xc)
+					for (sint siz = 0; siz < (sint)BOT_FO_MAX; siz++)
 					{
-						ret = vtool.AVTV(&f_con, &FCON[siz], true, true);
+						sint xh = -1;
+						ret = LockElement(MTX_FCON, siz, &xh, false, false);
 
-						if (ret > -1)
+						if (!ret)
 						{
-							f_con[ret]->Renew(val_, siz);
-							xc = SetVecEleMem((void*)&ret, MTX_FO, val_->lid, BOT_FS_FCON, false);
-							val_->fcon = ret;
-						}
-						else
-						{
-							if (!xh)
+							ret = vtool.AVTV(&f_con, &FCON[siz], true, true);
+
+							if (ret > -1)
 							{
-								xc = UnlockElement(MTX_FCON, siz, false);
+								f_con[ret]->Renew(val_, siz);
+								val_->fcon = ret;
+								ret = SetVecEleMem((void*)&ret, MTX_FO, val_->lid, BOT_FS_FCON, false);
+								mt = -1;
 							}
+							else
+							{
+								if (!xh)
+								{
+									sint xc = UnlockElement(MTX_FCON, siz, false);
+								}
+							}
+							siz = (sint)BOT_FO_MAX;
 						}
-						siz = BOT_FO_MAX;
+					}
+
+					if (!h)
+					{
+						h = UnlockGMutex(MTX_FCON);
 					}
 				}
-
-				if (!h)
-				{
-					h = UnlockGMutex(MTX_FCON);
-				}
-				break;
+				mt--;
+				rst = nsRest((sllint)BOT_FO_REST);
 			}
+			break;
 		}
 		default:
 		{
@@ -9250,6 +9593,8 @@ sint machine::CloseFConn(BOT_FILE_M* xfile_, bool clear_conn)
 						ox = UnlockGMutex(MTX_FCON);
 					}
 				}
+				hx = -1;
+				ox = SetVecEleMem((void*)&hx, MTX_FO, xfile_->lid, BOT_FS_FCON, false);
 			}
 			else
 			{
@@ -9831,42 +10176,52 @@ sint machine::BOTFileStats(BOT_FILE_M *file_, bool doscan, sint scan_lvl)
 	}
 
 #ifdef _WIN32
-	sint ret = _stat(BOTFileStr(file_).c_str(), &file_->fst.filestats);
+	struct _stat nstat;
+	sint ret = _stat(BOTFileStr(file_).c_str(), &nstat);
 #else
-	sint ret = stat(BOTFileStr(file_).c_str(), &file_->fst.filestats);
+	struct stat nstat;
+	sint ret = stat(BOTFileStr(file_).c_str(), &nstat);
 #endif
 
 	if (!ret)
 	{
+		if (file_->fst.cmpstats(&nstat))
+		{
+			file_->fst.RenewStats(&nstat);
+		}
 		if (file_->fst.exists < 1)
 		{
 			file_->fst.exists = 1;
-			std::string onm;
-			_char dmk = '\\';
 
-			for (sint x = (sint)file_->path.length() - 2; x > -1; x--)
+			if (file_->bto < 0)
 			{
-				if (!memcmp((void*)&file_->path[x], (void*)&dmk, sizeof(_char)))
+				std::string onm;
+				_char dmk = '\\';
+
+				for (sint x = (sint)file_->path.length() - 2; x > -1; x--)
 				{
-					for (x++; x < (sint)file_->path.length(); x++)
+					if (!memcmp((void*)&file_->path[x], (void*)&dmk, sizeof(_char)))
 					{
-						onm.push_back(file_->path[x]);
+						for (x++; x < (sint)file_->path.length(); x++)
+						{
+							onm.push_back(file_->path[x]);
+						}
+						x = -1;
 					}
-					x = -1;
 				}
-			}
 
-			if (!onm.empty())
-			{
-				std::string np;
-				np.append(file_->path.substr(0, file_->path.length() - onm.length()).c_str());
-				BOT_FILE_M blt(onm.c_str(), "", np.c_str(), 0, BOT_DIR_CON);
-				sint xret = GetInVec(&blt, MTX_FO);
-
-				if (xret > -1)
+				if (!onm.empty())
 				{
-					file_->bto = blt.lid;
-					sint xret = SetVecEleMem((void*)&file_->bto, MTX_FO, file_->lid, BOT_FS_BTO, false);
+					std::string np;
+					np.append(file_->path.substr(0, file_->path.length() - onm.length()).c_str());
+					BOT_FILE_M blt(onm.c_str(), "", np.c_str(), 0, BOT_DIR_CON);
+					sint xret = GetInVec(&blt, MTX_FO);
+
+					if (xret > -1)
+					{
+						file_->bto = blt.lid;
+						sint xret = SetVecEleMem((void*)&file_->bto, MTX_FO, file_->lid, BOT_FS_BTO, false);
+					}
 				}
 			}
 		}
@@ -9875,146 +10230,155 @@ sint machine::BOTFileStats(BOT_FILE_M *file_, bool doscan, sint scan_lvl)
 
 		if (file_->cm == BOT_DIR_CON)
 		{
-			return ret;
+			ret = 0;
 		}
-
-		if (scan_lvl && doscan)
+		else
 		{
-			if ((ullint)file_->fst.filestats.st_size > (ullint)BOT_STRLEN_MAX)
+			if (doscan)
 			{
-				std::vector<TINFO_M> tvec;
-				ullint x = (ullint)BOT_STRLEN_MAX;
-				ullint last_x = 0;
-
-				while (x < (ullint)file_->fst.filestats.st_size)
+				if (scan_lvl < 0)
 				{
-					if ((ullint)file_->fst.filestats.st_size < (ullint)BOT_STRLEN_MAX)
-					{
-						x = (ullint)file_->fst.filestats.st_size;
-					}
-
-					std::vector<ullint> nvals{ (ullint)file_->lid, (ullint)file_->encode, last_x, x };
-					TINFO_M nt((sint)PTHREAD_CREATE_JOINABLE, "ScanFileThread", ScanFileThread, lid, 0.0f, &nvals);
-					tvec.push_back(nt);
-					last_x = x;
-
-					if (x + (ullint)BOT_STRLEN_MAX >(ullint)file_->fst.filestats.st_size)
-					{
-						x = (ullint)file_->fst.filestats.st_size;
-					}
-					else
-					{
-						x += (ullint)BOT_STRLEN_MAX;
-					}
+					scan_lvl = BOT_FSCAN_LVL;
 				}
-
-				sint xret = HasLock(MTX_FO, file_->lid);
-
-				if (!xret)
+				if (scan_lvl > 0)
 				{
-					ret = UnlockElement(MTX_FO, file_->lid, false);
-				}
-
-				if (ret > -1)
-				{
-					std::vector<sint> rets;
-					ret = InitThreads(&tvec, &rets);
-
-					if (!xret)
+					if ((ullint)file_->fst.filestats.st_size > (ullint)BOT_STRLEN_MAX)
 					{
-						ret = LockElement(MTX_FO, file_->lid, &xret, true, false);
-					}
-				}
-				tvec.clear();
-				if (scan_lvl > 1)
-				{
-					xret = GetVecEleMem((void*)&file_->fst, MTX_FO, file_->lid, BOT_FS_STATE);
-					xret = DetSep(file_);
-					x = (ullint)BOT_STRLEN_MAX;
-					last_x = 0;
+						std::vector<TINFO_M> tvec;
+						ullint x = (ullint)BOT_STRLEN_MAX;
+						ullint last_x = 0;
 
-					while (x < (ullint)file_->fst.filestats.st_size)
-					{
-						if ((ullint)file_->fst.filestats.st_size < (ullint)BOT_STRLEN_MAX)
+						while (x < (ullint)file_->fst.filestats.st_size)
 						{
-							x = (ullint)file_->fst.filestats.st_size;
+							if ((ullint)file_->fst.filestats.st_size < (ullint)BOT_STRLEN_MAX)
+							{
+								x = (ullint)file_->fst.filestats.st_size;
+							}
+
+							std::vector<ullint> nvals{ (ullint)file_->lid, (ullint)file_->encode, last_x, x };
+							TINFO_M nt((sint)PTHREAD_CREATE_JOINABLE, "ScanFileThread", ScanFileThread, lid, 0.0f, &nvals);
+							tvec.push_back(nt);
+							last_x = x;
+
+							if (x + (ullint)BOT_STRLEN_MAX > (ullint)file_->fst.filestats.st_size)
+							{
+								x = (ullint)file_->fst.filestats.st_size;
+							}
+							else
+							{
+								x += (ullint)BOT_STRLEN_MAX;
+							}
 						}
 
-						std::vector<ullint> nvals{ (ullint)file_->lid, (ullint)file_->encode, last_x, x };
-						TINFO_M nt((sint)PTHREAD_CREATE_JOINABLE, "RendFileThread", RendFileThread, lid, 0.0f, &nvals);
-						tvec.push_back(nt);
-						last_x = x;
+						sint xret = HasLock(MTX_FO, file_->lid);
 
-						if (x + (ullint)BOT_STRLEN_MAX >(ullint)file_->fst.filestats.st_size)
+						if (xret)
 						{
-							x = (ullint)file_->fst.filestats.st_size;
+							xret = UnlockElement(MTX_FO, file_->lid, false);
 						}
-						else
-						{
-							x += (ullint)BOT_STRLEN_MAX;
-						}
-					}
-
-					xret = HasLock(MTX_FO, file_->lid);
-
-					if (!xret)
-					{
-						ret = UnlockElement(MTX_FO, file_->lid, false);
-					}
-
-					if (!ret)
-					{
-						std::vector<sint> rets;
-						ret = InitThreads(&tvec, &rets);
 
 						if (!xret)
 						{
-							ret = LockElement(MTX_FO, file_->lid, &xret, true, false);
+							std::vector<sint> rets;
+							ret = InitThreads(&tvec, &rets);
+
+							if (!xret)
+							{
+								ret = LockElement(MTX_FO, file_->lid, &xret, true, false);
+							}
+						}
+
+						tvec.clear();
+						xret = GetVecEleMem((void*)&file_->fst, MTX_FO, file_->lid, BOT_FS_STATE);
+						file_->fst.AvgSyms();
+						xret = DetSep(file_);
+
+						if (scan_lvl > 1)
+						{
+							x = (ullint)BOT_STRLEN_MAX;
+							last_x = 0;
+
+							while (x < (ullint)file_->fst.filestats.st_size)
+							{
+								if ((ullint)file_->fst.filestats.st_size < (ullint)BOT_STRLEN_MAX)
+								{
+									x = (ullint)file_->fst.filestats.st_size;
+								}
+
+								std::vector<ullint> nvals{ (ullint)file_->lid, (ullint)file_->encode, last_x, x };
+								TINFO_M nt((sint)PTHREAD_CREATE_JOINABLE, "RendFileThread", RendFileThread, lid, 0.0f, &nvals);
+								tvec.push_back(nt);
+								last_x = x;
+
+								if (x + (ullint)BOT_STRLEN_MAX > (ullint)file_->fst.filestats.st_size)
+								{
+									x = (ullint)file_->fst.filestats.st_size;
+								}
+								else
+								{
+									x += (ullint)BOT_STRLEN_MAX;
+								}
+							}
+
+							xret = HasLock(MTX_FO, file_->lid);
+
+							if (xret)
+							{
+								xret = UnlockElement(MTX_FO, file_->lid, false);
+							}
+
+							if (!xret)
+							{
+								std::vector<sint> rets;
+								ret = InitThreads(&tvec, &rets);
+								xret = LockElement(MTX_FO, file_->lid, &xret, true, false);
+							}
+
+							xret = SetVecEleMem((void*)&file_->fst, MTX_FO, file_->lid, BOT_FS_STATE);
+
+							if (ret > -1)
+							{
+								ret = 0;
+							}
 						}
 					}
-
-					xret = SetVecEleMem((void*)&file_->fst, MTX_FO, file_->lid, BOT_FS_STATE);
-
-					if (xret > -1)
+					else
 					{
-						ret = 0;
+						if (file_->fst.filestats.st_size)
+						{
+							file_->fst.RenewLocs(file_->fst.filestats.st_size - 1, file_->fst.oa_loc, file_->fst.ia_loc);
+							ret = BOTScanFileSyms(file_);
+
+							if (ret > -1)
+							{
+								file_->fst.AvgSyms();
+								ret = DetSep(file_);
+
+								if (scan_lvl > 1)
+								{
+									ret = BOTRendFileSyms(file_);
+
+									if (ret < 0)
+									{
+										ret = -1;
+									}
+								}
+							}
+
+							xret = SetVecEleMem((void*)&file_->fst, MTX_FO, file_->lid, BOT_FS_STATE, false);
+
+							if (ret > -1)
+							{
+								ret = 0;
+							}
+						}
 					}
 				}
 			}
 			else
 			{
-				if (file_->fst.filestats.st_size)
-				{
-					file_->fst.RenewLocs(file_->fst.filestats.st_size - 1, file_->fst.oa_loc, file_->fst.ia_loc);
-					ret = BOTScanFileSyms(file_);
-
-					if (ret > -1)
-					{
-						file_->fst.AvgSyms();
-						ret = DetSep(file_);
-
-						if (scan_lvl > 1)
-						{
-							ret = BOTRendFileSyms(file_);
-
-							if (ret < 0)
-							{
-								ret = -1;
-							}
-						}
-					}
-					ret = SetVecEleMem((void*)&file_->fst, MTX_FO, file_->lid, BOT_FS_STATE, false);
-
-					if (ret > -1)
-					{
-						ret = 0;
-					}
-				}
+				ret = 0;
 			}
-		}
-		else
-		{
-			ret = 0;
 		}
 	}
 	else
@@ -10022,17 +10386,6 @@ sint machine::BOTFileStats(BOT_FILE_M *file_, bool doscan, sint scan_lvl)
 		file_->fst.Clear();
 		ret = -1;
 	}
-
-	/*if (file_->lid > -1)
-	{
-		BOT_FILE nf(file_->name.c_str(), file_->type.c_str(), file_->path.c_str(), file_->omode, -1, file_->lid, lid, file_->bto, file_->encode, &file_->crs, 0, 0, &file_->fst, file_->dsiz);
-		sint xret = SetVecEle(&nf, MTX_FO, file_->lid, false, false);
-
-		if (xret < 0)
-		{
-			xret = -1;
-		}
-	}*/
 	return ret;
 }
 sint machine::BOTCreateFile(BOT_FILE_M* file_, sint* was_open)
@@ -10052,8 +10405,6 @@ sint machine::BOTCreateFile(BOT_FILE_M* file_, sint* was_open)
 
 	if (strcmp(cur_path.c_str(), file_->path.c_str()))
 	{
-		//if (file_->fcon > -1)
-		//{
 		_char pre = '.';
 		_char dmk = '\\';
 		uint uf = 0;
@@ -10091,7 +10442,6 @@ sint machine::BOTCreateFile(BOT_FILE_M* file_, sint* was_open)
 				{
 					sint of = -1;
 					ret = BOTOpenFile(&dirf, &of, true);
-					//ret = _mkdir(dirf.path.c_str());
 
 					if (ret < 0)
 					{
@@ -10148,7 +10498,6 @@ sint machine::BOTCreateFile(BOT_FILE_M* file_, sint* was_open)
 				}
 			}
 		}
-		//}
 	}
 
 	switch (file_->cm)
@@ -10165,39 +10514,51 @@ sint machine::BOTCreateFile(BOT_FILE_M* file_, sint* was_open)
 
 			if (ret)
 			{
-
+				if (debug_lvl > 1 && debug_m)
+				{
+					carr_512 ncar;
+					sint op = bot_sprintf(ncar.carr, ncar.siz, "error %i creating db: %s", ret, BOTFileStr(file_).c_str());
+					op = SOutput(ncar.carr, 1);
+				}
 			}
 			if (!*was_open)
 			{
 				sint xret = ret;
 				ret = CloseDB(&ndb, &xh);
-				/*
-				if (ret > -1)
-				{
-				ret = GetDBConn(&ndb);
-				}*/
 			}
 		}
 		break;
 	}
 	case BOT_F_CON:
 	{
+		bool wcl = false;
+
 		if (file_->fcon < 0)
 		{
+			wcl = true;
 			ret = GetFConn(file_);
 		}
 
 		if (file_->fcon > -1)
 		{
 			ret = -1;
-			f_con[file_->fcon]->fstrm.open(BOTFileStr(file_).c_str(), file_->omode);
+			f_con[file_->fcon]->fstrm.open(BOTFileStr(file_).c_str(), BOT_FILE_APND);
 
 			if (f_con[file_->fcon]->fstrm.is_open())
 			{
 				f_con[file_->fcon]->fstrm.close();
 				ret = 0;
 			}
-			ret = CloseFConn(file_);
+
+			if (wcl)
+			{
+				sint xret = CloseFConn(file_);
+
+				if (xret < 0)
+				{
+					ret = -1;
+				}
+			}
 		}
 		break;
 	}
@@ -10232,6 +10593,47 @@ sint machine::BOTCreateFile(BOT_FILE_M* file_, sint* was_open)
 	}
 	return ret;
 }
+
+sint machine::BOTRenameFile(BOT_FILE_M* file_, c_char* nnm)
+{
+	if (debug_lvl >= 600 && debug_m)
+	{
+		carr_96 ncar;
+		sint oc = bot_sprintf(ncar.carr, ncar.siz, "::BOTRenameFile(BOT_FILE_M *xfile_(%i), c_char* nnm(%i))", (sint)file_, (sint)nnm);
+		oc = SOutput(ncar.carr, 2);
+	}
+
+	if (!file_)
+	{
+		return -1;
+	}
+	sint ret = -1;
+	switch (file_->cm)
+	{
+	case BOT_DIR_CON:
+	{
+
+		break;
+	}
+	case BOT_DB_CON:
+	case BOT_F_CON:
+	{
+		ret = std::rename(BOTFileStr(file_).c_str(), nnm);
+
+		if (ret)
+		{
+			ret = -1;
+		}
+		break;
+	}
+	default:
+	{
+		break;
+	}
+	}
+	return ret;
+}
+
 sint machine::BOTRemoveFile(BOT_FILE_M *xfile_)
 {
 	if (debug_lvl >= 600 && debug_m)
@@ -10261,30 +10663,6 @@ sint machine::BOTRemoveFile(BOT_FILE_M *xfile_)
 	case BOT_DB_CON:
 	case BOT_F_CON:
 	{
-		f_con[xfile_->fcon]->fstrm.seekp(0);
-
-		for (sint x = 0; x < f_con[xfile_->fcon]->fstrm.end; x++)
-		{
-			f_con[xfile_->fcon]->fstrm.put((_char)76);
-			x++;
-
-			if (x < f_con[xfile_->fcon]->fstrm.end)
-			{
-				f_con[xfile_->fcon]->fstrm.put((_char)79);
-				x++;
-
-				if (x < f_con[xfile_->fcon]->fstrm.end)
-				{
-					f_con[xfile_->fcon]->fstrm.put((_char)88);
-					x++;
-
-					if (x < f_con[xfile_->fcon]->fstrm.end)
-					{
-						f_con[xfile_->fcon]->fstrm.put((_char)79);
-					}
-				}
-			}
-		}
 		ret = std::remove(BOTFileStr(xfile_).c_str());
 
 		if (ret)
@@ -10298,12 +10676,6 @@ sint machine::BOTRemoveFile(BOT_FILE_M *xfile_)
 		break;
 	}
 	}
-
-	if (ret > -1)
-	{
-		sint p = ClearVecEle(MTX_FO, xfile_->lid, false);
-	}
-
 	return ret;
 }
 sint machine::BOTOpenFile(sint flid, sint *was_open, bool cine, bool r_to_st, bool dtp)
@@ -10328,7 +10700,7 @@ sint machine::BOTOpenFile(BOT_FILE_M* mfile_, sint *was_open, bool cine, bool r_
 {
 	if (debug_lvl >= 600 && debug_m)
 	{
-		carr_128 ncar;
+		carr_168 ncar;
 		sint oc = bot_sprintf(ncar.carr, ncar.siz, "::BOTOpenFile(BOT_FILE_M* mfile_(%i), sint *was_open(%i), bool cine(%u), bool r_to_st(%u), bool dtp(%u))", (sint)mfile_, (sint)was_open, (uint)cine, (uint)r_to_st, (uint)dtp);
 		oc = SOutput(ncar.carr, 2);
 	}
@@ -10351,6 +10723,11 @@ sint machine::BOTOpenFile(BOT_FILE_M* mfile_, sint *was_open, bool cine, bool r_
 
 	if (mfile_->lid < 0)
 	{
+		if (mfile_->cm < 0)
+		{
+			gc = BOTConnMethod(mfile_);
+		}
+
 		BOT_FILE nfile(mfile_->name.c_str(), mfile_->type.c_str(), mfile_->path.c_str(), mfile_->omode, mfile_->cm, -1, lid, -1, mfile_->encode);
 		gc = PushToVec((void*)&nfile, MTX_FO, true, true, false);
 
@@ -10398,7 +10775,6 @@ sint machine::BOTOpenFile(BOT_FILE_M* mfile_, sint *was_open, bool cine, bool r_
 	}
 
 	gc = BOTFileStats(mfile_, true);
-
 	sint xh = -1;
 	sint lx = LockElement(MTX_FO, mfile_->lid, &xh, true, false);
 
@@ -10419,36 +10795,50 @@ sint machine::BOTOpenFile(BOT_FILE_M* mfile_, sint *was_open, bool cine, bool r_
 
 				if (gc)
 				{
+					gc = ClearVecEle(MTX_FO, mfile_->lid, false);
+
+					if (!xh)
+					{
+						xh = UnlockElement(MTX_FO, mfile_->lid, false);
+					}
 					return -1;
-				}
-				if (mfile_->cm == BOT_DIR_CON)
-				{
-					return mfile_->lid;
 				}
 			}
 			else
 			{
+				gc = ClearVecEle(MTX_FO, mfile_->lid, false);
+
+				if (!xh)
+				{
+					xh = UnlockElement(MTX_FO, mfile_->lid, false);
+				}
 				return -5;
 			}
 		}
 		else
 		{
+			gc = ClearVecEle(MTX_FO, mfile_->lid, false);
+
+			if (!xh)
+			{
+				xh = UnlockElement(MTX_FO, mfile_->lid, false);
+			}
 			return -1;
 		}
 	}
 
-	sint fc = -1;
-	gc = 0;
-
-	for (fc = GetFConn(mfile_, was_open); fc < 0 && gc < INT32_MAX; fc = GetFConn(mfile_))
+	if (mfile_->cm != BOT_DIR_CON)
 	{
-		sllint rst = nsRest((sllint)BOT_FO_REST);
-		gc++;
-	}
+		sint fc = GetFConn(mfile_, was_open);
 
-	if (fc < 0)
-	{
-		return -1;
+		if (fc < 0)
+		{
+			if (!xh)
+			{
+				xh = UnlockElement(MTX_FO, mfile_->lid, false);
+			}
+			return -1;
+		}
 	}
 
 	if (was_open)
@@ -10476,15 +10866,23 @@ sint machine::BOTOpenFile(BOT_FILE_M* mfile_, sint *was_open, bool cine, bool r_
 		{
 			BOT_DB_M ndb(mfile_->name.c_str(),-1,mfile_->omode, mfile_->fst.exists);
 			sint xh = 1;
-			fc = OpenDB(&ndb, mfile_->omode, was_open, &xh);
+			gc = OpenDB(&ndb, mfile_->omode, was_open, &xh);
+
+			if (gc < 0)
+			{
+				gc = ClearVecEle(MTX_FO, mfile_->lid, false);
+			}
 			break;
 		}
 		case BOT_F_CON:
 		{
-			f_con[mfile_->fcon]->fstrm.open(BOTFileStr(mfile_).c_str(), mfile_->omode);
-
 			if (!f_con[mfile_->fcon]->fstrm.is_open())
 			{
+				f_con[mfile_->fcon]->fstrm.open(BOTFileStr(mfile_).c_str(), mfile_->omode);
+			}
+			if (!f_con[mfile_->fcon]->fstrm.is_open())
+			{
+				gc = ClearVecEle(MTX_FO, mfile_->lid, false);
 				return -1;
 			}
 			else
@@ -10496,6 +10894,27 @@ sint machine::BOTOpenFile(BOT_FILE_M* mfile_, sint *was_open, bool cine, bool r_
 
 					if (hx > -1)
 					{
+						gc = -1;
+						hx = LockGMutex(MTX_FPAD, &gc);
+
+						if (hx > -1)
+						{
+							/*if (!fpad[mfile_->fcon])
+							{
+								fpad[mfile_->fcon] = (_char*)malloc(mfile_->fst.filestats.st_size + 1);
+							}
+							else
+							{
+								_char* np = (_char*)realloc(fpad[mfile_->fcon], mfile_->fst.filestats.st_size + 1);
+							}*/
+
+							fileo_vec.d_vec[mfile_->lid].dat = fpad[mfile_->fcon];
+
+							if (!gc)
+							{
+								gc = UnlockGMutex(MTX_FPAD);
+							}
+						}
 						if (fileo_vec.d_vec[mfile_->lid].Alloc(mfile_->fst.filestats.st_size + 1))
 						{
 							mfile_->Renew(&fileo_vec.d_vec[mfile_->lid]);
@@ -10521,7 +10940,7 @@ sint machine::BOTOpenFile(BOT_FILE_M* mfile_, sint *was_open, bool cine, bool r_
 	else if (S_ISDIR(mfile_->fst.filestats.st_mode))
 	{
 		cur_path.clear();
-		cur_path.append(mfile_->path);
+		cur_path.append(BOTFileStr(mfile_).c_str());
 	}
 	else if (S_ISCHR(mfile_->fst.filestats.st_mode)) {}
 	else if (S_ISBLK(mfile_->fst.filestats.st_mode)) {}
@@ -10529,25 +10948,18 @@ sint machine::BOTOpenFile(BOT_FILE_M* mfile_, sint *was_open, bool cine, bool r_
 	else if (S_ISLNK(mfile_->fst.filestats.st_mode)) {}
 	else if (S_ISSOCK(mfile_->fst.filestats.st_mode)) {}
 	else {}
-
-	if (fc < 0)
-	{
-		if (!xh)
-		{
-			xh = UnlockElement(MTX_FO, mfile_->lid, false);
-		}
-		gc = ClearVecEle(MTX_FO, mfile_->lid, false);
-
-		if (fc < 0)
-		{
-			return -1;
-		}
-	}
 	return mfile_->lid;
 }
-sint machine::BOTFindInFile(BOT_FILE_M* file_, ullint f, ullint t, void* f_, ullint len)
+sint machine::BOTFindInFile(BOT_FILE_M* file_, bool indat, size_t f, size_t t, void* f_, size_t len)
 {
-	if (!file_ || !f_ || !len || len > (ullint)BOT_STRLEN_MAX || f > t)
+	if (debug_lvl >= 600 && debug_m)
+	{
+		carr_192 ncar;
+		sint oc = bot_sprintf(ncar.carr, ncar.siz, "::BOTFindInFile(BOT_FILE_M* file_(%i), bool indat(%u), size_t f(%u), size_t t(%u), void* f_(%i), size_t len(%u))", (sint)file_, (uint)indat, f, t, (sint)f_, len);
+		oc = SOutput(ncar.carr, 2);
+	}
+
+	if (!file_ || !f_ || !len || len > (size_t)BOT_STRLEN_MAX || f > t)
 	{
 		return -1;
 	}
@@ -10558,25 +10970,35 @@ sint machine::BOTFindInFile(BOT_FILE_M* file_, ullint f, ullint t, void* f_, ull
 
 	if (!t)
 	{
-		t = (ullint)file_->fst.filestats.st_size - 1;
+		t = file_->fst.filestats.st_size - 1;
 	}
 
-	if (file_->dsiz == 1)
+	if (!indat)
 	{
-		if (file_->fcon > -1)
+		sint ox = -1;
+
+		if (file_->fcon < 0)
+		{
+			ret = BOTOpenFile(file_, &ox);
+		}
+		else
+		{
+			ret = 0;
+		}
+		if (ret > -1)
 		{
 			xret = (sllint)f_con[file_->fcon];
 
-			if (file_->omode == BOT_FILE_W || file_->omode == BOT_FILE_OVERW || file_->omode == BOT_FILE_READ || file_->omode == BOT_FILE_READATE)
+			if (file_->omode == BOT_FILE_INS || file_->omode == BOT_FILE_OVRL || file_->omode == BOT_FILE_READ || file_->omode == BOT_FILE_READATE)
 			{
-				ullint ph = file_->fst.ia_loc;
-				ullint x = 0;
+				size_t ph = file_->fst.ia_loc;
+				size_t x = 0;
 
 				for (x = 0; x < file_->fst.e_loc; x++)
 				{
 					_char n;
 					ret = BOTFileIN(file_, false, f, t, BOT_RTV_CHAR, &n);
-					ullint y = 0;
+					size_t y = 0;
 
 					if (!memcmp((void*)&af[y], (void*)&n, sizeof(_char)))
 					{
@@ -10593,7 +11015,7 @@ sint machine::BOTFindInFile(BOT_FILE_M* file_, ullint f, ullint t, void* f_, ull
 
 						if (y == len)
 						{
-							BOT_CRS nc(xret, lid, (ullint)x, (ullint)x + (len - 1));
+							BOT_CRS nc(xret, lid, x, x + (len - 1));
 							ret = PushToVecEleMem((void*)&nc, MTX_FO, file_->lid, BOT_FS_CRSV, 2, false);
 							ret = 0;
 							x = file_->fst.e_loc + 1;
@@ -10607,36 +11029,34 @@ sint machine::BOTFindInFile(BOT_FILE_M* file_, ullint f, ullint t, void* f_, ull
 				}
 			}
 		}
+
+		if (!ox)
+		{
+			ret = BOTCloseFile(file_);
+		}
 	}
 	else
 	{
-		sint ox = -1;
-		sint hx = LockGMutex(MTX_FO, &ox);
-
-		if (hx > -1)
+		if (file_->datp)
 		{
-			sllint x = bot_findin(af, (size_t)f, (size_t)t, fileo_vec.d_vec[file_->lid].dat);
+			sllint x = bot_findin(af, (size_t)f, (size_t)t, file_->datp);
 
 			if (x > -1)
 			{
-				BOT_CRS nc(0, lid, (ullint)x, (ullint)x + (len - 1));
+				BOT_CRS nc(0, lid, (size_t)x, (size_t)x + (len - 1));
 				ret = PushToVecEleMem((void*)&nc, MTX_FO, file_->lid, BOT_FS_CRSV, 2, false);
 				ret = 0;
-			}
-			if (!ox)
-			{
-				ox = UnlockGMutex(MTX_FO);
 			}
 		}
 	}
 
 	if (!ret)
 	{
-		sint xret = GetVecEle(file_, MTX_FO, file_->lid);
+		sint ox = GetVecEle(file_, MTX_FO, file_->lid);
 	}
 	return ret;
 }
-sint machine::BOTFileOUT(BOT_FILE_M* file_, ullint f, bool to_fdat, ...)
+sint machine::BOTFileOUT(BOT_FILE_M* file_, size_t f, bool to_fdat, ...)
 {
 	if (!file_)
 	{
@@ -10647,178 +11067,196 @@ sint machine::BOTFileOUT(BOT_FILE_M* file_, ullint f, bool to_fdat, ...)
 
 	if (file_->cm == BOT_F_CON)
 	{
-		if (file_->omode == BOT_FILE_APPEND)
-		{
-			f = file_->fst.e_loc + 1;
-		}
 		if (!to_fdat)
 		{
-			boto_file = true;
-			sint ud = UpdMTXPrio();
-			bool done = false;
-			va_list args;
-			va_start(args, to_fdat);
+			sint ox = -1;
 
-			if ((ullint)f_con[file_->fcon]->fstrm.tellp() != f)
+			if (file_->fcon < 0)
 			{
-				f_con[file_->fcon]->fstrm.seekp(f);
+				ret = BOTOpenFile(file_, &ox, true);
 			}
 
-			while (!done)
+			if (file_->fcon > -1)
 			{
-				sint as_opt = va_arg(args, sint);
+				sint ud = BOTFileStats(file_);
+				boto_file = true;
+				ud = UpdMTXPrio();
+				bool done = false;
+				va_list args;
+				va_start(args, to_fdat);
 
-				switch (as_opt)
+				if (f > (size_t)file_->fst.filestats.st_size)
 				{
-				case -1:
-				case BOT_RTV_MAX:
-				{
-					done = true;
-					break;
+					f = file_->fst.filestats.st_size;
 				}
-				case BOT_RTV_UINT:
+				if ((size_t)f_con[file_->fcon]->fstrm.tellp() != f)
 				{
-					uint val_ = va_arg(args, uint);
-					f_con[file_->fcon]->fstrm.put(val_);
-					file_->fst.oa_loc = (ullint)f_con[file_->fcon]->fstrm.tellp();
-					ret = 0;
-					break;
+					f_con[file_->fcon]->fstrm.seekp(f);
 				}
-				case BOT_RTV_UCHAR:
-				{
-					uint val_ = va_arg(args, uint);
-					u_char val = (u_char)val_;
-					f_con[file_->fcon]->fstrm.put(val);
-					file_->fst.oa_loc = (ullint)f_con[file_->fcon]->fstrm.tellp();
-					ret = 0;
-					break;
-				}
-				case BOT_RTV_SINT:
-				{
-					sint val_ = va_arg(args, sint);
-					f_con[file_->fcon]->fstrm.put(val_);
-					file_->fst.oa_loc = (ullint)f_con[file_->fcon]->fstrm.tellp();
-					ret = 0;
-					break;
-				}
-				case BOT_RTV_CHAR:
-				{
-					sint val_ = va_arg(args, sint);
-					_char val = (_char)val_;
-					f_con[file_->fcon]->fstrm.put(val);
-					file_->fst.oa_loc = (ullint)f_con[file_->fcon]->fstrm.tellp();
-					ret = 0;
-					break;
-				}
-				case BOT_RTV_UCHARP:
-				{
-					uint* val_ = va_arg(args, uint*);
 
-					if (val_)
+				while (!done)
+				{
+					sint as_opt = va_arg(args, sint);
+
+					switch (as_opt)
 					{
-						u_char* val = (u_char*)val_;
-						size_t nt = bot_ustrlen(val);
-
-						for (size_t x = 0; x < nt; x++)
-						{
-							f_con[file_->fcon]->fstrm.put(val[nt]);
-						}
-						file_->fst.oa_loc = (ullint)f_con[file_->fcon]->fstrm.tellp();
+					case -1:
+					case BOT_RTV_MAX:
+					{
+						done = true;
+						break;
+					}
+					case BOT_RTV_UINT:
+					{
+						uint val_ = va_arg(args, uint);
+						f_con[file_->fcon]->fstrm.put(val_);
+						file_->fst.oa_loc = (size_t)f_con[file_->fcon]->fstrm.tellp();
 						ret = 0;
+						break;
 					}
-					break;
-				}
-				case BOT_RTV_CHARP:
-				{
-					_char* val_ = va_arg(args, _char*);
-
-					if (val_)
+					case BOT_RTV_UCHAR:
 					{
-						size_t nt = bot_strlen(val_);
-
-						for (size_t x = 0; x < nt; x++)
-						{
-							f_con[file_->fcon]->fstrm.put(val_[nt]);
-						}
-						file_->fst.oa_loc = (ullint)f_con[file_->fcon]->fstrm.tellp();
+						uint val = va_arg(args, uint);
+						u_char val_ = (u_char)val;
+						f_con[file_->fcon]->fstrm.put(val_);
+						file_->fst.oa_loc = (size_t)f_con[file_->fcon]->fstrm.tellp();
 						ret = 0;
+						break;
 					}
-					break;
-				}
-				case BOT_RTV_CCHAR:
-				{
-					c_char* op_ = va_arg(args, c_char*);
-
-					if (op_)
+					case BOT_RTV_SINT:
 					{
-						size_t osiz = bot_cstrlen(op_);
-
-						if (osiz && osiz < BOT_STRLEN_MAX)
-						{
-							f_con[file_->fcon]->fstrm << op_ << std::endl;
-							ret = 0;
-						}
-						file_->fst.oa_loc = (ullint)f_con[file_->fcon]->fstrm.tellp();
+						sint val_ = va_arg(args, sint);
+						f_con[file_->fcon]->fstrm.put(val_);
+						file_->fst.oa_loc = (size_t)f_con[file_->fcon]->fstrm.tellp();
+						ret = 0;
+						break;
 					}
-					break;
-				}
-				case BOT_RTV_STR:
-				{
-					std::string* str = va_arg(args, std::string*);
-
-					if (str)
+					case BOT_RTV_CHAR:
 					{
-						if (!str->empty() && str->length() < BOT_STRLEN_MAX)
-						{
-							f_con[file_->fcon]->fstrm << str->c_str() << std::endl;
-							ret = 0;
-						}
-						file_->fst.oa_loc = (ullint)f_con[file_->fcon]->fstrm.tellp();
+						sint val = va_arg(args, sint);
+						_char val_ = (_char)val;
+						f_con[file_->fcon]->fstrm.put(val_);
+						file_->fst.oa_loc = (size_t)f_con[file_->fcon]->fstrm.tellp();
+						ret = 0;
+						break;
 					}
-					break;
-				}
-				case BOT_RTV_VSTR:
-				{
-					std::vector<std::string>* strvec = va_arg(args, std::vector<std::string>*);
-
-					if (strvec)
+					case BOT_RTV_UCHARP:
 					{
-						if (!strvec->empty())
+						uint* val_ = va_arg(args, uint*);
+
+						if (val_)
 						{
-							for (size_t siz = 0; siz < strvec->size(); siz++)
+							u_char* val = (u_char*)val_;
+							size_t nt = bot_ustrlen(val);
+
+							for (size_t x = 0; x < nt; x++)
 							{
-								if (strvec->at(siz).length() < BOT_STRLEN_MAX)
-								{
-									f_con[file_->fcon]->fstrm << strvec->at(siz).c_str() << std::endl;
-								}
-								strvec->at(siz).clear();
+								f_con[file_->fcon]->fstrm.put(val[x]);
 							}
-							strvec->clear();
-							file_->fst.oa_loc = (ullint)f_con[file_->fcon]->fstrm.tellp();
+							file_->fst.oa_loc = (size_t)f_con[file_->fcon]->fstrm.tellp();
 							ret = 0;
 						}
+						break;
 					}
-					break;
+					case BOT_RTV_CHARP:
+					{
+						_char* val_ = va_arg(args, _char*);
+
+						if (val_)
+						{
+							size_t nt = bot_strlen(val_);
+							for (size_t x = 0; x < nt; x++)
+							{
+								f_con[file_->fcon]->fstrm.put(val_[x]);
+							}
+							file_->fst.oa_loc = (size_t)f_con[file_->fcon]->fstrm.tellp();
+							ret = 0;
+						}
+						break;
+					}
+					case BOT_RTV_CCHAR:
+					{
+						c_char* op_ = va_arg(args, c_char*);
+
+						if (op_)
+						{
+							size_t nt = bot_cstrlen(op_);
+
+							for (size_t x = 0; x < nt; x++)
+							{
+								f_con[file_->fcon]->fstrm.put(op_[x]);
+							}
+							file_->fst.oa_loc = (size_t)f_con[file_->fcon]->fstrm.tellp();
+						}
+						break;
+					}
+					case BOT_RTV_STR:
+					{
+						std::string* str = va_arg(args, std::string*);
+
+						if (str)
+						{
+							if (!str->empty() && str->length() < BOT_STRLEN_MAX)
+							{
+								for (size_t x = 0; x < str->length(); x++)
+								{
+									f_con[file_->fcon]->fstrm.put(str->at(x));
+								}
+								file_->fst.oa_loc = (size_t)f_con[file_->fcon]->fstrm.tellp();
+							}
+						}
+						break;
+					}
+					case BOT_RTV_VSTR:
+					{
+						std::vector<std::string>* strvec = va_arg(args, std::vector<std::string>*);
+
+						if (strvec)
+						{
+							if (!strvec->empty())
+							{
+								for (size_t siz = 0; siz < strvec->size(); siz++)
+								{
+									if (strvec->at(siz).length() < BOT_STRLEN_MAX)
+									{
+										for (size_t x = 0; x < strvec->at(siz).length(); x++)
+										{
+											f_con[file_->fcon]->fstrm.put(strvec->at(siz)[x]);
+										}
+									}
+									strvec->at(siz).clear();
+								}
+								strvec->clear();
+								file_->fst.oa_loc = (size_t)f_con[file_->fcon]->fstrm.tellp();
+								ret = 0;
+							}
+						}
+						break;
+					}
+					default:
+					{
+						done = true;
+						break;
+					}
+					}
 				}
-				default:
+
+				va_end(args);
+
+				if (!ret)
 				{
-					done = true;
-					break;
+					ret = BOTFileStats(file_);
+					BOT_CRS crs((sllint)f_con[file_->fcon], lid, file_->fst.oa_loc);
+					ud = PushToVecEleMem((void*)&crs, MTX_FO, file_->lid, BOT_FS_CRSV, 2, false);
+					ud = GetVecEle(file_, MTX_FO, file_->lid);
 				}
-				}
+				boto_file = false;
+				ud = UpdMTXPrio();
 			}
-
-			va_end(args);
-
-			if (!ret)
+			if (!ox)
 			{
-				BOT_CRS crs((sllint)f_con[file_->fcon], lid, file_->fst.oa_loc);
-				ud = PushToVecEleMem((void*)&crs, MTX_FO, file_->lid, BOT_FS_CRSV, 2, false);
-				ud = GetVecEle(file_, MTX_FO, file_->lid);
+				ox = BOTCloseFile(file_);
 			}
-
-			boto_file = false;
-			ud = UpdMTXPrio();
 		}
 		else
 		{
@@ -10847,12 +11285,16 @@ sint machine::BOTFileOUT(BOT_FILE_M* file_, ullint f, bool to_fdat, ...)
 					}
 					case BOT_RTV_UINT:
 					{
-						if (fileo_vec.d_vec[file_->lid].Alloc(file_->dsiz + sizeof(uint)))
+						if (file_->omode == BOT_FILE_OVRL)
+						{
+
+						}
+						else if (file_->omode == BOT_FILE_APND || file_->omode == BOT_FILE_INS)
 						{
 							uint val_ = va_arg(args, uint);
 							uint xval = 0;
 
-							for (ullint x = f; x < file_->dsiz; x++)
+							for (size_t x = f; x < file_->dsiz; x++)
 							{
 								if (x == f)
 								{
@@ -10866,21 +11308,28 @@ sint machine::BOTFileOUT(BOT_FILE_M* file_, ullint f, bool to_fdat, ...)
 									memcpy((void*)&xval, (void*)&val_, sizeof(uint));
 								}
 							}
+							uint term = (uint)'\0';
+							memcpy((void*)&fileo_vec.d_vec[file_->lid].dat[(fileo_vec.d_vec[file_->lid].dsiz + sizeof(uint)) - 1], (void*)&term, sizeof(uint));
 							ret = 0;
-							BOT_CRS crs(0, lid, f + sizeof(uint));
+							BOT_CRS crs(0, lid, f + sizeof(sint));
 							ud = PushToVecEleMem((void*)&crs, MTX_FO, file_->lid, BOT_FS_CRSV, 2, false);
 						}
+						else {}
 						break;
 					}
 					case BOT_RTV_UCHAR:
 					{
-						if (fileo_vec.d_vec[file_->lid].Alloc(file_->dsiz + sizeof(u_char)))
+						if (file_->omode == BOT_FILE_APND || file_->omode == BOT_FILE_OVRL)
+						{
+
+						}
+						else if (file_->omode == BOT_FILE_INS)
 						{
 							uint val_ = va_arg(args, uint);
 							u_char val = (u_char)val_;
 							u_char xval = 0;
 
-							for (ullint x = f; x < file_->dsiz; x++)
+							for (size_t x = f; x < file_->dsiz; x++)
 							{
 								if (x == f)
 								{
@@ -10894,36 +11343,49 @@ sint machine::BOTFileOUT(BOT_FILE_M* file_, ullint f, bool to_fdat, ...)
 									memcpy((void*)&xval, (void*)&val_, sizeof(u_char));
 								}
 							}
+							u_char term = (u_char)'\0';
+							memcpy((void*)&fileo_vec.d_vec[file_->lid].dat[(fileo_vec.d_vec[file_->lid].dsiz + sizeof(u_char)) - 1], (void*)&term, sizeof(u_char));
 							ret = 0;
 							BOT_CRS crs(0, lid, f + sizeof(u_char));
 							ud = PushToVecEleMem((void*)&crs, MTX_FO, file_->lid, BOT_FS_CRSV, 2, false);
 						}
+						else {}
 						break;
 					}
 					case BOT_RTV_SINT:
 					{
 						if (fileo_vec.d_vec[file_->lid].Alloc(file_->dsiz + sizeof(sint)))
 						{
-							sint val_ = va_arg(args, sint);
-							sint xval = 0;
-
-							for (ullint x = f; x < file_->dsiz; x++)
+							if (file_->omode == BOT_FILE_APND || file_->omode == BOT_FILE_OVRL)
 							{
-								if (x == f)
-								{
-									memcpy((void*)&xval, (void*)&fileo_vec.d_vec[file_->lid].dat[x], sizeof(sint));
-									memcpy((void*)&fileo_vec.d_vec[file_->lid].dat[x], (void*)&val_, sizeof(sint));
-								}
-								else
-								{
-									memcpy((void*)&val_, (void*)&fileo_vec.d_vec[file_->lid].dat[x], sizeof(sint));
-									memcpy((void*)&fileo_vec.d_vec[file_->lid].dat[x], (void*)&xval, sizeof(sint));
-									memcpy((void*)&xval, (void*)&val_, sizeof(sint));
-								}
+
 							}
-							ret = 0;
-							BOT_CRS crs(0, lid, f + sizeof(sint));
-							ud = PushToVecEleMem((void*)&crs, MTX_FO, file_->lid, BOT_FS_CRSV, 2, false);
+							else if (file_->omode == BOT_FILE_INS)
+							{
+								sint val_ = va_arg(args, sint);
+								sint xval = 0;
+
+								for (size_t x = f; x < file_->dsiz; x++)
+								{
+									if (x == f)
+									{
+										memcpy((void*)&xval, (void*)&fileo_vec.d_vec[file_->lid].dat[x], sizeof(sint));
+										memcpy((void*)&fileo_vec.d_vec[file_->lid].dat[x], (void*)&val_, sizeof(sint));
+									}
+									else
+									{
+										memcpy((void*)&val_, (void*)&fileo_vec.d_vec[file_->lid].dat[x], sizeof(sint));
+										memcpy((void*)&fileo_vec.d_vec[file_->lid].dat[x], (void*)&xval, sizeof(sint));
+										memcpy((void*)&xval, (void*)&val_, sizeof(sint));
+									}
+								}
+								sint term = (sint)'\0';
+								memcpy((void*)&fileo_vec.d_vec[file_->lid].dat[(fileo_vec.d_vec[file_->lid].dsiz + sizeof(sint)) - 1], (void*)&term, sizeof(sint));
+								ret = 0;
+								BOT_CRS crs(0, lid, f + sizeof(sint));
+								ud = PushToVecEleMem((void*)&crs, MTX_FO, file_->lid, BOT_FS_CRSV, 2, false);
+							}
+							else {}
 						}
 						break;
 					}
@@ -10931,27 +11393,37 @@ sint machine::BOTFileOUT(BOT_FILE_M* file_, ullint f, bool to_fdat, ...)
 					{
 						if (fileo_vec.d_vec[file_->lid].Alloc(file_->dsiz + sizeof(_char)))
 						{
-							sint val_ = va_arg(args, sint);
-							_char val = (_char)val_;
-							_char xval = 0;
-
-							for (ullint x = f; x < file_->dsiz; x++)
+							if (file_->omode == BOT_FILE_APND || file_->omode == BOT_FILE_OVRL)
 							{
-								if (x == f)
-								{
-									memcpy((void*)&xval, (void*)&fileo_vec.d_vec[file_->lid].dat[x], sizeof(_char));
-									memcpy((void*)&fileo_vec.d_vec[file_->lid].dat[x], (void*)&val_, sizeof(_char));
-								}
-								else
-								{
-									memcpy((void*)&val_, (void*)&fileo_vec.d_vec[file_->lid].dat[x], sizeof(_char));
-									memcpy((void*)&fileo_vec.d_vec[file_->lid].dat[x], (void*)&xval, sizeof(_char));
-									memcpy((void*)&xval, (void*)&val_, sizeof(_char));
-								}
+
 							}
-							ret = 0;
-							BOT_CRS crs(0, lid, f + sizeof(_char));
-							ud = PushToVecEleMem((void*)&crs, MTX_FO, file_->lid, BOT_FS_CRSV, 2, false);
+							else if (file_->omode == BOT_FILE_INS)
+							{
+								sint val_ = va_arg(args, sint);
+								_char val = (_char)val_;
+								_char xval = 0;
+
+								for (size_t x = f; x < file_->dsiz; x++)
+								{
+									if (x == f)
+									{
+										memcpy((void*)&xval, (void*)&fileo_vec.d_vec[file_->lid].dat[x], sizeof(_char));
+										memcpy((void*)&fileo_vec.d_vec[file_->lid].dat[x], (void*)&val_, sizeof(_char));
+									}
+									else
+									{
+										memcpy((void*)&val_, (void*)&fileo_vec.d_vec[file_->lid].dat[x], sizeof(_char));
+										memcpy((void*)&fileo_vec.d_vec[file_->lid].dat[x], (void*)&xval, sizeof(_char));
+										memcpy((void*)&xval, (void*)&val_, sizeof(_char));
+									}
+								}
+								_char term = '\0';
+								memcpy((void*)&fileo_vec.d_vec[file_->lid].dat[(fileo_vec.d_vec[file_->lid].dsiz + sizeof(_char)) - 1], (void*)&term, sizeof(_char));
+								ret = 0;
+								BOT_CRS crs(0, lid, f + sizeof(_char));
+								ud = PushToVecEleMem((void*)&crs, MTX_FO, file_->lid, BOT_FS_CRSV, 2, false);
+							}
+							else {}
 						}
 						break;
 					}
@@ -10963,42 +11435,83 @@ sint machine::BOTFileOUT(BOT_FILE_M* file_, ullint f, bool to_fdat, ...)
 						{
 							size_t nt = bot_ustrlen(val_);
 
-							if (fileo_vec.d_vec[file_->lid].Alloc(fileo_vec.d_vec[file_->lid].dsiz + nt))
+							if (file_->omode == BOT_FILE_OVRL)
 							{
-								u_char* xval = (u_char*)malloc(nt + 1);
-
-								if (xval)
+								if (f + nt > fileo_vec.d_vec[file_->lid].dsiz - 1)
 								{
-									size_t x = (size_t)f;
-
-									while (x + nt < file_->dsiz)
+									if (fileo_vec.d_vec[file_->lid].Alloc(fileo_vec.d_vec[file_->lid].dsiz + ((f + nt) - fileo_vec.d_vec[file_->lid].dsiz)))
 									{
-										if (x == f)
+										ud = SetVecEleMem((void*)&fileo_vec.d_vec[file_->lid].dsiz, MTX_FO, file_->lid, BOT_FS_DSIZ, false);
+										size_t x = f;
+
+										while (x < (f + nt))
 										{
-											memcpy((void*)xval, (void*)&fileo_vec.d_vec[file_->lid].dat[x], nt);
-											memcpy((void*)&fileo_vec.d_vec[file_->lid].dat[x], (void*)val_, nt);
+											if (memcmp((void*)&fileo_vec.d_vec[file_->lid].dat[x], (void*)&val_[x - f], sizeof(u_char)))
+											{
+												memcpy((void*)&fileo_vec.d_vec[file_->lid].dat[x], (void*)&val_[x - f], sizeof(u_char));
+											}
+											x++;
 										}
-										else
+									}
+								}
+								else
+								{
+									size_t x = f;
+
+									while (x < (f + nt))
+									{
+										if (memcmp((void*)&fileo_vec.d_vec[file_->lid].dat[x], (void*)&val_[x - f], sizeof(u_char)))
+										{
+											memcpy((void*)&fileo_vec.d_vec[file_->lid].dat[x], (void*)&val_[x - f], sizeof(u_char));
+										}
+										x++;
+									}
+								}
+								u_char term = (u_char)'\0';
+								memcpy((void*)&fileo_vec.d_vec[file_->lid].dat[fileo_vec.d_vec[file_->lid].dsiz - 1], (void*)&term, sizeof(u_char));
+							}
+							else if (file_->omode == BOT_FILE_APND || file_->omode == BOT_FILE_INS)
+							{
+								size_t osiz = fileo_vec.d_vec[file_->lid].dsiz;
+
+								if (fileo_vec.d_vec[file_->lid].Alloc(fileo_vec.d_vec[file_->lid].dsiz + nt))
+								{
+									u_char* xval = (u_char*)malloc(nt + 1);
+
+									if (xval)
+									{
+										ud = SetVecEleMem((void*)&fileo_vec.d_vec[file_->lid].dsiz, MTX_FO, file_->lid, BOT_FS_DSIZ, false);
+										memcpy((void*)xval, (void*)&fileo_vec.d_vec[file_->lid].dat[f], nt);
+										memcpy((void*)&fileo_vec.d_vec[file_->lid].dat[f], (void*)val_, nt);
+										u_char term = (u_char)'\0';
+										memcpy((void*)&xval[nt], (void*)&term, sizeof(u_char));
+										size_t x = f + nt;
+
+										while (x + nt < file_->dsiz)
 										{
 											memcpy((void*)val_, (void*)&fileo_vec.d_vec[file_->lid].dat[x], nt);
 											memcpy((void*)&fileo_vec.d_vec[file_->lid].dat[x], (void*)xval, nt);
 											memcpy((void*)xval, (void*)val_, nt);
+											x += nt;
 										}
-										x += nt;
-									}
 
-									if (x < file_->dsiz)
-									{
-										memcpy((void*)val_, (void*)&fileo_vec.d_vec[file_->lid].dat[x], (size_t)file_->dsiz - x);
-										memcpy((void*)&fileo_vec.d_vec[file_->lid].dat[x], (void*)xval, (size_t)file_->dsiz - x);
-										memcpy((void*)xval, (void*)val_, (size_t)file_->dsiz - x);
+										if (x < fileo_vec.d_vec[file_->lid].dsiz)
+										{
+											memcpy((void*)val_, (void*)&fileo_vec.d_vec[file_->lid].dat[x], fileo_vec.d_vec[file_->lid].dsiz - osiz);
+											memcpy((void*)&fileo_vec.d_vec[file_->lid].dat[x], (void*)xval, nt);
+											x += nt;
+											memcpy((void*)&fileo_vec.d_vec[file_->lid].dat[x], (void*)val_, fileo_vec.d_vec[file_->lid].dsiz - osiz);
+										}
+
+										memcpy((void*)&fileo_vec.d_vec[file_->lid].dat[fileo_vec.d_vec[file_->lid].dsiz - 1], (void*)&term, sizeof(u_char));
+										free(xval);
+										ret = 0;
+										BOT_CRS crs(0, lid, f + nt);
+										ud = PushToVecEleMem((void*)&crs, MTX_FO, file_->lid, BOT_FS_CRSV, 2, false);
 									}
-									free(xval);
-									ret = 0;
-									BOT_CRS crs(0, lid, f + nt);
-									ud = PushToVecEleMem((void*)&crs, MTX_FO, file_->lid, BOT_FS_CRSV, 2, false);
 								}
 							}
+							else {}
 						}
 						break;
 					}
@@ -11010,42 +11523,83 @@ sint machine::BOTFileOUT(BOT_FILE_M* file_, ullint f, bool to_fdat, ...)
 						{
 							size_t nt = bot_strlen(val_);
 
-							if (fileo_vec.d_vec[file_->lid].Alloc(fileo_vec.d_vec[file_->lid].dsiz + nt))
+							if (file_->omode == BOT_FILE_OVRL)
 							{
-								_char* xval = (_char*)malloc(nt + 1);
-								
-								if (xval)
+								if (f + nt > fileo_vec.d_vec[file_->lid].dsiz - 1)
 								{
-									size_t x = (size_t)f;
-
-									while (x + nt < file_->dsiz)
+									if (fileo_vec.d_vec[file_->lid].Alloc(fileo_vec.d_vec[file_->lid].dsiz + ((f + nt) - fileo_vec.d_vec[file_->lid].dsiz)))
 									{
-										if (x == f)
+										ud = SetVecEleMem((void*)&fileo_vec.d_vec[file_->lid].dsiz, MTX_FO, file_->lid, BOT_FS_DSIZ, false);
+										size_t x = f;
+
+										while (x < (f + nt))
 										{
-											memcpy((void*)xval, (void*)&fileo_vec.d_vec[file_->lid].dat[x], nt);
-											memcpy((void*)&fileo_vec.d_vec[file_->lid].dat[x], (void*)val_, nt);
+											if (memcmp((void*)&fileo_vec.d_vec[file_->lid].dat[x], (void*)&val_[x - f], sizeof(_char)))
+											{
+												memcpy((void*)&fileo_vec.d_vec[file_->lid].dat[x], (void*)&val_[x - f], sizeof(_char));
+											}
+											x++;
 										}
-										else
+									}
+								}
+								else
+								{
+									size_t x = f;
+
+									while (x < (f + nt))
+									{
+										if (memcmp((void*)&fileo_vec.d_vec[file_->lid].dat[x], (void*)&val_[x - f], sizeof(_char)))
+										{
+											memcpy((void*)&fileo_vec.d_vec[file_->lid].dat[x], (void*)&val_[x - f], sizeof(_char));
+										}
+										x++;
+									}
+								}
+								_char term = '\0';
+								memcpy((void*)&fileo_vec.d_vec[file_->lid].dat[fileo_vec.d_vec[file_->lid].dsiz - 1], (void*)&term, sizeof(_char));
+							}
+							else if (file_->omode == BOT_FILE_APND || file_->omode == BOT_FILE_INS)
+							{
+								size_t osiz = fileo_vec.d_vec[file_->lid].dsiz;
+
+								if (fileo_vec.d_vec[file_->lid].Alloc(fileo_vec.d_vec[file_->lid].dsiz + nt))
+								{
+									_char* xval = (_char*)malloc(nt + 1);
+
+									if (xval)
+									{
+										ud = SetVecEleMem((void*)&fileo_vec.d_vec[file_->lid].dsiz, MTX_FO, file_->lid, BOT_FS_DSIZ, false);
+										memcpy((void*)xval, (void*)&fileo_vec.d_vec[file_->lid].dat[f], nt);
+										memcpy((void*)&fileo_vec.d_vec[file_->lid].dat[f], (void*)val_, nt);
+										_char term = '\0';
+										memcpy((void*)&xval[nt], (void*)&term, sizeof(_char));
+										size_t x = f + nt;
+
+										while (x + nt < file_->dsiz)
 										{
 											memcpy((void*)val_, (void*)&fileo_vec.d_vec[file_->lid].dat[x], nt);
 											memcpy((void*)&fileo_vec.d_vec[file_->lid].dat[x], (void*)xval, nt);
 											memcpy((void*)xval, (void*)val_, nt);
+											x += nt;
 										}
-										x += nt;
-									}
 
-									if (x < file_->dsiz)
-									{
-										memcpy((void*)val_, (void*)&fileo_vec.d_vec[file_->lid].dat[x], (size_t)file_->dsiz - x);
-										memcpy((void*)&fileo_vec.d_vec[file_->lid].dat[x], (void*)xval, (size_t)file_->dsiz - x);
-										memcpy((void*)xval, (void*)val_, (size_t)file_->dsiz - x);
+										if (x < fileo_vec.d_vec[file_->lid].dsiz)
+										{
+											memcpy((void*)val_, (void*)&fileo_vec.d_vec[file_->lid].dat[x], fileo_vec.d_vec[file_->lid].dsiz - osiz);
+											memcpy((void*)&fileo_vec.d_vec[file_->lid].dat[x], (void*)xval, nt);
+											x += nt;
+											memcpy((void*)&fileo_vec.d_vec[file_->lid].dat[x], (void*)val_, fileo_vec.d_vec[file_->lid].dsiz - osiz);
+										}
+
+										memcpy((void*)&fileo_vec.d_vec[file_->lid].dat[fileo_vec.d_vec[file_->lid].dsiz - 1], (void*)&term, sizeof(_char));
+										free(xval);
+										ret = 0;
+										BOT_CRS crs(0, lid, f + nt);
+										ud = PushToVecEleMem((void*)&crs, MTX_FO, file_->lid, BOT_FS_CRSV, 2, false);
 									}
-									free(xval);
-									ret = 0;
-									BOT_CRS crs(0, lid, f + nt);
-									ud = PushToVecEleMem((void*)&crs, MTX_FO, file_->lid, BOT_FS_CRSV, 2, false);
 								}
 							}
+							else {}
 						}
 						break;
 					}
@@ -11057,44 +11611,86 @@ sint machine::BOTFileOUT(BOT_FILE_M* file_, ullint f, bool to_fdat, ...)
 						{
 							if (!str->empty())
 							{
-								if (fileo_vec.d_vec[file_->lid].Alloc(fileo_vec.d_vec[file_->lid].dsiz + str->length()))
+								if (file_->omode == BOT_FILE_OVRL)
 								{
-									_char* val_ = (_char*)malloc(str->length() + 1);
-									_char* xval = (_char*)malloc(str->length() + 1);
-
-									if (val_ && xval)
+									if (f + str->length() > fileo_vec.d_vec[file_->lid].dsiz - 1)
 									{
-										size_t x = (size_t)f;
-
-										while (x + str->length() < file_->dsiz)
+										if (fileo_vec.d_vec[file_->lid].Alloc(fileo_vec.d_vec[file_->lid].dsiz + ((f + str->length()) - fileo_vec.d_vec[file_->lid].dsiz)))
 										{
-											if (x == f)
+											ud = SetVecEleMem((void*)&fileo_vec.d_vec[file_->lid].dsiz, MTX_FO, file_->lid, BOT_FS_DSIZ, false);
+											size_t x = f;
+
+											while (x < (f + str->length()))
 											{
-												memcpy((void*)xval, (void*)&fileo_vec.d_vec[file_->lid].dat[x], str->length());
-												memcpy((void*)&fileo_vec.d_vec[file_->lid].dat[x], (void*)str->c_str(), str->length());
+												if (memcmp((void*)&fileo_vec.d_vec[file_->lid].dat[x], (void*)&str[x - f], sizeof(_char)))
+												{
+													memcpy((void*)&fileo_vec.d_vec[file_->lid].dat[x], (void*)&str[x - f], sizeof(_char));
+												}
+												x++;
 											}
-											else
+										}
+									}
+									else
+									{
+										size_t x = f;
+
+										while (x < (f + str->length()))
+										{
+											if (memcmp((void*)&fileo_vec.d_vec[file_->lid].dat[x], (void*)&str[x - f], sizeof(_char)))
+											{
+												memcpy((void*)&fileo_vec.d_vec[file_->lid].dat[x], (void*)&str[x - f], sizeof(_char));
+											}
+											x++;
+										}
+									}
+									_char term = '\0';
+									memcpy((void*)&fileo_vec.d_vec[file_->lid].dat[fileo_vec.d_vec[file_->lid].dsiz - 1], (void*)&term, sizeof(_char));
+								}
+								else if (file_->omode == BOT_FILE_APND || file_->omode == BOT_FILE_INS)
+								{
+									size_t osiz = fileo_vec.d_vec[file_->lid].dsiz;
+
+									if (fileo_vec.d_vec[file_->lid].Alloc(fileo_vec.d_vec[file_->lid].dsiz + str->length()))
+									{
+										ud = SetVecEleMem((void*)&fileo_vec.d_vec[file_->lid].dsiz, MTX_FO, file_->lid, BOT_FS_DSIZ, false);
+										_char* val_ = (_char*)malloc(str->length() + 1);
+										_char* xval = (_char*)malloc(str->length() + 1);
+
+										if (val_ && xval)
+										{
+											memcpy((void*)xval, (void*)&fileo_vec.d_vec[file_->lid].dat[f], str->length());
+											memcpy((void*)&fileo_vec.d_vec[file_->lid].dat[f], (void*)str->c_str(), str->length());
+											_char term = '\0';
+											memcpy((void*)&val_[str->length()], (void*)&term, sizeof(_char));
+											memcpy((void*)&xval[str->length()], (void*)&term, sizeof(_char));
+											size_t x = f + str->length();
+
+											while (x + str->length() < osiz)
 											{
 												memcpy((void*)val_, (void*)&fileo_vec.d_vec[file_->lid].dat[x], str->length());
 												memcpy((void*)&fileo_vec.d_vec[file_->lid].dat[x], (void*)xval, str->length());
 												memcpy((void*)xval, (void*)val_, str->length());
+												x += str->length();
 											}
-											x += str->length();
-										}
 
-										if (x < file_->dsiz)
-										{
-											memcpy((void*)val_, (void*)&fileo_vec.d_vec[file_->lid].dat[x], (size_t)file_->dsiz - x);
-											memcpy((void*)&fileo_vec.d_vec[file_->lid].dat[x], (void*)xval, (size_t)file_->dsiz - x);
-											memcpy((void*)xval, (void*)val_, (size_t)file_->dsiz - x);
+											if (x < fileo_vec.d_vec[file_->lid].dsiz)
+											{
+												memcpy((void*)val_, (void*)&fileo_vec.d_vec[file_->lid].dat[x], fileo_vec.d_vec[file_->lid].dsiz - osiz);
+												memcpy((void*)&fileo_vec.d_vec[file_->lid].dat[x], (void*)xval, str->length());
+												x += str->length();
+												memcpy((void*)&fileo_vec.d_vec[file_->lid].dat[x], (void*)val_, fileo_vec.d_vec[file_->lid].dsiz - osiz);
+											}
+
+											memcpy((void*)&fileo_vec.d_vec[file_->lid].dat[fileo_vec.d_vec[file_->lid].dsiz - 1], (void*)&term, sizeof(_char));
+											free(val_);
+											free(xval);
+											ret = 0;
+											BOT_CRS crs(0, lid, f + str->length());
+											ud = PushToVecEleMem((void*)&crs, MTX_FO, file_->lid, BOT_FS_CRSV, 2, false);
 										}
-										free(val_);
-										free(xval);
-										ret = 0;
-										BOT_CRS crs(0, lid, f + str->length());
-										ud = PushToVecEleMem((void*)&crs, MTX_FO, file_->lid, BOT_FS_CRSV, 2, false);
 									}
 								}
+								else {}
 							}
 						}
 						break;
@@ -11114,11 +11710,11 @@ sint machine::BOTFileOUT(BOT_FILE_M* file_, ullint f, bool to_fdat, ...)
 									tot += strvec->at(siz).length();;
 								}
 
-								if (fileo_vec.d_vec[file_->lid].Alloc(fileo_vec.d_vec[file_->lid].dsiz + tot))
+								if (BOT_FILE_OVRL)
 								{
-									if (file_->omode == BOT_FILE_APPEND || BOT_FILE_OVERW)
+									if (f + tot < file_->dsiz)
 									{
-										size_t x = (size_t)f;
+										size_t x = f;
 
 										for (size_t siz = 0; siz < strvec->size(); siz++)
 										{
@@ -11131,14 +11727,25 @@ sint machine::BOTFileOUT(BOT_FILE_M* file_, ullint f, bool to_fdat, ...)
 										BOT_CRS crs(0, lid, f + tot);
 										ud = PushToVecEleMem((void*)&crs, MTX_FO, file_->lid, BOT_FS_CRSV, 2, false);
 									}
-									else if (file_->omode == BOT_FILE_W)
+									else
 									{
+
+									}
+								}
+								else if (file_->omode == BOT_FILE_APND || file_->omode == BOT_FILE_INS)
+								{
+									if (fileo_vec.d_vec[file_->lid].Alloc(fileo_vec.d_vec[file_->lid].dsiz + tot))
+									{
+										ud = SetVecEleMem((void*)&fileo_vec.d_vec[file_->lid].dsiz, MTX_FO, file_->lid, BOT_FS_DSIZ, false);
 										_char* val_ = (_char*)malloc(tot + 1);
 										_char* xval = (_char*)malloc(tot + 1);
 
 										if (val_ && xval)
 										{
-											size_t x = (size_t)f;
+											_char term = '\0';
+											memcpy((void*)&val_[tot], (void*)&term, sizeof(_char));
+											memcpy((void*)&xval[tot], (void*)&term, sizeof(_char));
+											size_t x = f;
 
 											for (size_t siz = 0; siz < strvec->size(); siz++)
 											{
@@ -11158,10 +11765,9 @@ sint machine::BOTFileOUT(BOT_FILE_M* file_, ullint f, bool to_fdat, ...)
 
 											if (x < file_->dsiz)
 											{
-												memcpy((void*)val_, (void*)&fileo_vec.d_vec[file_->lid].dat[x], (size_t)file_->dsiz - x);
-												memcpy((void*)&fileo_vec.d_vec[file_->lid].dat[x], (void*)xval, (size_t)file_->dsiz - x);
-												memcpy((void*)xval, (void*)val_, (size_t)file_->dsiz - x);
+												memcpy((void*)&fileo_vec.d_vec[file_->lid].dat[x], (void*)xval, file_->dsiz - x);
 											}
+											memcpy((void*)&fileo_vec.d_vec[file_->lid].dat[fileo_vec.d_vec[file_->lid].dsiz - 1], (void*)&term, sizeof(_char));
 											free(val_);
 											free(xval);
 											ret = 0;
@@ -11170,8 +11776,8 @@ sint machine::BOTFileOUT(BOT_FILE_M* file_, ullint f, bool to_fdat, ...)
 											ud = PushToVecEleMem((void*)&crs, MTX_FO, file_->lid, BOT_FS_CRSV, 2, false);
 										}
 									}
-									else {}
 								}
+								else {}
 							}
 						}
 						break;
@@ -11188,7 +11794,8 @@ sint machine::BOTFileOUT(BOT_FILE_M* file_, ullint f, bool to_fdat, ...)
 
 				if (!ret)
 				{
-					sint xret = GetVecEle(file_, MTX_FO, file_->lid);
+					sint xret = SetVecEleMem(fileo_vec.d_vec[file_->lid].dat, MTX_FO, file_->lid, BOT_FS_DATP);
+					xret = GetVecEle(file_, MTX_FO, file_->lid);
 				}
 
 				boto_file = false;
@@ -11198,8 +11805,6 @@ sint machine::BOTFileOUT(BOT_FILE_M* file_, ullint f, bool to_fdat, ...)
 				{
 					ox = UnlockGMutex(MTX_FO);
 				}
-
-				
 			}
 		}
 	}
@@ -11292,7 +11897,7 @@ sint machine::BOTFileOUT(BOT_FILE_M* file_, ullint f, bool to_fdat, ...)
 	return ret;
 }
 
-sint machine::BOTFileIN(BOT_FILE_M* file_, bool f_fdat, ullint from, ullint to, ...)
+sint machine::BOTFileIN(BOT_FILE_M* file_, bool f_fdat, size_t from, size_t to, ...)
 {
 	if (!file_ || to < from)
 	{
@@ -11305,11 +11910,20 @@ sint machine::BOTFileIN(BOT_FILE_M* file_, bool f_fdat, ullint from, ullint to, 
 	{
 		if (!f_fdat)
 		{
-			if (f_con[file_->fcon]->flid > -1 && f_con[file_->fcon]->flid == file_->lid)
+			sint ox = -1;
+
+			if (file_->fcon < 0)
 			{
-				if (!to || to > file_->fst.filestats.st_size)
+				ret = BOTOpenFile(file_, &ox);
+			}
+			//if (f_con[file_->fcon]->flid > -1 && f_con[file_->fcon]->flid == file_->lid)
+			//{
+
+			if (file_->fcon > -1)
+			{
+				if (!to || to > (size_t)file_->fst.filestats.st_size)
 				{
-					to = file_->fst.filestats.st_size;
+					to = (size_t)file_->fst.filestats.st_size;
 				}
 
 				f_con[file_->fcon]->fstrm.seekg(from);
@@ -11348,7 +11962,7 @@ sint machine::BOTFileIN(BOT_FILE_M* file_, bool f_fdat, ullint from, ullint to, 
 							}
 							nc = '\0';
 							memcpy((void*)&val_[to], (void*)&nc, sizeof(_char));
-							file_->fst.ia_loc = (ullint)f_con[file_->fcon]->fstrm.tellg();
+							file_->fst.ia_loc = (size_t)f_con[file_->fcon]->fstrm.tellg();
 							BOT_CRS ncs((sllint)f_con[file_->fcon], lid, file_->fst.ia_loc);
 							ud = PushToVecEleMem((void*)&ncs, MTX_FO, file_->lid, BOT_FS_CRSV, 2, false);
 							ret = 0;
@@ -11371,7 +11985,7 @@ sint machine::BOTFileIN(BOT_FILE_M* file_, bool f_fdat, ullint from, ullint to, 
 							}
 							nc = '\0';
 							memcpy((void*)&val_[to], (void*)&nc, sizeof(_char));
-							file_->fst.ia_loc = (ullint)f_con[file_->fcon]->fstrm.tellg();
+							file_->fst.ia_loc = (size_t)f_con[file_->fcon]->fstrm.tellg();
 							BOT_CRS ncs((sllint)f_con[file_->fcon], lid, file_->fst.ia_loc);
 							ud = PushToVecEleMem((void*)&ncs, MTX_FO, file_->lid, BOT_FS_CRSV, 2, false);
 							ret = 0;
@@ -11394,7 +12008,7 @@ sint machine::BOTFileIN(BOT_FILE_M* file_, bool f_fdat, ullint from, ullint to, 
 							}
 							nc = (u_char)'\0';
 							memcpy((void*)&val_[to], (void*)&nc, sizeof(u_char));
-							file_->fst.ia_loc = (ullint)f_con[file_->fcon]->fstrm.tellg();
+							file_->fst.ia_loc = (size_t)f_con[file_->fcon]->fstrm.tellg();
 							BOT_CRS ncs((sllint)f_con[file_->fcon], lid, file_->fst.ia_loc);
 							ud = PushToVecEleMem((void*)&ncs, MTX_FO, file_->lid, BOT_FS_CRSV, 2, false);
 							ret = 0;
@@ -11417,7 +12031,7 @@ sint machine::BOTFileIN(BOT_FILE_M* file_, bool f_fdat, ullint from, ullint to, 
 							}
 							nc = (u_char)'\0';
 							memcpy((void*)&val_[to], (void*)&nc, sizeof(u_char));
-							file_->fst.ia_loc = (ullint)f_con[file_->fcon]->fstrm.tellg();
+							file_->fst.ia_loc = (size_t)f_con[file_->fcon]->fstrm.tellg();
 							BOT_CRS ncs((sllint)f_con[file_->fcon], lid, file_->fst.ia_loc);
 							ud = PushToVecEleMem((void*)&ncs, MTX_FO, file_->lid, BOT_FS_CRSV, 2, false);
 							ret = 0;
@@ -11451,7 +12065,7 @@ sint machine::BOTFileIN(BOT_FILE_M* file_, bool f_fdat, ullint from, ullint to, 
 							{
 								str_->push_back(xc);
 							}
-							file_->fst.ia_loc = (ullint)f_con[file_->fcon]->fstrm.tellg();
+							file_->fst.ia_loc = (size_t)f_con[file_->fcon]->fstrm.tellg();
 							BOT_CRS ncs((sllint)f_con[file_->fcon], lid, file_->fst.ia_loc);
 							ud = PushToVecEleMem((void*)&ncs, MTX_FO, file_->lid, BOT_FS_CRSV, 2, false);
 							ret = 0;
@@ -11468,7 +12082,7 @@ sint machine::BOTFileIN(BOT_FILE_M* file_, bool f_fdat, ullint from, ullint to, 
 							{
 								val_->push_back(ud);
 							}
-							file_->fst.ia_loc = (ullint)f_con[file_->fcon]->fstrm.tellg();
+							file_->fst.ia_loc = (size_t)f_con[file_->fcon]->fstrm.tellg();
 							BOT_CRS ncs((sllint)f_con[file_->fcon], lid, file_->fst.ia_loc);
 							ud = PushToVecEleMem((void*)&ncs, MTX_FO, file_->lid, BOT_FS_CRSV, 2, false);
 							ret = 0;
@@ -11487,7 +12101,7 @@ sint machine::BOTFileIN(BOT_FILE_M* file_, bool f_fdat, ullint from, ullint to, 
 							{
 								val_->push_back(nc);
 							}
-							file_->fst.ia_loc = (ullint)f_con[file_->fcon]->fstrm.tellg();
+							file_->fst.ia_loc = (size_t)f_con[file_->fcon]->fstrm.tellg();
 							BOT_CRS ncs((sllint)f_con[file_->fcon], lid, file_->fst.ia_loc);
 							ud = PushToVecEleMem((void*)&ncs, MTX_FO, file_->lid, BOT_FS_CRSV, 2, false);
 							ret = 0;
@@ -11504,7 +12118,7 @@ sint machine::BOTFileIN(BOT_FILE_M* file_, bool f_fdat, ullint from, ullint to, 
 							{
 								val_->push_back(ud);
 							}
-							file_->fst.ia_loc = (ullint)f_con[file_->fcon]->fstrm.tellg();
+							file_->fst.ia_loc = (size_t)f_con[file_->fcon]->fstrm.tellg();
 							BOT_CRS ncs((sllint)f_con[file_->fcon], lid, file_->fst.ia_loc);
 							ud = PushToVecEleMem((void*)&ncs, MTX_FO, file_->lid, BOT_FS_CRSV, 2, false);
 							ret = 0;
@@ -11523,7 +12137,7 @@ sint machine::BOTFileIN(BOT_FILE_M* file_, bool f_fdat, ullint from, ullint to, 
 							{
 								val_->push_back(nc);
 							}
-							file_->fst.ia_loc = (ullint)f_con[file_->fcon]->fstrm.tellg();
+							file_->fst.ia_loc = (size_t)f_con[file_->fcon]->fstrm.tellg();
 							BOT_CRS ncs((sllint)f_con[file_->fcon], lid, file_->fst.ia_loc);
 							ud = PushToVecEleMem((void*)&ncs, MTX_FO, file_->lid, BOT_FS_CRSV, 2, false);
 							ret = 0;
@@ -11548,7 +12162,7 @@ sint machine::BOTFileIN(BOT_FILE_M* file_, bool f_fdat, ullint from, ullint to, 
 							{
 								nstr.push_back(xc);
 							}
-							file_->fst.ia_loc = (ullint)f_con[file_->fcon]->fstrm.tellg();
+							file_->fst.ia_loc = (size_t)f_con[file_->fcon]->fstrm.tellg();
 							BOT_CRS ncs((sllint)f_con[file_->fcon], lid, file_->fst.ia_loc);
 							ud = PushToVecEleMem((void*)&ncs, MTX_FO, file_->lid, BOT_FS_CRSV, 2, false);
 							strvec_->push_back(nstr);
@@ -11576,7 +12190,11 @@ sint machine::BOTFileIN(BOT_FILE_M* file_, bool f_fdat, ullint from, ullint to, 
 				{
 					ud = GetVecEle((void*)file_, MTX_FO, file_->lid);
 				}
-				return ret;
+			}
+
+			if (!ox)
+			{
+				ox = BOTCloseFile(file_);
 			}
 		}
 		else
@@ -11851,7 +12469,6 @@ sint machine::BOTFileIN(BOT_FILE_M* file_, bool f_fdat, ullint from, ullint to, 
 					ud = GetVecEle((void*)file_, MTX_FO, file_->lid);
 				}
 			}
-			return ret;
 		}
 	}
 	else if (file_->cm == BOT_DB_CON)
@@ -11878,7 +12495,7 @@ sint machine::BOTFileIN(BOT_FILE_M* file_, bool f_fdat, ullint from, ullint to, 
 		va_end(args);
 	}
 	else {}
-	return -1;
+	return ret;
 }
 sint machine::BOTCloseFile(sint flid, bool clear_conn, bool del, bool clear_dat)
 {
@@ -11917,6 +12534,8 @@ sint machine::BOTCloseFile(BOT_FILE_M* xfile_, bool clear_conn, bool del, bool c
 		return -1;
 	}
 
+	sint ret = -1;
+
 	switch (xfile_->cm)
 	{
 	case BOT_DB_CON:
@@ -11938,9 +12557,44 @@ sint machine::BOTCloseFile(BOT_FILE_M* xfile_, bool clear_conn, bool del, bool c
 	}
 	case BOT_F_CON:
 	{
-		sint fc = CloseFConn(xfile_, clear_conn);
+		if (clear_dat)
+		{
+			ret = ClearVecEleMem(MTX_FO, xfile_->lid, BOT_FS_DAT, false);
+		}
 
-		if (fc < 0)
+		if (del)
+		{
+			if (xfile_->fst.filestats.st_size)
+			{
+				f_con[xfile_->fcon]->fstrm.seekp(0);
+
+				for (sint x = 0; x < f_con[xfile_->fcon]->fstrm.end; x++)
+				{
+					f_con[xfile_->fcon]->fstrm.put((_char)76);
+					x++;
+
+					if (x < f_con[xfile_->fcon]->fstrm.end)
+					{
+						f_con[xfile_->fcon]->fstrm.put((_char)79);
+						x++;
+
+						if (x < f_con[xfile_->fcon]->fstrm.end)
+						{
+							f_con[xfile_->fcon]->fstrm.put((_char)88);
+							x++;
+
+							if (x < f_con[xfile_->fcon]->fstrm.end)
+							{
+								f_con[xfile_->fcon]->fstrm.put((_char)79);
+							}
+						}
+					}
+				}
+			}
+		}
+		ret = CloseFConn(xfile_, clear_conn);
+
+		if (ret < 0)
 		{
 			return -1;
 		}
@@ -11960,17 +12614,13 @@ sint machine::BOTCloseFile(BOT_FILE_M* xfile_, bool clear_conn, bool del, bool c
 
 	if (del)
 	{
-		sint p = BOTRemoveFile(xfile_);
+		ret = BOTRemoveFile(xfile_);
 
-		if (p)
+		if (ret)
 		{
-			p = -1;
+			ret = -1;
 		}
-	}
-
-	if (clear_dat)
-	{
-		sint p = ClearVecEleMem(MTX_FO, xfile_->lid, BOT_FS_DAT, false);
+		ret = ClearVecEle(MTX_FO, xfile_->lid, false);
 	}
 
 	sint p = vtool.VIV(&h_mtxs, MTX_FO);
@@ -11986,6 +12636,109 @@ sint machine::BOTCloseFile(BOT_FILE_M* xfile_, bool clear_conn, bool del, bool c
 		}
 	}
 	return -1;
+}
+sint machine::BOTSaveFile(BOT_FILE_M* file_, c_char* to_, bool ow)
+{
+	if (debug_lvl >= 600 && debug_m)
+	{
+		carr_256 instr;
+		sint oc = bot_sprintf(instr.carr, instr.siz, "::BOTSaveFile(BOT_FILE_M* file_(%i), c_char* to_(%i), bool ow(%u))", (sint)file_, (sint)to_, (uint)ow);
+		oc = SOutput(instr.carr, 2);
+	}
+	if (!file_)
+	{
+		return -1;
+	}
+
+	sint ret = -1;
+	BOT_FILE_M xfile;
+	xfile.Renew(file_);
+	xfile.lid = -1;
+
+	if (to_)
+	{
+		if (strcmp(xfile.path.c_str(), to_))
+		{
+			xfile.path.clear();
+			xfile.path.append(to_);
+		}
+	}
+
+	ret = BOTFileStats(&xfile);
+
+	if (!ret)
+	{
+		carr_24 ncar;
+		sint ct = 0;
+		sint hx = 0;
+
+		while (!hx && ct < INT32_MAX)
+		{
+			sint op = bot_sprintf(ncar.carr, ncar.siz, "(%i)", ++ct);
+			xfile.name.clear();
+			xfile.name.append(file_->name.c_str());
+			xfile.name.append(ncar.carr);
+			hx = BOTFileStats(&xfile);
+		}
+	}
+
+	sint ox = -1;
+	ret = BOTOpenFile(&xfile, &ox, true);
+
+	if (ret > -1)
+	{
+		if (file_->datp)
+		{
+			ret = BOTFileOUT(&xfile, 0, false, BOT_RTV_CHARP, file_->datp, BOT_RTV_MAX);
+
+			if (ret > -1)
+			{
+				if (ow)
+				{
+					bool wo = false;
+
+					if (file_->fcon > -1)
+					{
+						wo = true;
+						ret = CloseFConn(file_, true);
+					}
+
+					ret = BOTRemoveFile(file_);
+
+					if (!ret)
+					{
+						ret = BOTCloseFile(&xfile);
+
+						if (ret > -1)
+						{
+							ox = -1;
+							ret = BOTRenameFile(&xfile, BOTFileStr(file_).c_str());
+
+							if (!ret)
+							{
+								ret = ClearVecEle(MTX_FO, xfile.lid, false);
+								file_->lid = -1;
+
+								if (wo)
+								{
+									ret = BOTOpenFile(file_, &ox);
+								}
+							}
+						}
+					}
+				}
+				else
+				{
+					ret = 0;
+				}
+			}
+		}
+		if (!ox)
+		{
+			ox = BOTCloseFile(&xfile);
+		}
+	}
+	return ret;
 }
 sint machine::BotOpenError(sint err_id, std::string* err_str)
 {
@@ -12044,7 +12797,7 @@ sint machine::BotOpenError(sint err_id, std::string* err_str)
 }
 
 // Sleep Functions
-void machine::Nanosleep(slint dur)
+void machine::Nanosleep(sllint dur)
 {
 #ifdef _WIN32
 	HANDLE tmr;
@@ -12087,27 +12840,29 @@ sllint machine::nsRest(sllint i, bool keep_mtx)
 	}
 	stk_ct++;
 	std::chrono::steady_clock::time_point t_I = std::chrono::steady_clock::now();
-
+	
 	if (i < (sllint)BOT_NANO_REST)
 	{
 		i = (sllint)BOT_NANO_REST;
 	}
 
 	//std::vector<lok_req> relocks;
+	std::chrono::steady_clock::time_point t_II;
+	std::chrono::duration<sllint, std::nano> span;
 	sllint slpct = 0;
 
 	while (slpct < i)
 	{
 		if (!keep_mtx && !h_mtxs.empty())
 		{
-			uint blox = relocks.size();
+			size_t blox = relocks.size();
 			sint cheq = CheqMTXReqs(&relocks);
 
 			if (relocks.size() > blox)
 			{
-				uint elox = relocks.size() - blox;
+				size_t elox = relocks.size() - blox;
 
-				for (uint x = blox; x < blox + elox; x++)
+				for (size_t x = blox; x < blox + elox; x++)
 				{
 					cheq = CloseObject(relocks[x].gmtx, relocks[x].ele, relocks[x].is_meta, &relocks[x].fid, &relocks[x].lid); // returns fid as openmode
 
@@ -12120,14 +12875,14 @@ sllint machine::nsRest(sllint i, bool keep_mtx)
 		}
 
 		Nanosleep(BOT_NANO_REST);
-		std::chrono::steady_clock::time_point t_II = std::chrono::steady_clock::now();
-		std::chrono::duration<sllint, std::nano> span = std::chrono::duration_cast<std::chrono::nanoseconds>(t_II - t_I);
+		t_II = std::chrono::steady_clock::now();
+		span = std::chrono::duration_cast<std::chrono::nanoseconds>(t_II - t_I);
 		slpct = (sllint)span.count();
 	}
 
 	if (!keep_mtx && stk_ct == 1)
 	{
-		for (uint x = 0; x < relocks.size(); x++)
+		for (size_t x = 0; x < relocks.size(); x++)
 		{
 			if (relocks[x].gmtx > -1)
 			{
@@ -12145,8 +12900,8 @@ sllint machine::nsRest(sllint i, bool keep_mtx)
 	}
 
 	stk_ct--;
-	std::chrono::steady_clock::time_point t_II = std::chrono::steady_clock::now();
-	std::chrono::duration<sllint, std::nano> span = std::chrono::duration_cast<std::chrono::nanoseconds>(t_II - t_I);
+	t_II = std::chrono::steady_clock::now();
+	span = std::chrono::duration_cast<std::chrono::nanoseconds>(t_II - t_I);
 	slpct = (sllint)span.count();
 
 	if (debug_lvl >= 1000 && debug_m)
@@ -12177,20 +12932,22 @@ sllint machine::Rest(sllint i, bool keep_mtx)
 	}
 
 	//std::vector<lok_req> relocks;
+	std::chrono::steady_clock::time_point t_II;
+	std::chrono::duration<sllint, std::milli> span;
 	sllint slpct = 0;
 
 	while (slpct < i)
 	{
 		if (!keep_mtx && !h_mtxs.empty())
 		{
-			uint blox = relocks.size();
+			size_t blox = relocks.size();
 			sint cheq = CheqMTXReqs(&relocks);
 
 			if (relocks.size() > blox)
 			{
-				uint elox = relocks.size() - blox;
+				size_t elox = relocks.size() - blox;
 
-				for (uint x = blox; x < blox + elox; x++)
+				for (size_t x = blox; x < blox + elox; x++)
 				{
 					cheq = CloseObject(relocks[x].gmtx, relocks[x].ele, relocks[x].is_meta, &relocks[x].fid, &relocks[x].lid); // returns fid as openmode
 
@@ -12208,14 +12965,14 @@ sllint machine::Rest(sllint i, bool keep_mtx)
 		sint xc = sleep(BOT_MILLI_REST);
 #endif
 
-		std::chrono::steady_clock::time_point t_II = std::chrono::steady_clock::now();
-		std::chrono::duration<sllint, std::milli> span = std::chrono::duration_cast<std::chrono::milliseconds>(t_II - t_I);
+		t_II = std::chrono::steady_clock::now();
+		span = std::chrono::duration_cast<std::chrono::milliseconds>(t_II - t_I);
 		slpct = (sllint)span.count();
 	}
 
 	if (!keep_mtx && stk_ct == 1)
 	{
-		for (uint x = 0; x < relocks.size(); x++)
+		for (size_t x = 0; x < relocks.size(); x++)
 		{
 			if (relocks[x].gmtx > -1)
 			{
@@ -12233,16 +12990,16 @@ sllint machine::Rest(sllint i, bool keep_mtx)
 	}
 
 	stk_ct--;
-	std::chrono::steady_clock::time_point t_II = std::chrono::steady_clock::now();
-	std::chrono::duration<sllint, std::milli> span = std::chrono::duration_cast<std::chrono::milliseconds>(t_II - t_I);
-	slpct = (slint)span.count();
+	t_II = std::chrono::steady_clock::now();
+	span = std::chrono::duration_cast<std::chrono::milliseconds>(t_II - t_I);
+	slpct = (sllint)span.count();
 
 	if (debug_lvl >= 1000 && debug_m)
 	{
 		if (slpct)
 		{
 			carr_128 outp;
-			sint op = bot_sprintf(outp.carr, outp.siz, "attempted to rest:%lims, rested for:%lims", i, (slint)span.count());
+			sint op = bot_sprintf(outp.carr, outp.siz, "attempted to rest:%lims, rested for:%lims", i, (sllint)span.count());
 			op = SOutput(outp.carr, 2);
 		}
 	}
@@ -15166,6 +15923,12 @@ sint machine::FindColumn(c_char *str_, sqlite3_stmt* ppstmt)
 }
 sint machine::GetODBConn(BOT_DB_M *db_)
 {
+	if (debug_lvl >= 550 && debug_m)
+	{
+		carr_48 ncar;
+		sint oc = bot_sprintf(ncar.carr, ncar.siz, "::GetODBConn(BOT_DB_M *db_(5i))", (sint)db_);
+		oc = SOutput(ncar.carr, 2);
+	}
 	if (!db_ || !d_con_)
 	{
 		return -1;
@@ -15190,52 +15953,74 @@ sint machine::GetODBConn(BOT_DB_M *db_)
 	db_->fcon = rc;
 	return -1;
 }
-sint machine::GetDBConn(BOT_DB_M* val_)
+sint machine::GetDBConn(BOT_DB_M* db_, slint mt)
 {
-	if (!val_)
+	if (debug_lvl >= 550 && debug_m)
+	{
+		carr_72 ncar;
+		sint oc = bot_sprintf(ncar.carr, ncar.siz, "::GetDBConn(BOT_DB_M *db_(5i), slint mt(%li))", (sint)db_, mt);
+		oc = SOutput(ncar.carr, 2);
+	}
+	if (!db_)
 	{
 		return -1;
 	}
 
-	sint ret = GetODBConn(val_);
+	sint ret = GetODBConn(db_);
 
 	if (ret > -1)
 	{
 		return ret;
 	}
 
-	sint h = -1;
-	sint p = LockGMutex(MTX_DBC, &h);
+	sllint rst = -1;
 
-	if (p > -1)
+	while (mt > -1 && !d_con_)
 	{
-		if (olim < BOT_ATT_LIM)
-		{
-			for (sint siz = 0; siz < BOT_ATT_LIM; siz++)
-			{
-				sint xh = -1;
-				sint xc = LockElement(MTX_DBC, siz, &xh, false, false);
+		sint h = -1;
+		sint p = LockGMutex(MTX_DBC, &h);
 
-				if (!xc)
+		if (p > -1)
+		{
+			if (olim < BOT_ATT_LIM)
+			{
+				for (sint siz = 0; siz < BOT_ATT_LIM; siz++)
 				{
-					d_con_ = &DCON[siz];
-					ret = UpdMTXPrio();
-					val_->fcon = siz;
-					d_con_->Renew(val_->name.c_str(), val_->lid, val_->omode, siz);
-					ret = siz;
-					siz = BOT_ATT_LIM;
+					sint xh = -1;
+					sint xc = LockElement(MTX_DBC, siz, &xh, false, false);
+
+					if (!xc)
+					{
+						d_con_ = &DCON[siz];
+						ret = UpdMTXPrio();
+						db_->fcon = siz;
+						ret = SetVecEleMem((void*)&db_->fcon, MTX_DBL, db_->lid, BOT_DB_FCON, false);
+						d_con_->Renew(db_->name.c_str(), db_->lid, db_->omode, siz);
+						ret = siz;
+						siz = BOT_ATT_LIM;
+						mt = -1;
+					}
 				}
 			}
+			if (!h)
+			{
+				h = UnlockGMutex(MTX_DBC);
+			}
 		}
-		if (!h)
-		{
-			h = UnlockGMutex(MTX_DBC);
-		}
+		mt--;
+		rst = nsRest((sllint)BOT_FO_REST);
 	}
 	return ret;
 }
 sint machine::CloseDBConn(BOT_DB_M* db_)
 {
+	if (debug_lvl >= 550 && debug_m)
+	{
+		carr_48 ncar;
+		sint oc = bot_sprintf(ncar.carr, ncar.siz, "::CloseDBConn(BOT_DB_M *db_(5i))", (sint)db_);
+		oc = SOutput(ncar.carr, 2);
+	}
+
 	sint xc = -1;
 	sint hlim = -1;
 	sint plim = LockGMutex(MTX_DBC, &hlim);
@@ -15261,7 +16046,7 @@ sint machine::CloseDBConn(BOT_DB_M* db_)
 sint machine::OpenOpt(sint opt) { if (opt < 0) { return -1; } if (!opt) { return 0; } if (opt < 3) { return 2; } if (opt < 9) { return 3; } return -1; }
 sint machine::OpenDB(sint db_lid, sint x, sint* was_open, sint* fwas_locked, bool r_to_st)
 {
-	if (debug_lvl >= 4 && debug_m)
+	if (debug_lvl >= 550 && debug_m)
 	{
 		carr_512 outp;
 		sint oc = bot_sprintf(outp.carr, outp.siz, "::OpenDB(sint db_lid(%i), sint x(%i), sint* was_open(%i), sint* fwas_locked(%i), bool r_to_st(%u))", db_lid, x, (sint)was_open, (sint)fwas_locked, (uint)r_to_st);
@@ -15510,13 +16295,7 @@ sint machine::OpenDB(BOT_DB_M *db_, sint x, sint* was_open, sint* fwas_locked, b
 
 	if (!d_con_)
 	{
-		xc = 0;
-
-		for (dbc = GetDBConn(db_); dbc < 0 && xc < INT32_MAX; dbc = GetDBConn(db_))
-		{
-			sllint rst = nsRest((slint)BOT_FO_REST);
-			xc++;
-		}
+		dbc = GetDBConn(db_);
 
 		if (!d_con_)
 		{
@@ -22238,7 +23017,7 @@ sint machine::StartThread(sint* thr_opt)
 	UpdMTXPrio();
 	return (sint)BOT_THR_RUN;
 }
-sint machine::ThreadRest(slint dur, sint qt_lvl)
+sint machine::ThreadRest(sllint dur, sint qt_lvl)
 {
 	sint qt = GetThreadQuit();
 
@@ -22423,7 +23202,7 @@ sint machine::StopAllThreads()
 
 	while (!done)
 	{
-		sllint rst = Rest(BOT_QUITREST);
+		sllint rst = Rest((sllint)BOT_QUITREST);
 		bool all = true;
 		sint siz = VecSize(MTX_TTS) - 1;
 
@@ -22482,7 +23261,7 @@ sint machine::StopAllThreads()
 
 	while (!done)
 	{
-		sllint rst = Rest(BOT_QUITREST);
+		sllint rst = Rest((sllint)BOT_QUITREST);
 		bool all = true;
 		sint siz = VecSize(MTX_TTS) - 1;
 
@@ -22521,7 +23300,7 @@ sint machine::StopAllThreads()
 
 	while (!done)
 	{
-		sllint rst = Rest(BOT_QUITREST);
+		sllint rst = Rest((sllint)BOT_QUITREST);
 		bool all = true;
 		sint siz = VecSize(MTX_TTS) - 1;
 
@@ -22595,7 +23374,7 @@ sint machine::InitThread(TINFO_M *tts_, sint* ret_)
 	{
 		while (FinishThread(tts_, ret_))
 		{
-			sllint rst = Rest(BOT_MILLI_REST);
+			sllint rst = Rest((sllint)BOT_MILLI_REST);
 		}
 	}
 	return xc;
@@ -22641,7 +23420,7 @@ sint machine::InitThreads(std::vector<TINFO_M> *tts_, std::vector<sint>* rets_)
 
 				while (FinishThread(&tts_->at(nsiz), &xret))
 				{
-					sllint rst = Rest(BOT_MILLI_REST);
+					sllint rst = Rest((sllint)BOT_MILLI_REST);
 				}
 
 				if (nsiz < rets_->size())
@@ -22693,7 +23472,7 @@ sint machine::CreateThread(TINFO_M* tts_, sint* ret_)
 
 				if (xc < 0)
 				{
-					sllint rst = Rest((slint)BOT_MILLI_REST);
+					sllint rst = Rest((sllint)BOT_MILLI_REST);
 				}
 				else
 				{
@@ -22756,7 +23535,7 @@ sint machine::CreateThread(TINFO_M* tts_, sint* ret_)
 
 			while (tts.fin < (sint)BOT_THR_RJC)
 			{
-				sllint rst = Rest(BOT_MILLI_REST);
+				sllint rst = Rest((sllint)BOT_MILLI_REST);
 				na = GetVecEleMem((void*)&tts.fin, MTX_TTS, tts.lid, BOT_TTS_FIN);
 
 				if (na < 0)
@@ -22775,7 +23554,7 @@ sint machine::CreateThread(TINFO_M* tts_, sint* ret_)
 			{
 				while (FinishThread(tts_, ret_))
 				{
-					sllint rst = Rest(BOT_MILLI_REST);
+					sllint rst = Rest((sllint)BOT_MILLI_REST);
 				}
 
 				if (debug_lvl >= 200 && debug_m)
@@ -23650,7 +24429,7 @@ sint machine::ProcErrLog(sint opt, c_char* in_file_p, c_char* in_file_n, c_char*
 		nm_str.append(vdate.c_str());
 		std::string pth;
 		BOTPath(&pth, BOT_MOD_NM);
-		xfile.Renew(nm_str.c_str(), ".txt", pth.c_str(), BOT_FILE_APPEND, BOT_F_CON, -1, -1, lid);
+		xfile.Renew(nm_str.c_str(), ".txt", pth.c_str(), BOT_FILE_APND, BOT_F_CON, -1, -1, lid);
 		of = -1;
 		lx = BOTOpenFile(&xfile, &of, true);
 
@@ -23973,7 +24752,7 @@ sint machine::ProcVINs(sint opt, c_char* in_file_p, c_char* in_file_n, c_char* i
 		}
 		std::string pth;
 		BOTPath(&pth, BOT_MOD_NM);
-		xfile.Renew(nm_str.c_str(), ".txt", pth.c_str(), BOT_FILE_APPEND, BOT_F_CON, -1, -1, lid);
+		xfile.Renew(nm_str.c_str(), ".txt", pth.c_str(), BOT_FILE_APND, BOT_F_CON, -1, -1, lid);
 		of = -1;
 		lx = BOTOpenFile(&xfile, &of, true);
 
@@ -24070,7 +24849,7 @@ sint machine::GetVINs(c_char* in_file_p, c_char* in_file_n, c_char* in_file_t, c
 		nm_str.append(dcar.carr);
 		std::string pth;
 		BOTPath(&pth, BOT_MOD_NM);
-		xfile.Renew(nm_str.c_str(), ".txt", pth.c_str(), BOT_FILE_APPEND, BOT_F_CON, -1, -1, lid);
+		xfile.Renew(nm_str.c_str(), ".txt", pth.c_str(), BOT_FILE_APND, BOT_F_CON, -1, -1, lid);
 		of = -1;
 		lx = BOTOpenFile(&xfile, &of, true);
 
@@ -24097,7 +24876,7 @@ sint machine::AddDlrCode(c_char* to_vin, c_char* in_file)
 	std::cout << "searching for VIN: " << to_vin << " to correct dealer code in file: " << in_file << std::endl;
 	std::string pth;
 	BOTPath(&pth, BOT_MOD_NM);
-	BOT_FILE_M xfile(in_file, ".txt", pth.c_str(), BOT_FILE_OVERW, BOT_F_CON, -1, -1, lid);
+	BOT_FILE_M xfile(in_file, ".txt", pth.c_str(), BOT_FILE_OVRL, BOT_F_CON, -1, -1, lid);
 	sint of = -1;
 	sint lx = BOTOpenFile(&xfile, &of);
 
@@ -24566,7 +25345,7 @@ void* machine::ScanFileThread(void* vp_)
 
 		if (rc > -1)
 		{
-			nfile.fst.RenewLocs(vals[3], 0, vals[2]);
+			nfile.fst.RenewLocs((size_t)vals[3], (size_t)0, (size_t)vals[2]);
 			vals.clear();
 
 			if (rc > -1)
@@ -24625,8 +25404,8 @@ void* machine::RendFileThread(void* vp_)
 		if (rc > -1)
 		{
 			nfile.omode = (sint)vals[1];
-			nfile.fst.e_loc = vals[3];
-			nfile.fst.ia_loc = vals[2];
+			nfile.fst.e_loc = (size_t)vals[3];
+			nfile.fst.ia_loc = (size_t)vals[2];
 			vals.clear();
 
 			if (rc > -1)
@@ -24695,7 +25474,7 @@ void* machine::LogMaintenance(void* vp_)
 						{
 							std::string pth;
 							LITEBot.BOTPath(&pth, BOT_LOG_NM);
-							BOT_FILE_M xfile(logm.logtitle.c_str(), ".txt", pth.c_str(), BOT_FILE_APPEND, BOT_F_CON, -1, LITEBot.lid);
+							BOT_FILE_M xfile(logm.logtitle.c_str(), ".txt", pth.c_str(), BOT_FILE_APND, BOT_F_CON, -1, LITEBot.lid);
 							sint ox = -1;
 							rc = LITEBot.BOTOpenFile(&xfile, &ox, true);
 
@@ -24726,7 +25505,7 @@ void* machine::LogMaintenance(void* vp_)
 			}
 		}
 
-		rc = LITEBot.ThreadRest((slint)BOT_LOGREST, (sint)BOT_THRQ_LOG);
+		rc = LITEBot.ThreadRest((sllint)BOT_LOGREST, (sint)BOT_THRQ_LOG);
 		
 		if (rc)
 		{
@@ -25011,7 +25790,7 @@ void* machine::ServThread(void* vp_)
 
 	while (!done)
 	{
-		rc = LITEBot.ThreadRest((slint)BOT_SERVREST, (sint)BOT_THRQ_CONS);
+		rc = LITEBot.ThreadRest((sllint)BOT_SERVREST, (sint)BOT_THRQ_CONS);
 
 		if (rc)
 		{
@@ -25067,7 +25846,7 @@ void* machine::CliThread(void* vp_)
 
 	while (!done)
 	{
-		rc = LITEBot.ThreadRest((slint)BOT_CLIREST, (sint)BOT_THRQ_CONS);
+		rc = LITEBot.ThreadRest((sllint)BOT_CLIREST, (sint)BOT_THRQ_CONS);
 
 		if (rc)
 		{
@@ -25171,7 +25950,7 @@ void* machine::DBMaintenance(void* vp_)
 			}
 		}
 	
-		rc = LITEBot.ThreadRest((slint)BOT_DBREST, (sint)BOT_THRQ_DBM);
+		rc = LITEBot.ThreadRest((sllint)BOT_DBREST, (sint)BOT_THRQ_DBM);
 
 		if (rc)
 		{
@@ -25540,52 +26319,9 @@ std::string machine::Uppercase(c_char* str_)
 		}
 		case '+':
 		{
-			r_str.push_back(str_[i]);// using a common symbol seems to expand support for char constants so foreign chars will compile. comment out chars after this and compile, future compiles will succeed until c4droid is minimized or closed.
+			r_str.push_back(str_[i]);
 			break;
 		}
-		/*
-		case 'ä' :
-		{
-		r_str+=( 'Ä' );
-		break;
-		}
-
-		case 'ï' :
-		{
-		r_str+=( 'Ï' );
-		break;
-		}
-
-		case 'ë' :
-		{
-		r_str+=( 'Ë' );
-		break;
-		}
-
-		case 'ö' :
-		{
-		r_str+=( 'Ö' );
-		break;
-		}
-
-		case 'ü' :
-		{
-		r_str+=( 'Ü' );
-		break;
-		}
-
-		case 'ß' :
-		{
-		r_str+=( 'ß' );
-		break;
-		}
-
-		case 'ñ' :
-		{
-		r_str+=( 'Ñ' );
-		break;
-		}
-		*/
 		default:
 		{
 			r_str.push_back(str_[i]);
@@ -25686,151 +26422,6 @@ std::string machine::CleanPunctuation(c_char* i_)
 		{
 			break;
 		}
-		/*
-		case 'ß' :
-		case 'Ñ' :
-		case 'ñ' :
-		case 'ë' :
-		case 'ē' :
-		case 'ę' :
-		case 'ě' :
-		case 'ĕ' :
-		case 'ə' :
-		case 'è' :
-		case 'é' :
-		case 'ê' :
-		case 'ŕ' :
-		case 'ř' :
-		case 'þ' :
-		case 'ť' :
-		case 'ț' :
-		case 'ţ' :
-		case 'ý' :
-		case 'ų' :
-		case 'ű' :
-		case 'ů' :
-		case 'ū' :
-		case 'ü' :
-		case 'û' :
-		case 'ú' :
-		case 'ù' :
-		case 'į' :
-		case 'ī' :
-		case 'ï' :
-		case 'î' :
-		case 'í' :
-		case 'ì' :
-		case 'œ' :
-		case 'ő' :
-		case 'ø' :
-		case 'ö' :
-		case 'õ' :
-		case 'ô' :
-		case 'ó' :
-		case 'ò' :
-		case 'å' :
-		case 'æ' :
-		case 'ā' :
-		case 'ă' :
-		case 'ą' :
-		case '@' :
-		case 'à' :
-		case 'á' :
-		case 'â' :
-		case 'ã' :
-		case 'ä' :
-		case 'ś' :
-		case 'š' :
-		case 'ş' :
-		case '§' :
-		case 'ď' :
-		case 'đ' :
-		case 'ģ' :
-		case 'ğ' :
-		case 'ķ' :
-		case 'ł' :
-		case 'ľ' :
-		case 'ļ' :
-		case 'ĺ' :
-		case 'ź' :
-		case 'ż' :
-		case 'ž' :
-		case 'ç' :
-		case 'ć' :
-		case 'č' :
-		case 'ň' :
-		case 'ņ' :
-		case 'ń' :
-		case 'Ė' :
-		case 'Ę' :
-		case 'Ě' :
-		case 'Ĕ' :
-		case 'È' :
-		case 'É' :
-		case 'Ê' :
-		case 'Ë' :
-		case 'Ē' :
-		case 'Ŕ' :
-		case 'Ř' :
-		case 'Ť' :
-		case 'Ț' :
-		case 'Ţ' :
-		case 'Ý' :
-		case 'Ų' :
-		case 'Ű' :
-		case 'Ů' :
-		case 'Ū' :
-		case 'Ü' :
-		case 'Û' :
-		case 'Ú' :
-		case 'Ù' :
-		case 'Œ' :
-		case 'Ő' :
-		case 'Ø' :
-		case 'Ö' :
-		case 'Õ' :
-		case 'Ô' :
-		case 'Ó' :
-		case 'Ò' :
-		case 'Å' :
-		case 'Æ' :
-		case 'Ā' :
-		case 'Ă' :
-		case 'Ą' :
-		case 'À' :
-		case 'Á' :
-		case 'Â' :
-		case 'Ã' :
-		case 'Ä' :
-		case 'Ś' :
-		case 'Š' :
-		case 'Ş' :
-		case 'Ď' :
-		case 'Đ' :
-		case 'Ģ' :
-		case 'Ğ' :
-		case 'Ķ' :
-		case 'Ł' :
-		case 'Ľ' :
-		case 'Ļ' :
-		case 'Ĺ' :
-		case 'Ź' :
-		case 'Ż' :
-		case 'Ž' :
-		case 'Ç' :
-		case 'Ć' :
-		case 'Č' :
-		case 'Ň' :
-		case 'Ņ' :
-		case 'Ń' :
-		case '$' :
-		case '€' :
-		case '£' :
-		case '¥' :
-		{
-		break;
-		}
-		*/
 		default:
 		{
 			b = false;
