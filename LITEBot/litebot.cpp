@@ -34,7 +34,8 @@ FO_VEC fileo_vec;
 sllint thr_exe_min;
 
 // MTX_STRT
-bot_strt_up bot_strt;
+BOT_STRT_UP bot_strt;
+bot_strt_syms bot_strt_s;
 
 // MTX_FCON
 BOTF_CONN FCON[BOT_FS_LIM];
@@ -168,14 +169,14 @@ bool bot_sisa(c_char* val, sint slen)
 
 		while (x < 53)
 		{
-			if (!memcmp((void*)&val[slen], (void*)&nstr[slen], sizeof(_char)))
+			if (!memcmp((void*)&val[slen], (void*)&nstr[x], sizeof(_char)))
 			{
-				x = 10;
+				x = 53;
 			}
 			x++;
 		}
 
-		if (x == 10)
+		if (x == 53)
 		{
 			return false;
 		}
@@ -195,7 +196,7 @@ sint bot_shasa(c_char* val, sint slen)
 	{
 		for (x = 0; x < 53; x++)
 		{
-			if (!memcmp((void*)&val[slen], (void*)&nstr[slen], sizeof(_char)))
+			if (!memcmp((void*)&val[slen], (void*)&nstr[x], sizeof(_char)))
 			{
 				return (sint)slen;
 			}
@@ -3513,7 +3514,7 @@ sint machine::LITEBot(carr_256 *ncar_, bool do_start_up)
 	{
 		carr_256 outp;
 		sint rc = bot_sprintf(outp.carr, outp.siz, "LITEBot(carr_256* ncar_(%i), bool do_start_up(%u))", (sint)ncar_, (uint)do_start_up);
-		rc = SOutput(outp.carr, 2);
+		rc = Output(outp.carr, 2, false);
 	}
 	if (!ncar_)
 	{
@@ -4194,7 +4195,7 @@ sint machine::ReqMTX(lok_req* nreq, bool wait)
 						{
 							carr_128 ncar;
 							sint xp = bot_sprintf(ncar.carr, ncar.siz, "requested mutex for element:%i is_meta: -1", nreq->ele);
-							xp = BotOut(ncar.carr);
+							xp = Output(ncar.carr, 1);
 						}
 					}
 				}
@@ -4326,7 +4327,7 @@ sint machine::LockGMutex(sint g_opt, sint* had_lock, bool sleep_wait)
 	{
 		carr_128 outp;
 		sint op = bot_sprintf(outp.carr, outp.siz, "::LockGMutex(sint g_opt(%i), sint* had_lock(%i), bool sleep_wait(%u))", g_opt, (sint)had_lock, (uint)sleep_wait);
-		op = SOutput(outp.carr, 2);
+		op = Output(outp.carr, 2);
 	}
 
 	if (g_opt < 0 || !had_lock)
@@ -4401,7 +4402,7 @@ sint machine::LockGMutex(sint g_opt, sint* had_lock, bool sleep_wait)
 			{
 				carr_64 outp;
 				sint op = bot_sprintf(outp.carr, outp.siz, "unable to lock Global Mutex(opt:%i sleep count(%u).", g_opt, ct);
-				op = SOutput(outp.carr, 2);
+				op = Output(outp.carr, 2);
 			}
 		}
 		return -1;
@@ -4412,7 +4413,7 @@ sint machine::LockGMutex(sint g_opt, sint* had_lock, bool sleep_wait)
 		{
 			carr_64 outp;
 			sint op = bot_sprintf(outp.carr, outp.siz, "Locked Global Mutex(opt:%i sleep count(%u)).", g_opt, ct);
-			op = SOutput(outp.carr, 2);
+			op = Output(outp.carr, 2);
 		}
 	}
 	return ele;
@@ -4423,7 +4424,7 @@ sint machine::UnlockGMutex(sint g_opt)
 	{
 		carr_256 outp;
 		sint op = bot_sprintf(outp.carr, outp.siz, "UnlockGMutex(sint g_opt(%i))", g_opt);
-		op = SOutput(outp.carr, 2);
+		op = Output(outp.carr, 2);
 	}
 
 	if (g_opt < 0)
@@ -4445,14 +4446,14 @@ sint machine::UnlockGMutex(sint g_opt)
 			{
 				carr_128 outp;
 				sint op = bot_sprintf(outp.carr, outp.siz, "unable to Clear() lok_req(ele:%i, mtx:%i)).", ele, g_opt);
-				op = SOutput(outp.carr, 2);
+				op = Output(outp.carr, 2);
 			}
 		}
 		if (debug_lvl >= 900 && debug_m)
 		{
 			carr_64 outp;
 			sint op = bot_sprintf(outp.carr, outp.siz, "Unlocked Global Mutex(opt:%i).", g_opt);
-			op = SOutput(outp.carr, 2);
+			op = Output(outp.carr, 2);
 		}
 	}
 	if (lox)
@@ -4469,7 +4470,7 @@ sint machine::UnlockGMutex(sint g_opt)
 			{
 				sint op = bot_sprintf(outp.carr, outp.siz, "unable to unlock Global Mutex(opt:%i).", g_opt);
 			}
-			sint op = SOutput(outp.carr, 2);
+			sint op = Output(outp.carr, 2);
 		}
 		return -1;
 	}
@@ -4484,7 +4485,7 @@ sint machine::LockElement(sint g_opt, sint ele, sint* had_lock, bool sleep_wait 
 	{
 		carr_256 outp;
 		sint op = bot_sprintf(outp.carr, outp.siz, "LockElement(sint g_opt(%i), sint ele(%i), sint* had_lock(%i), bool sleep_wait(%u), bool is_meta(%u))", g_opt, ele, (sint)had_lock, (uint)sleep_wait, (uint)is_meta);
-		op = SOutput(outp.carr, 2);
+		op = Output(outp.carr, 2);
 	}
 
 	if (g_opt < 0 || ele < 0 || !had_lock)
@@ -4571,7 +4572,7 @@ sint machine::LockElement(sint g_opt, sint ele, sint* had_lock, bool sleep_wait 
 			{
 				carr_128 outp;
 				sint op = bot_sprintf(outp.carr, outp.siz, "unable to lock element(g:%i ele:%i is_meta:%u).", g_opt, ele, (uint)is_meta);
-				op = SOutput(outp.carr, 2);
+				op = Output(outp.carr, 2);
 			}
 		}
 		return -1;
@@ -4580,7 +4581,7 @@ sint machine::LockElement(sint g_opt, sint ele, sint* had_lock, bool sleep_wait 
 	{
 		carr_128 outp;
 		sint op = bot_sprintf(outp.carr, outp.siz, "locked element(g:%i ele:%i is_meta:%u).", g_opt, ele, (uint)is_meta);
-		op = SOutput(outp.carr, 2);
+		op = Output(outp.carr, 2);
 	}
 	return ret;
 }
@@ -4590,7 +4591,7 @@ sint machine::UnlockElement(sint g_opt, sint ele, bool is_meta)
 	{
 		carr_256 outp;
 		sint op = bot_sprintf(outp.carr, outp.siz, "UnlockElement(sint g_opt(%i), sint ele(%i), bool is_meta(%u))", g_opt, ele, (uint)is_meta);
-		op = SOutput(outp.carr, 2);
+		op = Output(outp.carr, 2);
 	}
 
 	if (g_opt < 0 || ele < 0)
@@ -4635,7 +4636,7 @@ sint machine::UnlockElement(sint g_opt, sint ele, bool is_meta)
 		{
 			carr_128 outp;
 			sint op = bot_sprintf(outp.carr, outp.siz, "unlocked element(g:%i ele:%i is_meta:%u).", g_opt, ele, (uint)is_meta);
-			op = SOutput(outp.carr, 2);
+			op = Output(outp.carr, 2);
 		}
 		return 0;
 	}
@@ -4644,7 +4645,7 @@ sint machine::UnlockElement(sint g_opt, sint ele, bool is_meta)
 	{
 		carr_128 outp;
 		sint op = bot_sprintf(outp.carr, outp.siz, "unable to unlock element(g:%i ele:%i is_meta:%u).", g_opt, ele, (uint)is_meta);
-		op = SOutput(outp.carr, 2);
+		op = Output(outp.carr, 2);
 	}
 	return -1;
 }
@@ -4827,7 +4828,7 @@ sint machine::PushToVec(void *val_, sint g_opt, bool check, bool use_empty, bool
 	{
 		carr_256 outp;
 		sint op = bot_sprintf(outp.carr, outp.siz, "PushToVec(void *val_(%i), sint g_opt(%i), bool is_meta(%u))", (sint)val_, g_opt, (uint)is_meta);
-		op = SOutput(outp.carr, 2);
+		op = Output(outp.carr, 2);
 	}
 	sint ret = -1;
 	sint h = -1;
@@ -5014,7 +5015,7 @@ sint machine::PushToVecEleMem(void *val_, sint g_opt, sint ele, sint memb, sint 
 	{
 		carr_256 outp;
 		sint op = bot_sprintf(outp.carr, outp.siz, "PushToVecEleMem(void *val_(%i), sint g_opt(%i), sint ele(%i), sint memb(%i), sint g_opt(%i), bool is_meta(%u))", (sint)val_, g_opt, ele, memb, v_opt, (uint)is_meta);
-		op = SOutput(outp.carr, 2);
+		op = Output(outp.carr, 2);
 	}
 
 	sint ret = -1;
@@ -5197,7 +5198,7 @@ sint machine::GetInVec(void* val_, sint g_opt, bool cine, bool is_meta)
 	{
 		carr_256 outp;
 		sint op = bot_sprintf(outp.carr, outp.siz, "GetInVec(void* val_(%i), sint g_opt(%i), bool cine(%u), bool is_meta(%u))", (sint)val_, g_opt, (uint)cine, (uint)is_meta);
-		op = SOutput(outp.carr, 2);
+		op = Output(outp.carr, 2);
 	}
 
 	sint vsiz = VecSize(g_opt);
@@ -5436,7 +5437,7 @@ sint machine::GetVecEle(void* val_, sint g_opt, sint ele, bool is_meta)
 	{
 		carr_256 outp;
 		sint op = bot_sprintf(outp.carr, outp.siz, "GetVecEle(void* val_(%i), sint g_opt(%i), size_t ele(%u), bool is_meta(%u))", (sint)val_, g_opt, ele, (uint)is_meta);
-		op = SOutput(outp.carr, 2);
+		op = Output(outp.carr, 2);
 	}
 
 	if (!val_ || g_opt < 0 || ele < 0)
@@ -5553,7 +5554,7 @@ sint machine::GetEmptyVecEle(sint g_opt, bool is_meta, sint mode)
 	{
 		carr_256 outp;
 		sint op = bot_sprintf(outp.carr, outp.siz, "GetEmptyVecEle(sint g_opt(%i), bool is_meta(%u), sint mode(%i))", g_opt, (uint)is_meta, mode);
-		op = SOutput(outp.carr, 2);
+		op = Output(outp.carr, 2);
 	}
 
 	if (!mode || mode < 0)
@@ -5596,7 +5597,7 @@ sint machine::GetVecEleMem(void* val_, sint g_opt, sint ele, sint memb, bool is_
 	{
 		carr_256 outp;
 		sint op = bot_sprintf(outp.carr, outp.siz, "GetVecEleMem(void* val_(%i), sint g_opt(%i), size_t ele(%u), sint memb(%i), bool is_meta(%u))", (sint)val_, g_opt, ele, memb, (uint)is_meta);
-		op = SOutput(outp.carr, 2);
+		op = Output(outp.carr, 2);
 	}
 
 	if (!val_ || ele < 0 || g_opt < 0 || memb < 0)
@@ -5703,7 +5704,7 @@ sint machine::SetVecEle(void* val_, sint g_opt, sint ele, bool cine, bool is_met
 	{
 		carr_256 outp;
 		sint op = bot_sprintf(outp.carr, outp.siz, "SetVecEle(void* val_(%i), sint g_opt(%i), sint ele(%i), bool cine(%u), bool is_meta(%u))", (sint)val_, g_opt, ele, (uint)cine, (uint)is_meta);
-		op = SOutput(outp.carr, 2);
+		op = Output(outp.carr, 2);
 	}
 
 	sint ret = -1;
@@ -5943,7 +5944,7 @@ sint machine::SetVecEleMem(void* val_, sint g_opt, sint ele, sint memb, bool is_
 	{
 		carr_256 outp;
 		sint op = bot_sprintf(outp.carr, outp.siz, "SetVecEleMem(void* val_(%i), sint g_opt(%i), sint ele(%i), sint memb(%i), bool is_meta(%u))", (sint)val_, g_opt, ele, memb, (uint)is_meta);
-		op = SOutput(outp.carr, 2);
+		op = Output(outp.carr, 2);
 	}
 	sint ret = -1;
 	sint xh = -1;
@@ -6109,7 +6110,7 @@ sint machine::ClearVecEle(sint g_opt, sint ele, bool is_meta)
 	{
 		carr_256 outp;
 		sint op = bot_sprintf(outp.carr, outp.siz, "ClearVecEle(sint g_opt(%i), sint ele(%i), bool is_meta(%u))", g_opt, ele, (uint)is_meta);
-		op = SOutput(outp.carr, 2);
+		op = Output(outp.carr, 2);
 	}
 	sint ret = -1;
 	sint xh = -1;
@@ -6246,7 +6247,7 @@ sint machine::ClearVecEleMem(sint g_opt, sint ele, sint memb, bool is_meta)
 	{
 		carr_256 outp;
 		sint op = bot_sprintf(outp.carr, outp.siz, "ClearVecEle(sint g_opt(%i), sint ele(%i), sint memb(%i), bool is_meta(%u))", g_opt, ele, memb, (uint)is_meta);
-		op = SOutput(outp.carr, 2);
+		op = Output(outp.carr, 2);
 	}
 	sint ret = -1;
 	sint xh = -1;
@@ -6367,7 +6368,7 @@ sint machine::VecSize(sint g_opt, bool is_meta)
 	{
 		carr_128 outp;
 		sint op = bot_sprintf(outp.carr, outp.siz, "VecSize(sint g_opt(%i), bool is_meta(%u))", g_opt, (uint)is_meta);
-		op = SOutput(outp.carr, 2);
+		op = Output(outp.carr, 2);
 	}
 	sint ret = -1;
 	sint h = -1;
@@ -6458,7 +6459,7 @@ sint machine::GetElementNames(sint g_opt, std::vector<std::string>* nvec, bool i
 	{
 		carr_128 outp;
 		sint op = bot_sprintf(outp.carr, outp.siz, "GetElementNames(sint g_opt(%i), std::vector<std::string>* nvec(%i), is_meta(%u))", g_opt, (sint)nvec, (uint)is_meta);
-		op = SOutput(outp.carr, 2);
+		op = Output(outp.carr, 2);
 	}
 
 	sint ret = -1;
@@ -6556,7 +6557,7 @@ sint machine::GetElementIDs(sint g_opt, std::vector<sint> *nvec, bool is_meta)
 	{
 		carr_128 outp;
 		sint op = bot_sprintf(outp.carr, outp.siz, "GetElementIDs(sint g_opt(%i), std::vector<sint>* nvec(%i), is_meta(%u))", g_opt, (sint)nvec, (uint)is_meta);
-		op = SOutput(outp.carr, 2);
+		op = Output(outp.carr, 2);
 	}
 
 	sint ret = -1;
@@ -6917,8 +6918,13 @@ sint machine::LogName(sint opt, carr_256* nm, carr_32* dat, bool tomine)
 }
 sint machine::LogPut(c_char* msg_, sint option)
 {
+	if (!msg_)
+	{
+		return -1;
+	}
 	carr_32 dat;
 	sint xc = GetDate(&dat, false);
+	char nl = '\n';
 
 	if (log_to[0])
 	{
@@ -6941,16 +6947,30 @@ sint machine::LogPut(c_char* msg_, sint option)
 		{
 			if (debug_m > 1)
 			{
-				str.append("[Q]");
+				for (uint x = 0; x < stk_ct; x++)
+				{
+					str.append("[Q]");
+				}
+
 				str.append(msg_);
-				str.push_back('\n');
+
+				if (memcmp((void*)&str[str.length() - 1], (void*)&nl, sizeof(_char)))
+				{
+					str.push_back(nl);
+				}
+
 				u_logs[uc].log_q.push_back(str);
 			}
 			return 0;
 		}
 
 		str.append(msg_);
-		str.push_back('\n');
+
+		if (memcmp((void*)&str[str.length() - 1], (void*)&nl, sizeof(_char)))
+		{
+			str.push_back(nl);
+		}
+
 		u_logs[uc].log_q.push_back(str);
 		BOT_LOGDET_M Current_m(nam.carr, dat.carr, option);
 		xc = GetInVec(&Current_m, MTX_LOG);
@@ -6995,16 +7015,29 @@ sint machine::LogPut(c_char* msg_, sint option)
 		{
 			if (debug_m > 1)
 			{
-				str.append("[Q]");
+				for (uint x = 0; x < stk_ct; x++)
+				{
+					str.append("[Q]");
+				}
 				str.append(msg_);
-				str.push_back('\n');
+
+				if (memcmp((void*)&str[str.length() - 1], (void*)&nl, sizeof(_char)))
+				{
+					str.push_back(nl);
+				}
+
 				u_logs[uc].log_q.push_back(str);
 			}
 			return 0;
 		}
 
 		str.append(msg_);
-		str.push_back('\n');
+
+		if (memcmp((void*)&str[str.length() - 1], (void*)&nl, sizeof(_char)))
+		{
+			str.push_back(nl);
+		}
+
 		u_logs[uc].log_q.push_back(str);
 		BOT_LOGDET_M Current_m(nam.carr, dat.carr, option);
 		xc = GetInVec(&Current_m, MTX_LOG);
@@ -7027,31 +7060,30 @@ sint machine::LogPut(c_char* msg_, sint option)
 		}
 		xc = PushToVecEleMem((void*)&u_logs[uc].log_q, MTX_LOG, Current_m.lid, BOT_LOG_Q, 3, false);
 		u_logs[uc].log_q.clear();
-		//xc = vtool.CLNV(&u_logs);
 	}
 	return 0;
 }
 
 // Commands
-sint machine::Command(std::vector<std::string> *vec_)
+sint machine::Command(std::vector<std::string>* vec_)
 {
 	if (debug_lvl >= 1000 && debug_m)
 	{
-		carr_96 outp;
-		sint op = bot_sprintf(outp.carr, outp.siz, "::Command(std::vector<std::string> *vec_(%i))", (sint)vec_);
-		op = SOutput(outp.carr, 2);
+		carr_64 outp;
+		sint op = bot_sprintf(outp.carr, outp.siz, "::Command(std::vector<std::string>* vec_(%i))", (sint)vec_);
+		op = Output(outp.carr, 2);
 	}
 	if (!vec_)
 	{
 		return -1;
 	}
 
-	if (vec_->empty())
+	if (vec_->size() < 1)
 	{
 		return -1;
 	}
 
-	BOTCOMMAND Command(Uppercase(vec_->at(0).substr(2,vec_->at(0).length()-2).c_str()).c_str());
+	BOTCOMMAND Command(UCASE(vec_->at(0).c_str()).c_str());
 	sint xc = GetCommand(&Command);
 
 	if (Command.cmd_id < 0)
@@ -7071,7 +7103,7 @@ sint machine::Command(std::vector<std::string> *vec_)
 	{
 		if (debug_lvl >= 100 && debug_m)
 		{
-			sint oc = SOutput("Telling threads to finish", 2);
+			sint oc = Output("Telling threads to finish", 2);
 		}
 		sint oc = SetThreadQuit(1);
 		break;
@@ -7083,7 +7115,7 @@ sint machine::Command(std::vector<std::string> *vec_)
 			if (strlen(vec_->at(1).c_str()))
 			{
 				BOT_CLIENT ProcClient;
-				ProcClient.login_name.append(Uppercase(vec_->at(1).c_str()).c_str());
+				ProcClient.login_name.append(UCASE(vec_->at(1).c_str()).c_str());
 				sint rc = SetPCliMem(BOT_C_LOGIN_NAME, (void*)ProcClient.login_name.c_str());
 				rc = GetLogin(vec_->at(2).c_str());
 
@@ -7097,7 +7129,7 @@ sint machine::Command(std::vector<std::string> *vec_)
 				}
 				else
 				{
-					rc = Output("login failed", 2, 0);
+					rc = Output(true, "login failed", 2, 0);
 					rc = GetPCli(&ProcClient);
 					ProcClient.updatelogin = true;
 					rc = UpdateAccount(&ProcClient);
@@ -7111,7 +7143,7 @@ sint machine::Command(std::vector<std::string> *vec_)
 	{
 		if (debug_lvl >= 1000 && debug_m)
 		{
-			sint oc = SOutput("Found BOTCOMMAND id 3", 2);
+			sint oc = Output("Found BOTCOMMAND id 3", 2);
 		}
 		std::vector<BOTCOMMAND> vec;
 		xc = GetCommands(&vec);
@@ -7122,7 +7154,7 @@ sint machine::Command(std::vector<std::string> *vec_)
 			{
 				carr_128 ncar;
 				sint oc = bot_sprintf(ncar.carr, ncar.siz, "%i %s", vec[x].cmd_id, vec[x].cmd.c_str());
-				oc = Output(ncar.carr, 2, 0);
+				oc = Output(true, ncar.carr, 2, 0);
 			}
 		}
 		else
@@ -7138,7 +7170,7 @@ sint machine::Command(std::vector<std::string> *vec_)
 				}
 				else
 				{
-					astr.append(Uppercase(vec_->at(y).c_str()).c_str());
+					astr.append(UCASE(vec_->at(y).c_str()).c_str());
 				}
 				
 				for (uint x = 0; x < vec.size(); x++)
@@ -7153,7 +7185,7 @@ sint machine::Command(std::vector<std::string> *vec_)
 					}
 					else
 					{
-						bstr.append(Uppercase(vec[x].cmd.c_str()).c_str());
+						bstr.append(UCASE(vec[x].cmd.c_str()).c_str());
 					}
 
 					if (!strcmp(astr.c_str(), bstr.c_str()))
@@ -7200,74 +7232,6 @@ sint machine::Command(std::vector<std::string> *vec_)
 								"\nIf 0 args: show current level and mode", ncar.carr);
 							break;
 						}
-						case 6:
-						{
-							break;
-						}
-						case 7:
-						{
-							break;
-						}
-						case 8:
-						{
-							break;
-						}
-						case 9:
-						{
-							break;
-						}
-						case 10:
-						{
-							break;
-						}
-						case 11:
-						{
-							break;
-						}
-						case 12:
-						{
-							break;
-						}
-						case 13:
-						{
-							break;
-						}
-						case 14:
-						{
-							break;
-						}
-						case 15:
-						{
-							break;
-						}
-						case 16:
-						{
-							break;
-						}
-						case 17:
-						{
-							oc = bot_sprintf(xcar.carr, xcar.siz, "%s" \
-								"\na: command name" \
-								"\nb: privlege level 0-UINT_MAX" \
-								"\nAdd a command to the db", ncar.carr);
-							break;
-						}
-						case 18:
-						{
-							break;
-						}
-						case 19:
-						{
-							break;
-						}
-						case 20:
-						{
-							break;
-						}
-						case 21:
-						{
-							break;
-						}
 						case 96:
 						{
 							oc = bot_sprintf(xcar.carr, xcar.siz, "!DISABLED!%s\nusage: /#readfile [a]", ncar.carr);
@@ -7297,12 +7261,12 @@ sint machine::Command(std::vector<std::string> *vec_)
 								"\nGet host i.p. addresses", ncar.carr);
 							break;
 						}
-						case 101:
-						{
-							break;
-						}
 						case 1000:
 						{
+							oc = bot_sprintf(xcar.carr, xcar.siz, "%s" \
+								"\na: command name" \
+								"\nb: privlege level 0-UINT_MAX" \
+								"\nAdd a command to the db", ncar.carr);
 							break;
 						}
 						default:
@@ -7312,7 +7276,7 @@ sint machine::Command(std::vector<std::string> *vec_)
 						}
 						if (xcar.carr[0] != '\0')
 						{
-							oc = Output(xcar.carr, 2, 0);
+							oc = Output(true, xcar.carr, 2, 0);
 						}
 					}
 				}
@@ -7336,14 +7300,14 @@ sint machine::Command(std::vector<std::string> *vec_)
 	{
 		if (debug_lvl >= 1000 && debug_m)
 		{
-			sint oc = SOutput("Found BOTCOMMAND id 5", 2);
+			sint oc = Output("Found BOTCOMMAND id 5", 2);
 		}
 
 		if (vec_->size() == 1)
 		{
 			carr_128 ncar;
 			xc = bot_sprintf(ncar.carr, ncar.siz, "debug level:%i debug mode:%i", debug_lvl, debug_m);
-			xc = Output(ncar.carr, 2, 0);
+			xc = Output(true, ncar.carr, 2, 0);
 		}
 		else if ((vec_->size() == 2) && (vec_->at(1).length() && bot_sisn(vec_->at(1).c_str(), (sint)vec_->at(1).length())))
 		{
@@ -7363,18 +7327,219 @@ sint machine::Command(std::vector<std::string> *vec_)
 				"\n(optional)a: new level 0-UINT_MAX - If arg(a) set the current level. debug_level restricts debug messages by 'approximate' level within code where more basic functions debug messages are a higher level." \
 				"\n(optional)b: new mode 0-UINT_MAX - If arg(b) set the current mode 0: no debug output, 1: debug output to logs only, 2: debug output to console and logs" \
 				"\nIf 0 args: show current level and mode");
-			oc = Output(xcar.carr, 2, 0);
+			oc = Output(true, xcar.carr, 2, 0);
 		}
 		break;
 	}
-	case 17:
+	case 96:
 	{
 		if (debug_lvl >= 1000 && debug_m)
 		{
-			sint oc = SOutput("Found BOTCOMMAND id 17", 2);
+			sint oc = Output("Found BOTCOMMAND id 96", 2);
+		}
+		carr_48 xcar;
+		sint oc = bot_sprintf(xcar.carr, xcar.siz,
+			"\n!DISABLED!");
+		oc = Output(true, xcar.carr, 2, 0);
+		xc = 0;
+		break;
+	}
+	case 98:
+	{
+		if (debug_lvl >= 1000 && debug_m)
+		{
+			sint oc = Output("Found BOTCOMMAND id 98", 2);
+		}
+		if (vec_->size() == 6)
+		{
+			BOT_FILE_M scp(vec_->at(3).c_str(), vec_->at(4).c_str(), vec_->at(5).c_str(), BOT_FILE_APND, BOT_F_CON);
+			sint ox = -1;
+			sint rc = BOTOpenFile(&scp, &ox);
+
+			if (xc < 0)
+			{
+				return -1;
+			}
+
+			bot_script ns;
+			BOT_STMT qt(false, 0, "scripts", "SCRIPTS", 1, &ns);
+			rc = qt.AddCol("NAME", LEncStrI(vec_->at(3).c_str(), -1).c_str());
+			rc = qt.AddCol("TYPE", LEncStrI(vec_->at(4).c_str(), -1).c_str());
+			rc = qt.AddCol("DEST", LEncStrI(vec_->at(5).c_str(), -1).c_str());
+			rc = Query(&qt, BOT_RTV_SCRPT);
+
+			if (rc > -1)
+			{
+				return -1;
+			}
+
+			std::vector<BOT_STMT> tvec;
+			BOT_STMT t(false, 2, "scripts", "SCRIPTS", 1);
+
+			if (vec_->at(1).length() < 10)
+			{
+				uint v = (uint)atoi(vec_->at(1).c_str());
+				const uint y = (sizeof(v) * 2) + 4;
+				_char nuchar[y]{ 0 };
+				sint rc = bot_sprintf(nuchar, y, "X'%02X'", vec_->at(1).c_str());
+				rc = t.AddCol("MODE", nuchar);
+			}
+
+			if (vec_->at(2).length() < 128)
+			{
+				sint rc = t.AddCol("ENCODING", "X'");
+
+				for (uint z = 0; z < vec_->at(2).length(); z++)
+				{
+					const uint y = (sizeof(vec_->at(2)[z]) * 2) + 1;
+					_char nuchar[y]{ 0 };
+					rc = bot_sprintf(nuchar, y, "%02X", (u_char)vec_->at(2)[z]);
+					t.cols[rc].append(nuchar);
+				}
+
+				t.cols[rc].append("'");
+			}
+
+			if (vec_->at(3).length() < 512)
+			{
+				sint rc = t.AddCol("NAME", "X'");
+
+				for (uint z = 0; z < vec_->at(3).length(); z++)
+				{
+					const uint y = (sizeof(vec_->at(3)[z]) * 2) + 1;
+					_char nuchar[y]{ 0 };
+					rc = bot_sprintf(nuchar, y, "%02X", (u_char)vec_->at(3)[z]);
+					t.cols[rc].append(nuchar);
+				}
+
+				t.cols[rc].append("'");
+			}
+
+			if (vec_->at(4).length() < 256)
+			{
+				sint rc = t.AddCol("TYPE", "X'");
+
+				for (uint z = 0; z < vec_->at(4).length(); z++)
+				{
+					const uint y = (sizeof(vec_->at(4)[z]) * 2) + 1;
+					_char nuchar[y]{ 0 };
+					rc = bot_sprintf(nuchar, y, "%02X", (u_char)vec_->at(4)[z]);
+					t.cols[rc].append(nuchar);
+				}
+
+				t.cols[rc].append("'");
+			}
+
+			if (vec_->at(5).length() < 512)
+			{
+				sint rc = t.AddCol("DEST", "X'");
+
+				for (uint z = 0; z < vec_->at(5).length(); z++)
+				{
+					const uint y = (sizeof(vec_->at(5)[z]) * 2) + 1;
+					_char nuchar[y]{ 0 };
+					rc = bot_sprintf(nuchar, y, "%02X", (u_char)vec_->at(5)[z]);
+					t.cols[rc].append(nuchar);
+				}
+
+				t.cols[rc].append("'");
+			}
+			t.cspec = 2;
+			tvec.push_back(t);
+			xc = Commit(&tvec);
+		}
+		else
+		{
+			carr_192 xcar;
+			sint oc = bot_sprintf(xcar.carr, xcar.siz,
+				"\na: mode" \
+				"\nb: encoding" \
+				"\nc: name" \
+				"\nd: type" \
+				"\ne: file destination" \
+				"\nAdd a script at file destination to the db");
+			oc = Output(true, xcar.carr, 2, 0);
+		}
+		break;
+	}
+	case 99:
+	{
+		if (debug_lvl >= 1000 && debug_m)
+		{
+			sint oc = Output("Found BOTCOMMAND id 99", 2);
+		}
+		if (vec_->size() == 2)
+		{
+			if (bot_sisn(vec_->at(1).c_str()))
+			{
+				bot_script rval;
+				BOT_STMT t(false, 0, "scripts", "SCRIPTS", 1, &rval);
+				sint rc = t.AddCol("ID", LEncStrI(vec_->at(1).c_str(), -1).c_str());
+				rc = Query(&t, BOT_RTV_SCRPT);
+
+				if (rc > -1)
+				{
+					system(rval.script.c_str());
+				}
+			}
+			else
+			{
+
+				bot_script rval;
+				BOT_STMT t(false, 0, "scripts", "SCRIPTS", 1);
+				sint rc = t.AddCol("DEST", LEncStrI(vec_->at(1).c_str(), -1).c_str());
+				t.rblk = (void*)&rval;
+				rc = Query(&t, BOT_RTV_SCRPT);
+
+				if (rc > -1)
+				{
+					system(rval.script.c_str());
+				}
+			}
+		}
+		else
+		{
+			carr_192 xcar;
+			sint oc = bot_sprintf(xcar.carr, xcar.siz,
+				"\na: script name or id" \
+				"\nAttempt to run script with a call to system(c_char*)");
+			oc = Output(true, xcar.carr, 2, 0);
+		}
+		break;
+	}
+	case 100:
+	{
+		if (debug_lvl >= 1000 && debug_m)
+		{
+			sint oc = Output("Found BOTCOMMAND id 100", 2);
+		}
+		TINFO_M tts((sint)PTHREAD_CREATE_JOINABLE, "GIPS", GIPS, lid);
+		sint rc = InitThread(&tts, &xc);
+		break;
+	}
+	case 1000:
+	{
+		if (debug_lvl >= 1000 && debug_m)
+		{
+			sint oc = Output("Found BOTCOMMAND id 1000", 2);
 		}
 		if (vec_->size() > 3)
 		{
+			if (!bot_sisn(vec_->at(2).c_str(), vec_->at(2).length()))
+			{
+				carr_128 ncar;
+				sint xp = bot_sprintf(ncar.carr, ncar.siz, "Command ID(%s) invalid", vec_->at(2).c_str());
+				xp = Output(true, ncar.carr, 2, 0);
+				return -1;
+			}
+			if (!bot_sisn(vec_->at(3).c_str(), vec_->at(3).length()))
+			{
+				carr_128 ncar;
+				sint xp = bot_sprintf(ncar.carr, ncar.siz, "Command Priv(%s) invalid", vec_->at(3).c_str());
+				xp = Output(true, ncar.carr, 2, 0);
+				return -1;
+			}
+			
 			sint ox = GetPCliMem(BOT_C_PRIV, (void*)&xc);
 			ox = (sint)atoi(vec_->at(3).c_str());
 
@@ -7382,11 +7547,17 @@ sint machine::Command(std::vector<std::string> *vec_)
 			{
 				carr_128 ncar;
 				sint xp = bot_sprintf(ncar.carr, ncar.siz, "Command Priv(%i) exceeds User Priv(%i)", ox, xc);
-				xp = Output(ncar.carr, 2, 0);
+				xp = Output(true, ncar.carr, 2, 0);
 				return -1;
 			}
 
 			ox = (sint)atoi(vec_->at(2).c_str());
+
+			if (ox > 999)
+			{
+				return -1;
+			}
+
 			BOTCOMMAND Cmd("", ox);
 			xc = GetCommand(&Cmd);
 
@@ -7420,14 +7591,14 @@ sint machine::Command(std::vector<std::string> *vec_)
 				sint na = 0;
 				sint no = 0;
 				std::string resp;
-				carr_64 xcar;
+				carr_128 xcar;
 				xc = bot_sprintf(xcar.carr, xcar.siz, "Required arg(%i): [desc] || empty to continue || EXIT to exit", na + 1);
 
 				while (strlen(xcar.carr))
 				{
-					xc = Output(xcar.carr, 2, 0);
+					xc = Output(true, xcar.carr, 2, 0);
 					bot_strclr(xcar.carr);
-					xc = Input(&resp);
+					xc = Input(": ", &resp);
 
 					if (xc < 0)
 					{
@@ -7440,7 +7611,7 @@ sint machine::Command(std::vector<std::string> *vec_)
 						{
 							xc = bot_sprintf(xcar.carr, xcar.siz, "Length exceeds 999 characters");
 						}
-						else if (!strcmp(Uppercase(resp.c_str()).c_str(), "EXIT"))
+						else if (!strcmp(UCASE(resp.c_str()).c_str(), "EXIT"))
 						{
 							return 0;
 						}
@@ -7457,14 +7628,14 @@ sint machine::Command(std::vector<std::string> *vec_)
 					}
 					resp.clear();
 				}
-				
+
 				xc = bot_sprintf(xcar.carr, xcar.siz, "Optional arg(%i): [desc] || empty to continue || EXIT to exit", na + no + 1);
 
 				while (strlen(xcar.carr))
 				{
-					xc = Output(xcar.carr, 2, 0);
+					xc = Output(true, xcar.carr, 2, 0);
 					bot_strclr(xcar.carr);
-					xc = Input(&resp);
+					xc = Input(": ", &resp);
 
 					if (xc < 0)
 					{
@@ -7477,7 +7648,7 @@ sint machine::Command(std::vector<std::string> *vec_)
 						{
 							xc = bot_sprintf(xcar.carr, xcar.siz, "Length exceeds 999 characters");
 						}
-						else if (!strcmp(Uppercase(resp.c_str()).c_str(), "EXIT"))
+						else if (!strcmp(UCASE(resp.c_str()).c_str(), "EXIT"))
 						{
 							return 0;
 						}
@@ -7499,9 +7670,9 @@ sint machine::Command(std::vector<std::string> *vec_)
 
 				while (strlen(xcar.carr))
 				{
-					xc = Output(xcar.carr, 2, 0);
+					xc = Output(true, xcar.carr, 2, 0);
 					bot_strclr(xcar.carr);
-					xc = Input(&resp);
+					xc = Input(": ", &resp);
 
 					if (xc < 0)
 					{
@@ -7514,7 +7685,7 @@ sint machine::Command(std::vector<std::string> *vec_)
 						{
 							xc = bot_sprintf(xcar.carr, xcar.siz, "Length exceeds 999 characters");
 						}
-						else if (!strcmp(Uppercase(resp.c_str()).c_str(), "EXIT"))
+						else if (!strcmp(UCASE(resp.c_str()).c_str(), "EXIT"))
 						{
 							return 0;
 						}
@@ -7528,7 +7699,7 @@ sint machine::Command(std::vector<std::string> *vec_)
 				}
 
 				BOT_STMT t(false, 2, "litebot", "COMMANDS", 1);
-				xc = t.AddCol("COMMAND", Uppercase(LEncStrI(vec_->at(1).c_str(), -1).c_str()).c_str());
+				xc = t.AddCol("CMD", UCASE(LEncStrI(vec_->at(1).c_str(), -1).c_str()).c_str());
 				xc = t.AddCol("CMD_ID", vec_->at(2).c_str());
 				xc = t.AddCol("PRIV", vec_->at(3).c_str());
 				t.cspec = 2;
@@ -7668,27 +7839,27 @@ sint machine::Command(std::vector<std::string> *vec_)
 														else
 														{
 															carr_1024 ocar;
-															xc = bot_sprintf(ocar.carr, ocar.siz, "\tif (vec_->size() > %u)\n%s\t{\n%s\t\tif (debug_lvl >= 1000 && debug_m)\n%s\t\t{\n%s\t\t\tsint oc = SOutput(\"Found BOTCOMMAND id %s\", 2);\n%s\t\t}\n%s\t\t/*CMD*/\n%s\t}\n%s\telse\n%s\t{\n%s\t\toc = bot_sprintf(xcar.carr, xcar.siz, \"%s\"", na, fstr.c_str(), fstr.c_str(), fstr.c_str(), fstr.c_str(), vec_->at(2).c_str(), fstr.c_str(), fstr.c_str(), fstr.c_str(), fstr.c_str(), fstr.c_str(), fstr.c_str(), "%s");
+															xc = bot_sprintf(ocar.carr, ocar.siz, "\tif (vec_->size() > %u)\n%s\t{\n%s\t\tif (debug_lvl >= 1000 && debug_m)\n%s\t\t{\n%s\t\t\tsint oc = Output(\"Found BOTCOMMAND id %s\", 2);\n%s\t\t}\n%s\t\t/*CMD*/\n%s\t}\n%s\telse\n%s\t{\n%s\t\tcarr_4096 xcar;\n%s\t\tsint oc = bot_sprintf(xcar.carr, xcar.siz,", na, fstr.c_str(), fstr.c_str(), fstr.c_str(), fstr.c_str(), vec_->at(2).c_str(), fstr.c_str(), fstr.c_str(), fstr.c_str(), fstr.c_str(), fstr.c_str(), fstr.c_str(), fstr.c_str());
 															scar.append(ocar.carr);
 
 															for (size_t c = 0; c < nargs.size(); c++)
 															{
 																if (c == nargs.size() - 1)
 																{
-																	xc = bot_sprintf(ocar.carr, ocar.siz, " \\ \n\t\t\t%s\"\\n%s\"", fstr.c_str(), nargs[c].c_str());
+																	xc = bot_sprintf(ocar.carr, ocar.siz, "\n\t\t\t%s\"\\n%s\"", fstr.c_str(), nargs[c].c_str());
 																}
-																else if (c <= (size_t)na)
+																else if (c < (size_t)na)
 																{
-																	xc = bot_sprintf(ocar.carr, ocar.siz, " \\ \n\t\t\t%s\"\\n%u: %s\"", fstr.c_str(), c + 1, nargs[c].c_str());
+																	xc = bot_sprintf(ocar.carr, ocar.siz, "\n\t\t\t%s\"\\n%u: %s\" \\", fstr.c_str(), c + 1, nargs[c].c_str());
 																}
 																else if (c < nargs.size() - 1)
 																{
-																	xc = bot_sprintf(ocar.carr, ocar.siz, " \\ \n\t\t\t%s\"\\n(optional)%u: %s\"", fstr.c_str(), c + 1, nargs[c].c_str());
+																	xc = bot_sprintf(ocar.carr, ocar.siz, "\n\t\t\t%s\"\\n(optional)%u: %s\" \\", fstr.c_str(), c + 1, nargs[c].c_str());
 																}
 																else {}
 																scar.append(ocar.carr);
 															}
-															scar.append(", ncar.carr);\n");
+															scar.append(");\n\t\t\toc = Output(true, xcar.carr, 2, 0);\n");
 															scar.append(fstr.c_str());
 															scar.append("\t}\n");
 														}
@@ -7714,15 +7885,15 @@ sint machine::Command(std::vector<std::string> *vec_)
 															{
 																if (c == nargs.size() - 1)
 																{
-																	xc = bot_sprintf(ocar.carr, ocar.siz, " \\ \n\t\t%s\"\\n%s\"", fstr.c_str(), nargs[c].c_str());
+																	xc = bot_sprintf(ocar.carr, ocar.siz, "\n\t\t%s\"\\n%s\"", fstr.c_str(), nargs[c].c_str());
 																}
 																else if (c <= (size_t)na)
 																{
-																	xc = bot_sprintf(ocar.carr, ocar.siz, " \\ \n\t\t%s\"\\n%u: %s\"", fstr.c_str(), c + 1, nargs[c].c_str());
+																	xc = bot_sprintf(ocar.carr, ocar.siz, "\n\t\t%s\"\\n%u: %s\" \\", fstr.c_str(), c + 1, nargs[c].c_str());
 																}
 																else if (c < nargs.size() - 1)
 																{
-																	xc = bot_sprintf(ocar.carr, ocar.siz, " \\ \n\t\t%s\"\\n(optional)%u: %s\"", fstr.c_str(), c + 1, nargs[c].c_str());
+																	xc = bot_sprintf(ocar.carr, ocar.siz, "\n\t\t%s\"\\n(optional)%u: %s\" \\", fstr.c_str(), c + 1, nargs[c].c_str());
 																}
 																else {}
 																scar.append(ocar.carr);
@@ -7732,7 +7903,7 @@ sint machine::Command(std::vector<std::string> *vec_)
 														else
 														{
 															carr_1024 ocar;
-															xc = bot_sprintf(ocar.carr, ocar.siz, "\tif (vec_->size() > %u)\n%s\t{\n%s\t\tif (debug_lvl >= 1000 && debug_m)\n%s\t\t{\n%s\t\t\tsint oc = SOutput(\"Found BOTCOMMAND id %s\", 2);\n%s\t\t}\n%s\t\t/*CMD*/\n%s\t}\n%s\telse\n%s\t{\n%s\t\toc = bot_sprintf(xcar.carr, xcar.siz, \"%s\"", nargs.size() - 1, fstr.c_str(), fstr.c_str(), fstr.c_str(), fstr.c_str(), vec_->at(2).c_str(), fstr.c_str(), fstr.c_str(), fstr.c_str(), fstr.c_str(), fstr.c_str(), fstr.c_str(), "%s");
+															xc = bot_sprintf(ocar.carr, ocar.siz, "\tif (vec_->size() > %u)\n%s\t{\n%s\t\tif (debug_lvl >= 1000 && debug_m)\n%s\t\t{\n%s\t\tcarr_4096 xcar;\n%s\t\t\tsint oc = Output(\"Found BOTCOMMAND id %s\", 2);\n%s\t\t}\n%s\t\t/*CMD*/\n%s\t}\n%s\telse\n%s\t{\n%s\t\tsint oc = bot_sprintf(xcar.carr, xcar.siz,", nargs.size() - 1, fstr.c_str(), fstr.c_str(), fstr.c_str(), fstr.c_str(), vec_->at(2).c_str(), fstr.c_str(), fstr.c_str(), fstr.c_str(), fstr.c_str(), fstr.c_str(), fstr.c_str(), fstr.c_str());
 															scar.append(ocar.carr);
 
 															for (size_t c = 0; c < nargs.size(); c++)
@@ -7752,7 +7923,7 @@ sint machine::Command(std::vector<std::string> *vec_)
 																else {}
 																scar.append(ocar.carr);
 															}
-															scar.append(", ncar.carr);\n");
+															scar.append(");\n\t\t\toc = Output(true, xcar.carr, 2, 0);\n");
 															scar.append(fstr.c_str());
 															scar.append("\t}\n");
 														}
@@ -7775,8 +7946,55 @@ sint machine::Command(std::vector<std::string> *vec_)
 							ox = BOTCloseFile(&hfile, true, false, true);
 						}
 					}
-					xc = bot_sprintf(xcar.carr, xcar.siz, "Command: \"%s\" ID: %s added", Uppercase(vec_->at(1).c_str()).c_str(), vec_->at(2).c_str());
-					xc = Output(xcar.carr, 2, 0);
+
+					hfile.Renew("litebot", ".h", BOTPathS(BOT_MOD_NM).c_str(), BOT_FILE_INS, BOT_F_CON, -1, lid);
+					ox = -1;
+					xc = BOTOpenFile(&hfile, &ox, false, false, true);
+
+					if (xc < 0)
+					{
+						BOT_FILE_M xfile("litebot", ".h", BOTPathS().c_str(), BOT_FILE_INS, BOT_F_CON, -1, lid);
+						sint nx = -1;
+						xc = BOTOpenFile(&xfile, &nx, false, false, true);
+
+						if (xc > -1)
+						{
+							xc = BOTSaveFile(&xfile, BOTPathS(BOT_MOD_NM).c_str());
+
+							if (!nx)
+							{
+								nx = BOTCloseFile(&xfile, true, false, true);
+							}
+
+							hfile.lid = -1;
+							xc = BOTOpenFile(&hfile, &ox, false, false, true);
+						}
+					}
+
+					if (xc > -1)
+					{
+						carr_32 ccar("<c_char*> litebot_stmts\n\t{\n\t\t\t");
+						xc = BOTFindInFile(&hfile, true, 0, 0, ccar.carr, bot_strlen(ccar.carr));
+
+						if (xc > -1)
+						{
+							BOT_CRS crs(0, lid);
+							xc = hfile.GetCrs(&crs);
+							carr_1024 ocar;
+							xc = bot_sprintf(ocar.carr, ocar.siz, "\"INSERT INTO litebot.COMMANDS (\" \\\n\t\t\"CMD, PRIV, CMD_ID) \" \\\n\t\t\"\\\"%s\\\", %s, %s);\",\n\t\t\n\t\t", UCASE(vec_->at(1).c_str()).c_str(), vec_->at(3).c_str(), vec_->at(2).c_str());
+							xc = BOTFileOUT(&hfile, crs.t + 1, true, BOT_RTV_CHARP, ocar.carr, BOT_RTV_MAX);
+						}
+
+						xc = BOTSaveFile(&hfile, 0, true);
+
+						if (!ox)
+						{
+							ox = BOTCloseFile(&hfile, true, false, true);
+						}
+					}
+
+					xc = bot_sprintf(xcar.carr, xcar.siz, "Command: \"%s\" ID: %s added", UCASE(vec_->at(1).c_str()).c_str(), vec_->at(2).c_str());
+					xc = Output(true, xcar.carr, 2, 0);
 				}
 			}
 		}
@@ -7789,199 +8007,129 @@ sint machine::Command(std::vector<std::string> *vec_)
 				"\nc: privlege level 0-UINT_MAX" \
 				"\n(optional)d: file location " \
 				"\nAdd a command to the db");
-			oc = Output(xcar.carr, 2, 0);
+			oc = Output(true, xcar.carr, 2, 0);
 			return -1;
 		}
 		break;
 	}
-	case 96:
+	case 1001:
 	{
 		if (debug_lvl >= 1000 && debug_m)
 		{
-			sint oc = SOutput("Found BOTCOMMAND id 96", 2);
+			sint oc = Output("Found BOTCOMMAND id 1001", 2);
 		}
-		carr_48 xcar;
-		sint oc = bot_sprintf(xcar.carr, xcar.siz,
-			"\n!DISABLED!");
-		oc = Output(xcar.carr, 2, 0);
-		xc = 0;
-		break;
-	}
-	case 98:
-	{
-		if (debug_lvl >= 1000 && debug_m)
+		if (vec_->size() > 1)
 		{
-			sint oc = SOutput("Found BOTCOMMAND id 98", 2);
-		}
-		if (vec_->size() == 6)
-		{
-			BOT_FILE_M scp(vec_->at(3).c_str(), vec_->at(4).c_str(), vec_->at(5).c_str(), BOT_FILE_APND, BOT_F_CON);
-			sint ox = -1;
-			sint rc = BOTOpenFile(&scp, &ox);
+			std::vector<BOTCOMMAND> cmds;
+			BOTCOMMAND Cmd;
+			BOT_STMT t;
+			std::vector<BOT_STMT> stmts;
 
-			if (xc < 0)
+			for (size_t x = 1; x < vec_->size(); x++)
 			{
-				return -1;
-			}
+				t.Renew(false, 4, "litebot", "COMMANDS", 1);
+				t.cspec = 0;
 
-			bot_script ns;
-			BOT_STMT qt(false, 0, "scripts", "SCRIPTS", 1, &ns);
-			rc = qt.AddCol("NAME", LEncStrI(vec_->at(3).c_str(), -1).c_str());
-			rc = qt.AddCol("TYPE", LEncStrI(vec_->at(4).c_str(), -1).c_str());
-			rc = qt.AddCol("DEST", LEncStrI(vec_->at(5).c_str(), -1).c_str());
-			rc = Query(&qt, BOT_RTV_SCRPT);
-
-			if (rc > -1)
-			{
-				return -1;
-			}
-
-			std::vector<BOT_STMT> tvec;
-			BOT_STMT t(false, 2, "scripts", "SCRIPTS", 1);
-
-			if (vec_->at(1).length() < 10)
-			{
-				uint v = (uint)atoi(vec_->at(1).c_str());
-				const uint y = (sizeof(v) * 2) + 4;
-				_char nuchar[y]{ 0 };
-				sint rc = bot_sprintf(nuchar, y, "X'%02X'", vec_->at(1).c_str());
-				rc = t.AddCol("MODE", nuchar);
-			}
-
-			if (vec_->at(2).length() < 128)
-			{
-				sint rc = t.AddCol("ENCODING", "X'");
-
-				for (uint z = 0; z < vec_->at(2).length(); z++)
+				if (bot_sisn(vec_->at(1).c_str(), vec_->at(1).length()))
 				{
-					const uint y = (sizeof(vec_->at(2)[z]) * 2) + 1;
-					_char nuchar[y]{ 0 };
-					rc = bot_sprintf(nuchar, y, "%02X", (u_char)vec_->at(2)[z]);
-					t.cols[rc].append(nuchar);
+					sint ox = (sint)atoi(vec_->at(1).c_str());
+
+					if (ox < 1000)
+					{
+						Cmd.Renew("", ox);
+						xc = GetCommand(&Cmd);
+
+						if (xc > -1 && Cmd.id > -1)
+						{
+							xc = t.AddCond(0, "CMD_ID", "=", vec_->at(2).c_str());
+							xc = vtool.AVTV(&stmts, &t, true, true);
+							cmds.push_back(Cmd);
+						}
+					}
 				}
-
-				t.cols[rc].append("'");
-			}
-
-			if (vec_->at(3).length() < 512)
-			{
-				sint rc = t.AddCol("NAME", "X'");
-
-				for (uint z = 0; z < vec_->at(3).length(); z++)
+				else
 				{
-					const uint y = (sizeof(vec_->at(3)[z]) * 2) + 1;
-					_char nuchar[y]{ 0 };
-					rc = bot_sprintf(nuchar, y, "%02X", (u_char)vec_->at(3)[z]);
-					t.cols[rc].append(nuchar);
-				}
+					Cmd.Renew(vec_->at(1).c_str());
+					xc = GetCommand(&Cmd);
 
-				t.cols[rc].append("'");
-			}
-
-			if (vec_->at(4).length() < 256)
-			{
-				sint rc = t.AddCol("TYPE", "X'");
-
-				for (uint z = 0; z < vec_->at(4).length(); z++)
-				{
-					const uint y = (sizeof(vec_->at(4)[z]) * 2) + 1;
-					_char nuchar[y]{ 0 };
-					rc = bot_sprintf(nuchar, y, "%02X", (u_char)vec_->at(4)[z]);
-					t.cols[rc].append(nuchar);
-				}
-
-				t.cols[rc].append("'");
-			}
-
-			if (vec_->at(5).length() < 512)
-			{
-				sint rc = t.AddCol("DEST", "X'");
-
-				for (uint z = 0; z < vec_->at(5).length(); z++)
-				{
-					const uint y = (sizeof(vec_->at(5)[z]) * 2) + 1;
-					_char nuchar[y]{ 0 };
-					rc = bot_sprintf(nuchar, y, "%02X", (u_char)vec_->at(5)[z]);
-					t.cols[rc].append(nuchar);
-				}
-
-				t.cols[rc].append("'");
-			}
-			t.cspec = 2;
-			tvec.push_back(t);
-			xc = Commit(&tvec);
-		}
-		else
-		{
-			carr_192 xcar;
-			sint oc = bot_sprintf(xcar.carr, xcar.siz,
-				"\na: mode" \
-				"\nb: encoding" \
-				"\nc: name" \
-				"\nd: type" \
-				"\ne: file destination" \
-				"\nAdd a script at file destination to the db");
-			oc = Output(xcar.carr, 2, 0);
-		}
-		break;
-	}
-	case 99:
-	{
-		if (debug_lvl >= 1000 && debug_m)
-		{
-			sint oc = SOutput("Found BOTCOMMAND id 99", 2);
-		}
-		if (vec_->size() == 2)
-		{
-			if (bot_sisn(vec_->at(1).c_str()))
-			{
-				bot_script rval;
-				BOT_STMT t(false, 0, "scripts", "SCRIPTS", 1, &rval);
-				sint rc = t.AddCol("ID", LEncStrI(vec_->at(1).c_str(), -1).c_str());
-				rc = Query(&t, BOT_RTV_SCRPT);
-
-				if (rc > -1)
-				{
-					system(rval.script.c_str());
+					if (xc > -1 && Cmd.id > -1)
+					{
+						xc = t.AddCond(0, "CMD", "=", UCASE(LEncStrI(vec_->at(1).c_str(), -1).c_str()).c_str());
+						xc = vtool.AVTV(&stmts, &t, true, true);
+						cmds.push_back(Cmd);
+					}
 				}
 			}
-			else
+			
+			if (!stmts.empty())
 			{
+				xc = Commit(&stmts);
 
-				bot_script rval;
-				BOT_STMT t(false, 0, "scripts", "SCRIPTS", 1);
-				sint rc = t.AddCol("DEST", LEncStrI(vec_->at(1).c_str(), -1).c_str());
-				t.rblk = (void*)&rval;
-				rc = Query(&t, BOT_RTV_SCRPT);
-
-				if (rc > -1)
+				if (xc > -1)
 				{
-					system(rval.script.c_str());
+					for (size_t x = 0; x < cmds.size(); x++)
+					{
+						BOT_FILE_M hfile("litebot", ".h", BOTPathS(BOT_MOD_NM).c_str(), BOT_FILE_INS, BOT_F_CON, -1, lid);
+						sint ox = -1;
+						xc = BOTOpenFile(&hfile, &ox, false, false, true);
+
+						if (xc < 0)
+						{
+							BOT_FILE_M xfile("litebot", ".h", BOTPathS().c_str(), BOT_FILE_INS, BOT_F_CON, -1, lid);
+							sint nx = -1;
+							xc = BOTOpenFile(&xfile, &nx, false, false, true);
+
+							if (xc > -1)
+							{
+								xc = BOTSaveFile(&xfile, BOTPathS(BOT_MOD_NM).c_str());
+
+								if (!nx)
+								{
+									nx = BOTCloseFile(&xfile, true, false, true);
+								}
+
+								hfile.lid = -1;
+								xc = BOTOpenFile(&hfile, &ox, false, false, true);
+							}
+						}
+
+						carr_1024 xcar;
+
+						if (xc > -1)
+						{
+							xc = bot_sprintf(xcar.carr, xcar.siz, "\"INSERT INTO litebot.COMMANDS (\" \\\n\t\t\"CMD, PRIV, CMD_ID) \" \\\n\t\t\"\\\"%s\\\", %i, %i);\",\n\t\t\n\t\t", cmds[x].cmd.c_str(), cmds[x].priv, cmds[x].cmd_id);
+							xc = BOTFindInFile(&hfile, true, 0, 0, xcar.carr, bot_strlen(xcar.carr));
+
+							if (xc > -1)
+							{
+								BOT_CRS crs(0, lid);
+								xc = hfile.GetCrs(&crs);
+								xc = BOTFileER(&hfile, true, crs.f, crs.t);
+							}
+
+							xc = BOTSaveFile(&hfile, 0, true);
+
+							if (!ox)
+							{
+								ox = BOTCloseFile(&hfile, true, false, true);
+							}
+						}
+
+						xc = bot_sprintf(xcar.carr, xcar.siz, "Command: \"%s\" ID: %i removed", Cmd.cmd.c_str(), Cmd.cmd_id);
+						xc = Output(true, xcar.carr, 2, 0);
+					}
 				}
 			}
 		}
 		else
 		{
-			carr_192 xcar;
+			carr_64 xcar;
 			sint oc = bot_sprintf(xcar.carr, xcar.siz,
-				"\na: script name or id" \
-				"\nAttempt to run script with a call to system(c_char*)");
-			oc = Output(xcar.carr, 2, 0);
+				"\na: command name OR command id" \
+				"\nRemove a command from the db");
+			oc = Output(true, xcar.carr, 2, 0);
+			return -1;
 		}
-		break;
-	}
-	case 100:
-	{
-		if (debug_lvl >= 1000 && debug_m)
-		{
-			sint oc = SOutput("Found BOTCOMMAND id 100", 2);
-		}
-		TINFO_M tts((sint)PTHREAD_CREATE_JOINABLE, "GIPS", GIPS, lid);
-		sint rc = InitThread(&tts, &xc);
-		break;
-	}
-	case 1000:
-	{
 		break;
 	}
 	default:
@@ -8016,13 +8164,13 @@ sint machine::ArgSep(std::vector <std::string>* ret_, c_char* val, size_t f, siz
 		size_t mk = 0;
 		_char ig = '\\';
 
-		for (size_t x = f; x < t + 1; x++)
+		for (size_t x = f; x < t + 1 && x < vl; x++)
 		{
 			if (lit > -1)
 			{
-				for (size_t xl = 0; xl < nrts_lit.size(); xl++)
+				for (size_t xl = 0; xl < msy.nrts_lit.size(); xl++)
 				{
-					if (!memcmp((void*)&nrts_lit[xl], (void*)&val[x], sizeof(_char)))
+					if (!memcmp((void*)&msy.nrts_lit[xl], (void*)&val[x], sizeof(_char)))
 					{
 						if (memcmp((void*)&ig, (void*)&val[x - 1], sizeof(_char)))
 						{
@@ -8031,7 +8179,7 @@ sint machine::ArgSep(std::vector <std::string>* ret_, c_char* val, size_t f, siz
 								lit = -1;
 								litloc = (slint)x;
 							}
-							xl = nrts_lit.size();
+							xl = msy.nrts_lit.size();
 						}
 						else
 						{
@@ -8044,7 +8192,7 @@ sint machine::ArgSep(std::vector <std::string>* ret_, c_char* val, size_t f, siz
 										lit = -1;
 										litloc = (slint)x;
 									}
-									xl = nrts_lit.size();
+									xl = msy.nrts_lit.size();
 								}
 							}
 						}
@@ -8055,28 +8203,27 @@ sint machine::ArgSep(std::vector <std::string>* ret_, c_char* val, size_t f, siz
 			{
 				if (lign > -1)
 				{
-					for (size_t yl = 0; yl < nrts_lign_.size(); yl++)
+					for (size_t yl = 0; yl < msy.nrts_lign_.size(); yl++)
 					{
-						if (!memcmp((void*)&nrts_lign_[yl][0], (void*)&val[x], sizeof(_char)))
+						if (!memcmp((void*)&msy.nrts_lign_[yl][0], (void*)&val[x], sizeof(_char)))
 						{
 							size_t zl = 1;
-							size_t ll = bot_cstrlen(nrts_lign_[yl]);
 
-							while (zl < ll && zl < vl)
+							while (zl < msy.nrts_lign[yl].length() && zl < vl)
 							{
-								if (memcmp((void*)&nrts_lign_[yl][zl], (void*)&val[x + zl], sizeof(_char)))
+								if (memcmp((void*)&msy.nrts_lign_[yl][zl], (void*)&val[x + zl], sizeof(_char)))
 								{
-									zl = ll;
+									zl = msy.nrts_lign[yl].length();
 								}
 								zl++;
 							}
 
-							if (zl == ll)
+							if (zl == msy.nrts_lign[yl].length())
 							{
 								if (lign == (slint)yl)
 								{
 									lign = -1;
-									yl = nrts_lign_.size();
+									yl = msy.nrts_lign_.size();
 								}
 							}
 						}
@@ -8084,65 +8231,64 @@ sint machine::ArgSep(std::vector <std::string>* ret_, c_char* val, size_t f, siz
 				}
 				if (lign < 0)
 				{
-					for (size_t xl = 0; xl < nrts_lit.size(); xl++)
+					for (size_t xl = 0; xl < msy.nrts_lit.size(); xl++)
 					{
-						if (!memcmp((void*)&nrts_lit[xl], (void*)&val[x], sizeof(_char)))
+						if (!memcmp((void*)&msy.nrts_lit[xl], (void*)&val[x], sizeof(_char)))
 						{
 							lit = (slint)xl;
 							litloc = (slint)x;
-							xl = nrts_lit.size();
+							xl = msy.nrts_lit.size();
 						}
 					}
 					if (lit < 0)
 					{
 						if (lign < 0)
 						{
-							for (size_t yl = 0; yl < nrts_lign.size(); yl++)
+							for (size_t yl = 0; yl < msy.nrts_lign.size(); yl++)
 							{
-								if (!memcmp((void*)&nrts_lign[yl][0], (void*)&val[x], sizeof(_char)))
+								if (!memcmp((void*)&msy.nrts_lign[yl][0], (void*)&val[x], sizeof(_char)))
 								{
 									size_t zl = 1;
-									size_t ll = bot_cstrlen(nrts_lign[yl]);
 
-									while (zl < ll && zl < vl)
+									while (zl < msy.nrts_lign[yl].length() && zl < vl)
 									{
-										if (memcmp((void*)&nrts_lign[yl][zl], (void*)&val[x + zl], sizeof(_char)))
+										if (memcmp((void*)&msy.nrts_lign[yl][zl], (void*)&val[x + zl], sizeof(_char)))
 										{
-											zl = ll;
+											zl = msy.nrts_lign[yl].length();
 										}
 										zl++;
 									}
 
-									if (zl == ll)
+									if (zl == msy.nrts_lign[yl].length())
 									{
 										lign = (slint)yl;
-										yl = nrts_lign.size();
+										yl = msy.nrts_lign.size();
 									}
 								}
 							}
 							if (lign < 0)
 							{
-								for (size_t xl = 0; xl < nrts_ord.size(); xl++)
+								for (size_t xl = 0; xl < msy.nrts_ord.size(); xl++)
 								{
-									if (!memcmp((void*)&nrts_ord[xl], (void*)&val[x], sizeof(_char)))
+									if (!memcmp((void*)&msy.nrts_ord[xl], (void*)&val[x], sizeof(_char)))
 									{
 										ord.push_back(xl);
 										ordl.push_back(x);
-										xl = nrts_ord.size();
+										xl = msy.nrts_ord.size();
 									}
 								}
 								if (!ord.empty())
 								{
-									for (size_t xl = 0; xl < nrts_ord_.size(); xl++)
+									for (size_t xl = 0; xl < msy.nrts_ord_.size(); xl++)
 									{
-										if (!memcmp((void*)&nrts_ord_[xl], (void*)&val[x], sizeof(_char)))
+										if (!memcmp((void*)&msy.nrts_ord_[xl], (void*)&val[x], sizeof(_char)))
 										{
 											if (ord[ord.size() - 1] == xl)
 											{
 												ord.pop_back();
 												ordl.pop_back();
 											}
-											xl = nrts_ord_.size();
+											xl = msy.nrts_ord_.size();
 										}
 									}
 								}
@@ -8226,7 +8372,7 @@ sint machine::ArgSep(std::vector <std::string>* ret_, c_char* val, size_t f, siz
 		if (lit > -1)
 		{
 			carr_64 ncar;
-			ret = bot_sprintf(ncar.carr, ncar.siz, "Open literal '%c' at: %u", nrts_lit[lit], (uint)litloc);
+			ret = bot_sprintf(ncar.carr, ncar.siz, "Open literal '%c' at: %u", msy.nrts_lit[lit], (uint)litloc);
 			std::string rstr(ncar.carr);
 			ret_->push_back(rstr);
 			ret = -1;
@@ -8234,7 +8380,7 @@ sint machine::ArgSep(std::vector <std::string>* ret_, c_char* val, size_t f, siz
 		else if (!ord.empty())
 		{
 			carr_64 ncar;
-			ret = bot_sprintf(ncar.carr, ncar.siz, "Open bracket '%c' at: %u", nrts_ord[ord[0]], (uint)ordl[0]);
+			ret = bot_sprintf(ncar.carr, ncar.siz, "Open bracket '%c' at: %u", msy.nrts_ord[ord[0]], (uint)ordl[0]);
 			std::string rstr(ncar.carr);
 			ret_->push_back(rstr);
 			ret = -1;
@@ -8280,22 +8426,31 @@ sint machine::ArgSep(std::vector <std::string>* ret_ , c_char* val, carr_4* sep)
 
 		for (size_t x = 0; x < vl; x++)
 		{
-			//rstr.push_back(val[x]);
-
 			if (lit > -1)
 			{
-				for (size_t xl = 0; xl < nrts_lit.size(); xl++)
+				for (size_t xl = 0; xl < msy.nrts_lit.size(); xl++)
 				{
-					if (!memcmp((void*)&nrts_lit[xl], (void*)&val[x], sizeof(_char)))
+					if (!memcmp((void*)&msy.nrts_lit[xl], (void*)&val[x], sizeof(_char)))
 					{
 						if (memcmp((void*)&ig, (void*)&val[x - 1], sizeof(_char)))
 						{
 							if (lit == (slint)xl)
 							{
+								if (!strcmp(sep->carr, &msy.nrts_lit[xl]))
+								{
+									for (; mk < x + sl; mk++)
+									{
+										rstr.push_back(val[mk]);
+									}
+									x += (sl - 1);
+									mk = x + 1;
+									ret_->push_back(rstr);
+									rstr.clear();
+								}
 								lit = -1;
 								litloc = (slint)x;
 							}
-							xl = nrts_lit.size();
+							xl = msy.nrts_lit.size();
 						}
 						else
 						{
@@ -8305,10 +8460,21 @@ sint machine::ArgSep(std::vector <std::string>* ret_ , c_char* val, carr_4* sep)
 								{
 									if (lit == (slint)xl)
 									{
+										if (!strcmp(sep->carr, &msy.nrts_lit[xl]))
+										{
+											for (; mk < x + sl; mk++)
+											{
+												rstr.push_back(val[mk]);
+											}
+											x += (sl - 1);
+											mk = x + 1;
+											ret_->push_back(rstr);
+											rstr.clear();
+										}
 										lit = -1;
 										litloc = (slint)x;
 									}
-									xl = nrts_lit.size();
+									xl = msy.nrts_lit.size();
 								}
 							}
 						}
@@ -8319,28 +8485,27 @@ sint machine::ArgSep(std::vector <std::string>* ret_ , c_char* val, carr_4* sep)
 			{
 				if (lign > -1)
 				{
-					for (size_t yl = 0; yl < nrts_lign_.size(); yl++)
+					for (size_t yl = 0; yl < msy.nrts_lign_.size(); yl++)
 					{
-						if (!memcmp((void*)&nrts_lign_[yl][0], (void*)&val[x], sizeof(_char)))
+						if (!memcmp((void*)&msy.nrts_lign_[yl][0], (void*)&val[x], sizeof(_char)))
 						{
 							size_t zl = 1;
-							size_t ll = bot_cstrlen(nrts_lign_[yl]);
 
-							while (zl < ll && zl < vl)
+							while (zl < msy.nrts_lign[yl].length() && zl < vl)
 							{
-								if (memcmp((void*)&nrts_lign_[yl][zl], (void*)&val[x + zl], sizeof(_char)))
+								if (memcmp((void*)&msy.nrts_lign_[yl][zl], (void*)&val[x + zl], sizeof(_char)))
 								{
-									zl = ll;
+									zl = msy.nrts_lign[yl].length();
 								}
 								zl++;
 							}
 
-							if (zl == ll)
+							if (zl == msy.nrts_lign[yl].length())
 							{
 								if (lign == (slint)yl)
 								{
 									lign = -1;
-									yl = nrts_lign_.size();
+									yl = msy.nrts_lign_.size();
 								}
 							}
 						}
@@ -8348,65 +8513,100 @@ sint machine::ArgSep(std::vector <std::string>* ret_ , c_char* val, carr_4* sep)
 				}
 				if (lign < 0)
 				{
-					for (size_t xl = 0; xl < nrts_lit.size(); xl++)
+					for (size_t xl = 0; xl < msy.nrts_lit.size(); xl++)
 					{
-						if (!memcmp((void*)&nrts_lit[xl], (void*)&val[x], sizeof(_char)))
+						if (!memcmp((void*)&msy.nrts_lit[xl], (void*)&val[x], sizeof(_char)))
 						{
+							if (!strcmp(sep->carr, &msy.nrts_lit[xl]))
+							{
+								for (; mk < x; mk++)
+								{
+									rstr.push_back(val[mk]);
+								}
+								ret_->push_back(rstr);
+								rstr.clear();
+							}
 							lit = (slint)xl;
 							litloc = (slint)x;
-							xl = nrts_lit.size();
+							xl = msy.nrts_lit.size();
 						}
 					}
 					if (lit < 0)
 					{
 						if (lign < 0)
 						{
-							for (size_t yl = 0; yl < nrts_lign.size(); yl++)
+							for (size_t yl = 0; yl < msy.nrts_lign.size(); yl++)
 							{
-								if (!memcmp((void*)&nrts_lign[yl][0], (void*)&val[x], sizeof(_char)))
+								if (!memcmp((void*)&msy.nrts_lign[yl][0], (void*)&val[x], sizeof(_char)))
 								{
 									size_t zl = 1;
-									size_t ll = bot_cstrlen(nrts_lign[yl]);
 
-									while (zl < ll && zl < vl)
+									while (zl < msy.nrts_lign[yl].length() && zl < vl)
 									{
-										if (memcmp((void*)&nrts_lign[yl][zl], (void*)&val[x + zl], sizeof(_char)))
+										if (memcmp((void*)&msy.nrts_lign[yl][zl], (void*)&val[x + zl], sizeof(_char)))
 										{
-											zl = ll;
+											zl = msy.nrts_lign[yl].length();
 										}
 										zl++;
 									}
 
-									if (zl == ll)
+									if (zl == msy.nrts_lign[yl].length())
 									{
 										lign = (slint)yl;
-										yl = nrts_lign.size();
+										yl = msy.nrts_lign.size();
 									}
 								}
 							}
 							if (lign < 0)
 							{
-								for (size_t xl = 0; xl < nrts_ord.size(); xl++)
+								for (size_t xl = 0; xl < msy.nrts_ord.size(); xl++)
 								{
-									if (!memcmp((void*)&nrts_ord[xl], (void*)&val[x], sizeof(_char)))
+									if (!memcmp((void*)&msy.nrts_ord[xl], (void*)&val[x], sizeof(_char)))
 									{
+										if (ord.empty())
+										{
+											if (!strcmp(sep->carr, &msy.nrts_ord[xl]) || !strcmp(sep->carr, &msy.nrts_ord_[xl]))
+											{
+												for (; mk < x; mk++)
+												{
+													rstr.push_back(val[mk]);
+												}
+												ret_->push_back(rstr);
+												rstr.clear();
+											}
+										}
 										ord.push_back(xl);
 										ordl.push_back(x);
-										xl = nrts_ord.size();
+										xl = msy.nrts_ord.size();
 									}
 								}
 								if (!ord.empty())
 								{
-									for (size_t xl = 0; xl < nrts_ord_.size(); xl++)
+									for (size_t xl = 0; xl < msy.nrts_ord_.size(); xl++)
 									{
-										if (!memcmp((void*)&nrts_ord_[xl], (void*)&val[x], sizeof(_char)))
+										if (!memcmp((void*)&msy.nrts_ord_[xl], (void*)&val[x], sizeof(_char)))
 										{
 											if (ord[ord.size() - 1] == xl)
 											{
 												ord.pop_back();
 												ordl.pop_back();
+
+												if (ord.empty())
+												{
+													if (!strcmp(sep->carr, &msy.nrts_ord[xl]) || !strcmp(sep->carr, &msy.nrts_ord_[xl]))
+													{
+														for (; mk < x + sl; mk++)
+														{
+															rstr.push_back(val[mk]);
+														}
+														x += (sl - 1);
+														mk = x + 1;
+														ret_->push_back(rstr);
+														rstr.clear();
+													}
+												}
 											}
-											xl = nrts_ord_.size();
+											xl = msy.nrts_ord_.size();
 										}
 									}
 								}
@@ -8437,8 +8637,8 @@ sint machine::ArgSep(std::vector <std::string>* ret_ , c_char* val, carr_4* sep)
 														{
 															rstr.push_back(val[mk]);
 														}
-														x += sl;
-														mk = x;
+														x += (sl-1);
+														mk = x + 1;
 														ret_->push_back(rstr);
 														rstr.clear();
 													}
@@ -8463,8 +8663,8 @@ sint machine::ArgSep(std::vector <std::string>* ret_ , c_char* val, carr_4* sep)
 													{
 														rstr.push_back(val[mk]);
 													}
-													x += sl;
-													mk = x;
+													x += (sl - 1);
+													mk = (x + 1);
 													ret_->push_back(rstr);
 													rstr.clear();
 												}
@@ -8490,7 +8690,7 @@ sint machine::ArgSep(std::vector <std::string>* ret_ , c_char* val, carr_4* sep)
 		if (lit > -1)
 		{
 			carr_64 ncar;
-			ret = bot_sprintf(ncar.carr, ncar.siz, "Open literal '%c' at: %u", nrts_lit[lit], (uint)litloc);
+			ret = bot_sprintf(ncar.carr, ncar.siz, "Open literal '%c' at: %u", msy.nrts_lit[lit], (uint)litloc);
 			std::string rstr(ncar.carr);
 			ret_->push_back(rstr);
 			ret = -1;
@@ -8498,7 +8698,7 @@ sint machine::ArgSep(std::vector <std::string>* ret_ , c_char* val, carr_4* sep)
 		else if (!ord.empty())
 		{
 			carr_64 ncar;
-			ret = bot_sprintf(ncar.carr, ncar.siz, "Open bracket '%c' at: %u", nrts_ord[ord[0]], (uint)ordl[0]);
+			ret = bot_sprintf(ncar.carr, ncar.siz, "Open bracket '%c' at: %u", msy.nrts_ord[ord[0]], (uint)ordl[0]);
 			std::string rstr(ncar.carr);
 			ret_->push_back(rstr);
 			ret = -1;
@@ -8519,185 +8719,326 @@ sint machine::ArgSep(std::vector <std::string>* ret_ , c_char* val, carr_4* sep)
 	return ret;
 }
 
-sint machine::ArgSep(std::vector <std::string>* ret_, c_char* val, ...)
+sint machine::ArgSep(std::vector <std::string>* ret_, bool ksep, size_t f, size_t t, c_char* val, ...)
 {
+	if (!ret_ || !val)
+	{
+		return -1;
+	}
+
+	size_t vl = bot_cstrlen(val);
+
+	if (t > vl -1)
+	{
+		t = vl - 1;
+	}
 	sint ret = bot_cstrchk(val);
-	carr_4* sep = 0;
+	sint typ = BOT_RTV_MAX;
 	va_list args;
 	va_start(args, val);
-	sep = va_arg(args, carr_4*);
+	typ = va_arg(args, sint);
 
-	while (sep)
+	switch (typ)
 	{
-		bot_strchk(sep->carr);
-		size_t sl = bot_strlen(sep->carr);
-		size_t vl = bot_cstrlen(val);
+	case BOT_RTV_SINT:
+	{
+		sint sep = va_arg(args, sint);
+
 		ret = -1;
 
-		if (sl && vl && sl < (size_t)BOT_STRLEN_MAX && vl < (size_t)BOT_STRLEN_MAX)
+		if (vl && vl < (size_t)BOT_STRLEN_MAX)
 		{
-			bool ign = false;
-			bool lign = false;
-			size_t lit = 0;
-			size_t litloc = 0;
+			size_t sl = sizeof(sint);
+			slint lign = -1;
+			slint lit = -1;
+			slint litloc = 0;
 			std::vector<size_t> ord;
 			std::vector<size_t> ordl;
+			std::string rstr;
 			size_t mk = 0;
+			sint ig = (sint)'\\';
 
-			for (size_t x = 0; x < vl; x++)
+			for (size_t x = f; x < t + 1; x++)
 			{
-				if (lign)
+				if (lit > -1)
 				{
-					for (size_t yl = 0; yl < nrts_lign_.size(); yl++)
+					for (size_t xl = 0; xl < msy.nrts_lit.size(); xl++)
 					{
-						if (!memcmp((void*)&nrts_lign_[yl][0], (void*)&val[x], sizeof(_char)))
+						if (!memcmp((void*)&msy.nrts_lit[xl], (void*)&val[x], sl))
 						{
-							size_t zl = 0;
-							size_t ll = bot_cstrlen(nrts_lign_[yl]);
-
-							while (zl < ll && zl < vl)
+							if (memcmp((void*)&ig, (void*)&val[x - 1], sl))
 							{
-								if (memcmp((void*)&nrts_lign_[yl][zl], (void*)&val[x + zl], sizeof(_char)))
+								if (lit == (slint)xl)
 								{
-									zl = ll;
-								}
-								zl++;
-							}
+									if (!memcmp((void*)&sep, (void*)&msy.nrts_lit[xl], sl))
+									{
+										for (; mk < x + sl; mk++)
+										{
+											rstr.push_back(val[mk]);
+										}
+										x += (sl - 1);
+										mk = x + 1;
 
-							if (zl == ll)
+										if (!rstr.empty())
+										{
+											ret_->push_back(rstr);
+											rstr.clear();
+										}
+									}
+									lit = -1;
+									litloc = (slint)x;
+								}
+								xl = msy.nrts_lit.size();
+							}
+							else
 							{
-								lign = false;
-								yl = nrts_lign_.size();
+								if (x > 1)
+								{
+									if (!memcmp((void*)&ig, (void*)&val[x - 2], sl))
+									{
+										if (lit == (slint)xl)
+										{
+											if (!memcmp((void*)&sep, (void*)&msy.nrts_lit[xl], sl))
+											{
+												for (; mk < x + sl; mk++)
+												{
+													rstr.push_back(val[mk]);
+												}
+												x += (sl - 1);
+												mk = x + 1;
+
+												if (!rstr.empty())
+												{
+													ret_->push_back(rstr);
+													rstr.clear();
+												}
+											}
+											lit = -1;
+											litloc = (slint)x;
+										}
+										xl = msy.nrts_lit.size();
+									}
+								}
 							}
 						}
 					}
 				}
 				else
 				{
-					for (size_t yl = 0; yl < nrts_lign.size(); yl++)
+					if (lign > -1)
 					{
-						if (!memcmp((void*)&nrts_lign[yl][0], (void*)&val[x], sizeof(_char)))
+						for (size_t yl = 0; yl < msy.nrts_lign_.size(); yl++)
 						{
-							size_t zl = 0;
-							size_t ll = bot_cstrlen(nrts_lign[yl]);
-
-							while (zl < ll && zl < vl)
+							if (!memcmp((void*)&msy.nrts_lign_[yl][0], (void*)&val[x], sl))
 							{
-								if (memcmp((void*)&nrts_lign[yl][zl], (void*)&val[x + zl], sizeof(_char)))
+								size_t zl = 1;
+
+								while (zl < msy.nrts_lign[yl].length() && zl < vl)
 								{
-									zl = ll;
+									if (memcmp((void*)&msy.nrts_lign_[yl][zl], (void*)&val[x + zl], sl))
+									{
+										zl = msy.nrts_lign[yl].length();
+									}
+									zl++;
 								}
-								zl++;
-							}
 
-							if (zl == ll)
-							{
-								lign = true;
-								yl = nrts_lign.size();
+								if (zl == msy.nrts_lign[yl].length())
+								{
+									if (lign == (slint)yl)
+									{
+										lign = -1;
+										yl = msy.nrts_lign_.size();
+									}
+								}
 							}
 						}
 					}
-					if (!lign)
+					if (lign < 0)
 					{
-						for (size_t yl = 0; yl < nrts_ign.size(); yl++)
+						for (size_t xl = 0; xl < msy.nrts_lit.size(); xl++)
 						{
-							if (!memcmp((void*)&nrts_ign[yl], (void*)&val[x], sizeof(_char)))
+							if (!memcmp((void*)&msy.nrts_lit[xl], (void*)&val[x], sl))
 							{
-								x++;
-								ign = true;
-								yl = nrts_ign.size();
+								if (!memcmp((void*)&sep, (void*)&msy.nrts_lit[xl], sl))
+								{
+									for (; mk < x; mk++)
+									{
+										rstr.push_back(val[mk]);
+									}
+
+									if (!rstr.empty())
+									{
+										ret_->push_back(rstr);
+										rstr.clear();
+									}
+								}
+								lit = (slint)xl;
+								litloc = (slint)x;
+								xl = msy.nrts_lit.size();
 							}
 						}
-						if (!ign)
+						if (lit < 0)
 						{
-							for (size_t xl = 0; xl < nrts_lit.size(); xl++)
+							if (lign < 0)
 							{
-								if (!memcmp((void*)&nrts_lit[xl], (void*)&val[x], sizeof(_char)))
+								for (size_t yl = 0; yl < msy.nrts_lign.size(); yl++)
 								{
-									if (lit)
+									if (!memcmp((void*)&msy.nrts_lign[yl][0], (void*)&val[x], sl))
 									{
-										if (lit == xl)
+										size_t zl = 1;
+
+										while (zl < msy.nrts_lign[yl].length() && zl < vl)
 										{
-											lit = 0;
-											litloc = x;
+											if (memcmp((void*)&msy.nrts_lign[yl][zl], (void*)&val[x + zl], sl))
+											{
+												zl = msy.nrts_lign[yl].length();
+											}
+											zl++;
+										}
+
+										if (zl == msy.nrts_lign[yl].length())
+										{
+											lign = (slint)yl;
+											yl = msy.nrts_lign.size();
+										}
+									}
+								}
+								if (lign < 0)
+								{
+									for (size_t xl = 0; xl < msy.nrts_ord.size(); xl++)
+									{
+										if (!memcmp((void*)&msy.nrts_ord[xl], (void*)&val[x], sl))
+										{
+											if (ord.empty())
+											{
+												if (!memcmp((void*)&sep, (void*)&msy.nrts_ord[xl], sl) || !memcmp((void*)&sep, (void*)&msy.nrts_ord_[xl], sl))
+												{
+													for (; mk < x; mk++)
+													{
+														rstr.push_back(val[mk]);
+													}
+
+													if (!rstr.empty())
+													{
+														ret_->push_back(rstr);
+														rstr.clear();
+													}
+												}
+											}
+											ord.push_back(xl);
+											ordl.push_back(x);
+											xl = msy.nrts_ord.size();
+										}
+									}
+									if (!ord.empty())
+									{
+										for (size_t xl = 0; xl < msy.nrts_ord_.size(); xl++)
+										{
+											if (!memcmp((void*)&msy.nrts_ord_[xl], (void*)&val[x], sl))
+											{
+												if (ord[ord.size() - 1] == xl)
+												{
+													ord.pop_back();
+													ordl.pop_back();
+
+													if (ord.empty())
+													{
+														if (!memcmp((void*)&sep, (void*)&msy.nrts_ord[xl], sl) || !memcmp((void*)&sep, (void*)&msy.nrts_ord_[xl], sl))
+														{
+															for (; mk < x + sl; mk++)
+															{
+																rstr.push_back(val[mk]);
+															}
+															x += (sl - 1);
+															mk = x + 1;
+
+															if (!rstr.empty())
+															{
+																ret_->push_back(rstr);
+																rstr.clear();
+															}
+														}
+													}
+												}
+												xl = msy.nrts_ord_.size();
+											}
 										}
 									}
 									else
 									{
-										lit = xl;
-										litloc = x;
-									}
-									xl = nrts_lit.size();
-								}
-							}
-							if (!lit)
-							{
-								for (size_t xl = 0; xl < nrts_ord.size(); xl++)
-								{
-									if (!memcmp((void*)&nrts_ord[xl], (void*)&val[x], sizeof(_char)))
-									{
-										ord.push_back(xl);
-										ordl.push_back(x);
-										xl = nrts_ord.size();
-									}
-								}
-								if (!ord.empty())
-								{
-									for (size_t xl = 0; xl < nrts_ord_.size(); xl++)
-									{
-										if (!memcmp((void*)&nrts_ord_[xl], (void*)&val[x], sizeof(_char)))
+										if (!memcmp((void*)&val[x], (void*)&sep, sl))
 										{
-											if (ord[ord.size() - 1] == xl)
+											if (memcmp((void*)&ig, (void*)&val[x - 1], sl))
 											{
-												ord.pop_back();
-												ordl.pop_back();
-											}
-											xl = nrts_ord_.size();
-										}
-									}
-								}
-								if (ord.empty())
-								{
-									if (!memcmp((void*)&val[x], (void*)&sep->carr[0], sizeof(_char)))
-									{
-										size_t y = 1;
+												if (x > 1)
+												{
+													if (memcmp((void*)&ig, (void*)&val[x - 2], sl))
+													{
+														for (; mk < x; mk++)
+														{
+															rstr.push_back(val[mk]);
+														}
+														x += (sl - 1);
+														mk = x + 1;
 
-										while (y < sl && x + y < vl)
-										{
-											if (memcmp((void*)&val[x + y], &sep->carr[y], sizeof(_char)))
-											{
-												y = sl;
-											}
-											y++;
-										}
+														if (!rstr.empty())
+														{
+															ret_->push_back(rstr);
+															rstr.clear();
+														}
 
-										if (y == sl)
-										{
-											std::string rstr;
+														if (ksep)
+														{
+															std::string nsep;
+															nsep.push_back(sep);
+															ret_->push_back(nsep);
+														}
+													}
+												}
+												else
+												{
+													for (; mk < x; mk++)
+													{
+														rstr.push_back(val[mk]);
+													}
+													x += (sl - 1);
+													mk = x + 1;
 
-											for (size_t z = mk; z < x; z++)
-											{
-												rstr.push_back(val[z]);
+													if (!rstr.empty())
+													{
+														ret_->push_back(rstr);
+														rstr.clear();
+													}
+
+													if (ksep)
+													{
+														std::string nsep;
+														nsep.push_back(sep);
+														ret_->push_back(nsep);
+													}
+												}
 											}
-											x = y + 1;
-											mk = x;
-											ret_->push_back(rstr);
 										}
 									}
 								}
 							}
-						}
-						else
-						{
-							ign = false;
 						}
 					}
 				}
 			}
-			if (lit)
+
+			for (; mk < vl; mk++)
+			{
+				rstr.push_back(val[mk]);
+			}
+			if (!rstr.empty())
+			{
+				ret_->push_back(rstr);
+			}
+			if (lit > -1)
 			{
 				carr_64 ncar;
-				ret = bot_sprintf(ncar.carr, ncar.siz, "Open literal '%c' at: %u", nrts_lit[lit], (uint)litloc);
+				ret = bot_sprintf(ncar.carr, ncar.siz, "Open literal '%c' at: %u", msy.nrts_lit[lit], (uint)litloc);
 				std::string rstr(ncar.carr);
 				ret_->push_back(rstr);
 				ret = -1;
@@ -8705,7 +9046,7 @@ sint machine::ArgSep(std::vector <std::string>* ret_, c_char* val, ...)
 			else if (!ord.empty())
 			{
 				carr_64 ncar;
-				ret = bot_sprintf(ncar.carr, ncar.siz, "Open bracket '%c' at: %u", nrts_ord[ord[ord.size() - 1]], (uint)ordl[ordl.size() - 1]);
+				ret = bot_sprintf(ncar.carr, ncar.siz, "Open bracket '%c' at: %u", msy.nrts_ord[ord[0]], (uint)ordl[0]);
 				std::string rstr(ncar.carr);
 				ret_->push_back(rstr);
 				ret = -1;
@@ -8715,7 +9056,2533 @@ sint machine::ArgSep(std::vector <std::string>* ret_, c_char* val, ...)
 				ret = 0;
 			}
 		}
-		sep = va_arg(args, carr_4*);
+		else
+		{
+			carr_64 ncar;
+			ret = bot_sprintf(ncar.carr, ncar.siz, "Bad Size: vl: %u", (uint)vl);
+			std::string rstr(ncar.carr);
+			ret_->push_back(rstr);
+			ret = -1;
+		}
+		break;
+	}
+	case BOT_RTV_CHAR:
+	{
+		sint ptr = va_arg(args, sint);
+		_char sep = (_char)ptr;
+
+		if (sep)
+		{
+			ret = -1;
+
+			if (vl && vl < (size_t)BOT_STRLEN_MAX)
+			{
+				size_t sl = sizeof(_char);
+				slint lign = -1;
+				slint lit = -1;
+				slint litloc = 0;
+				std::vector<size_t> ord;
+				std::vector<size_t> ordl;
+				std::string rstr;
+				size_t mk = 0;
+				_char ig = '\\';
+
+				for (size_t x = f; x < t + 1; x++)
+				{
+					if (lit > -1)
+					{
+						for (size_t xl = 0; xl < msy.nrts_lit.size(); xl++)
+						{
+							if (!memcmp((void*)&msy.nrts_lit[xl], (void*)&val[x], sl))
+							{
+								if (memcmp((void*)&ig, (void*)&val[x - 1], sl))
+								{
+									if (lit == (slint)xl)
+									{
+										if (!memcmp((void*)&sep, (void*)&msy.nrts_lit[xl], sl))
+										{
+											for (; mk < x + sl; mk++)
+											{
+												rstr.push_back(val[mk]);
+											}
+											x += (sl - 1);
+											mk = x + 1;
+
+											if (!rstr.empty())
+											{
+												ret_->push_back(rstr);
+												rstr.clear();
+											}
+										}
+										lit = -1;
+										litloc = (slint)x;
+									}
+									xl = msy.nrts_lit.size();
+								}
+								else
+								{
+									if (x > 1)
+									{
+										if (!memcmp((void*)&ig, (void*)&val[x - 2], sl))
+										{
+											if (lit == (slint)xl)
+											{
+												if (!memcmp((void*)&sep, (void*)&msy.nrts_lit[xl], sl))
+												{
+													for (; mk < x + sl; mk++)
+													{
+														rstr.push_back(val[mk]);
+													}
+													x += (sl - 1);
+													mk = x + 1;
+
+													if (!rstr.empty())
+													{
+														ret_->push_back(rstr);
+														rstr.clear();
+													}
+												}
+												lit = -1;
+												litloc = (slint)x;
+											}
+											xl = msy.nrts_lit.size();
+										}
+									}
+								}
+							}
+						}
+					}
+					else
+					{
+						if (lign > -1)
+						{
+							for (size_t yl = 0; yl < msy.nrts_lign_.size(); yl++)
+							{
+								if (!memcmp((void*)&msy.nrts_lign_[yl][0], (void*)&val[x], sl))
+								{
+									size_t zl = 1;
+
+									while (zl < msy.nrts_lign[yl].length() && zl < vl)
+									{
+										if (memcmp((void*)&msy.nrts_lign_[yl][zl], (void*)&val[x + zl], sl))
+										{
+											zl = msy.nrts_lign[yl].length();
+										}
+										zl++;
+									}
+
+									if (zl == msy.nrts_lign[yl].length())
+									{
+										if (lign == (slint)yl)
+										{
+											lign = -1;
+											yl = msy.nrts_lign_.size();
+										}
+									}
+								}
+							}
+						}
+						if (lign < 0)
+						{
+							for (size_t xl = 0; xl < msy.nrts_lit.size(); xl++)
+							{
+								if (!memcmp((void*)&msy.nrts_lit[xl], (void*)&val[x], sl))
+								{
+									if (!memcmp((void*)&sep, (void*)&msy.nrts_lit[xl], sl))
+									{
+										for (; mk < x; mk++)
+										{
+											rstr.push_back(val[mk]);
+										}
+
+										if (!rstr.empty())
+										{
+											ret_->push_back(rstr);
+											rstr.clear();
+										}
+									}
+									lit = (slint)xl;
+									litloc = (slint)x;
+									xl = msy.nrts_lit.size();
+								}
+							}
+							if (lit < 0)
+							{
+								if (lign < 0)
+								{
+									for (size_t yl = 0; yl < msy.nrts_lign.size(); yl++)
+									{
+										if (!memcmp((void*)&msy.nrts_lign[yl][0], (void*)&val[x], sl))
+										{
+											size_t zl = 1;
+
+											while (zl < msy.nrts_lign[yl].length() && zl < vl)
+											{
+												if (memcmp((void*)&msy.nrts_lign[yl][zl], (void*)&val[x + zl], sl))
+												{
+													zl = msy.nrts_lign[yl].length();
+												}
+												zl++;
+											}
+
+											if (zl == msy.nrts_lign[yl].length())
+											{
+												lign = (slint)yl;
+												yl = msy.nrts_lign.size();
+											}
+										}
+									}
+									if (lign < 0)
+									{
+										for (size_t xl = 0; xl < msy.nrts_ord.size(); xl++)
+										{
+											if (!memcmp((void*)&msy.nrts_ord[xl], (void*)&val[x], sl))
+											{
+												if (ord.empty())
+												{
+													if (!memcmp((void*)&sep, (void*)&msy.nrts_ord[xl], sl) || !memcmp((void*)&sep, (void*)&msy.nrts_ord_[xl], sl))
+													{
+														for (; mk < x; mk++)
+														{
+															rstr.push_back(val[mk]);
+														}
+
+														if (!rstr.empty())
+														{
+															ret_->push_back(rstr);
+															rstr.clear();
+														}
+													}
+												}
+												ord.push_back(xl);
+												ordl.push_back(x);
+												xl = msy.nrts_ord.size();
+											}
+										}
+										if (!ord.empty())
+										{
+											for (size_t xl = 0; xl < msy.nrts_ord_.size(); xl++)
+											{
+												if (!memcmp((void*)&msy.nrts_ord_[xl], (void*)&val[x], sl))
+												{
+													if (ord[ord.size() - 1] == xl)
+													{
+														ord.pop_back();
+														ordl.pop_back();
+
+														if (ord.empty())
+														{
+															if (!memcmp((void*)&sep, (void*)&msy.nrts_ord[xl], sl) || !memcmp((void*)&sep, (void*)&msy.nrts_ord_[xl], sl))
+															{
+																for (; mk < x + sl; mk++)
+																{
+																	rstr.push_back(val[mk]);
+																}
+																x += (sl - 1);
+																mk = x + 1;
+
+																if (!rstr.empty())
+																{
+																	ret_->push_back(rstr);
+																	rstr.clear();
+																}
+															}
+														}
+													}
+													xl = msy.nrts_ord_.size();
+												}
+											}
+										}
+										else
+										{
+											if (!memcmp((void*)&val[x], (void*)&sep, sl))
+											{
+												if (memcmp((void*)&ig, (void*)&val[x - 1], sl))
+												{
+													if (x > 1)
+													{
+														if (memcmp((void*)&ig, (void*)&val[x - 2], sl))
+														{
+															for (; mk < x; mk++)
+															{
+																rstr.push_back(val[mk]);
+															}
+															x += (sl - 1);
+															mk = x + 1;
+
+															if (!rstr.empty())
+															{
+																ret_->push_back(rstr);
+																rstr.clear();
+															}
+
+															if (ksep)
+															{
+																std::string nsep;
+																nsep.push_back(sep);
+																ret_->push_back(nsep);
+															}
+														}
+													}
+													else
+													{
+														for (; mk < x; mk++)
+														{
+															rstr.push_back(val[mk]);
+														}
+														x += (sl - 1);
+														mk = x + 1;
+
+														if (!rstr.empty())
+														{
+															ret_->push_back(rstr);
+															rstr.clear();
+														}
+
+														if (ksep)
+														{
+															std::string nsep;
+															nsep.push_back(sep);
+															ret_->push_back(nsep);
+														}
+													}
+												}
+											}
+										}
+									}
+								}
+							}
+						}
+					}
+				}
+
+				for (; mk < vl; mk++)
+				{
+					rstr.push_back(val[mk]);
+				}
+				if (!rstr.empty())
+				{
+					ret_->push_back(rstr);
+				}
+				if (lit > -1)
+				{
+					carr_64 ncar;
+					ret = bot_sprintf(ncar.carr, ncar.siz, "Open literal '%c' at: %u", msy.nrts_lit[lit], (uint)litloc);
+					std::string rstr(ncar.carr);
+					ret_->push_back(rstr);
+					ret = -1;
+				}
+				else if (!ord.empty())
+				{
+					carr_64 ncar;
+					ret = bot_sprintf(ncar.carr, ncar.siz, "Open bracket '%c' at: %u", msy.nrts_ord[ord[0]], (uint)ordl[0]);
+					std::string rstr(ncar.carr);
+					ret_->push_back(rstr);
+					ret = -1;
+				}
+				else
+				{
+					ret = 0;
+				}
+			}
+			else
+			{
+				carr_64 ncar;
+				ret = bot_sprintf(ncar.carr, ncar.siz, "Bad Size: vl: %u", (uint)vl);
+				std::string rstr(ncar.carr);
+				ret_->push_back(rstr);
+				ret = -1;
+			}
+		}
+		break;
+	}
+	case BOT_RTV_CHARP:
+	{
+		void* ptr = va_arg(args, void*);
+		_char* sep = reinterpret_cast<_char*>(ptr);
+
+		if (sep)
+		{
+			ret = -1;
+
+			if (vl && vl < (size_t)BOT_STRLEN_MAX)
+			{
+				size_t sl = bot_strlen(sep);
+				slint lign = -1;
+				slint lit = -1;
+				slint litloc = 0;
+				std::vector<size_t> ord;
+				std::vector<size_t> ordl;
+				std::string rstr;
+				size_t mk = 0;
+				_char ig = '\\';
+
+				for (size_t x = f; x < t + 1; x++)
+				{
+					if (lit > -1)
+					{
+						for (size_t xl = 0; xl < msy.nrts_lit.size(); xl++)
+						{
+							if (!memcmp((void*)&msy.nrts_lit[xl], (void*)&val[x], sizeof(_char)))
+							{
+								if (memcmp((void*)&ig, (void*)&val[x - 1], sizeof(_char)))
+								{
+									if (lit == (slint)xl)
+									{
+										if (!strcmp(sep, &msy.nrts_lit[xl]))
+										{
+											for (; mk < x + sl; mk++)
+											{
+												rstr.push_back(val[mk]);
+											}
+											x += (sl - 1);
+											mk = x + 1;
+
+											if (!rstr.empty())
+											{
+												ret_->push_back(rstr);
+												rstr.clear();
+											}
+										}
+										lit = -1;
+										litloc = (slint)x;
+									}
+									xl = msy.nrts_lit.size();
+								}
+								else
+								{
+									if (x > 1)
+									{
+										if (!memcmp((void*)&ig, (void*)&val[x - 2], sizeof(_char)))
+										{
+											if (lit == (slint)xl)
+											{
+												if (!strcmp(sep, &msy.nrts_lit[xl]))
+												{
+													for (; mk < x + sl; mk++)
+													{
+														rstr.push_back(val[mk]);
+													}
+													x += (sl - 1);
+													mk = x + 1;
+
+													if (!rstr.empty())
+													{
+														ret_->push_back(rstr);
+														rstr.clear();
+													}
+												}
+												lit = -1;
+												litloc = (slint)x;
+											}
+											xl = msy.nrts_lit.size();
+										}
+									}
+								}
+							}
+						}
+					}
+					else
+					{
+						if (lign > -1)
+						{
+							for (size_t yl = 0; yl < msy.nrts_lign_.size(); yl++)
+							{
+								if (!memcmp((void*)&msy.nrts_lign_[yl][0], (void*)&val[x], sizeof(_char)))
+								{
+									size_t zl = 1;
+
+									while (zl < msy.nrts_lign[yl].length() && zl < vl)
+									{
+										if (memcmp((void*)&msy.nrts_lign_[yl][zl], (void*)&val[x + zl], sizeof(_char)))
+										{
+											zl = msy.nrts_lign[yl].length();
+										}
+										zl++;
+									}
+
+									if (zl == msy.nrts_lign[yl].length())
+									{
+										if (lign == (slint)yl)
+										{
+											lign = -1;
+											yl = msy.nrts_lign_.size();
+										}
+									}
+								}
+							}
+						}
+						if (lign < 0)
+						{
+							for (size_t xl = 0; xl < msy.nrts_lit.size(); xl++)
+							{
+								if (!memcmp((void*)&msy.nrts_lit[xl], (void*)&val[x], sizeof(_char)))
+								{
+									if (!strcmp(sep, &msy.nrts_lit[xl]))
+									{
+										for (; mk < x; mk++)
+										{
+											rstr.push_back(val[mk]);
+										}
+
+										if (!rstr.empty())
+										{
+											ret_->push_back(rstr);
+											rstr.clear();
+										}
+									}
+									lit = (slint)xl;
+									litloc = (slint)x;
+									xl = msy.nrts_lit.size();
+								}
+							}
+							if (lit < 0)
+							{
+								if (lign < 0)
+								{
+									for (size_t yl = 0; yl < msy.nrts_lign.size(); yl++)
+									{
+										if (!memcmp((void*)&msy.nrts_lign[yl][0], (void*)&val[x], sizeof(_char)))
+										{
+											size_t zl = 1;
+
+											while (zl < msy.nrts_lign[yl].length() && zl < vl)
+											{
+												if (memcmp((void*)&msy.nrts_lign[yl][zl], (void*)&val[x + zl], sizeof(_char)))
+												{
+													zl = msy.nrts_lign[yl].length();
+												}
+												zl++;
+											}
+
+											if (zl == msy.nrts_lign[yl].length())
+											{
+												lign = (slint)yl;
+												yl = msy.nrts_lign.size();
+											}
+										}
+									}
+									if (lign < 0)
+									{
+										for (size_t xl = 0; xl < msy.nrts_ord.size(); xl++)
+										{
+											if (!memcmp((void*)&msy.nrts_ord[xl], (void*)&val[x], sizeof(_char)))
+											{
+												if (ord.empty())
+												{
+													if (!strcmp(sep, &msy.nrts_ord[xl]) || !strcmp(sep, &msy.nrts_ord_[xl]))
+													{
+														for (; mk < x; mk++)
+														{
+															rstr.push_back(val[mk]);
+														}
+
+														if (!rstr.empty())
+														{
+															ret_->push_back(rstr);
+															rstr.clear();
+														}
+													}
+												}
+												ord.push_back(xl);
+												ordl.push_back(x);
+												xl = msy.nrts_ord.size();
+											}
+										}
+										if (!ord.empty())
+										{
+											for (size_t xl = 0; xl < msy.nrts_ord_.size(); xl++)
+											{
+												if (!memcmp((void*)&msy.nrts_ord_[xl], (void*)&val[x], sizeof(_char)))
+												{
+													if (ord[ord.size() - 1] == xl)
+													{
+														ord.pop_back();
+														ordl.pop_back();
+
+														if (ord.empty())
+														{
+															if (!strcmp(sep, &msy.nrts_ord[xl]) || !strcmp(sep, &msy.nrts_ord_[xl]))
+															{
+																for (; mk < x + sl; mk++)
+																{
+																	rstr.push_back(val[mk]);
+																}
+																x += (sl - 1);
+																mk = x + 1;
+
+																if (!rstr.empty())
+																{
+																	ret_->push_back(rstr);
+																	rstr.clear();
+																}
+															}
+														}
+													}
+													xl = msy.nrts_ord_.size();
+												}
+											}
+										}
+										else
+										{
+											if (!memcmp((void*)&val[x], (void*)&sep[0], sizeof(_char)))
+											{
+												if (memcmp((void*)&ig, (void*)&val[x - 1], sizeof(_char)))
+												{
+													if (x > 1)
+													{
+														if (memcmp((void*)&ig, (void*)&val[x - 2], sizeof(_char)))
+														{
+															size_t y = 1;
+
+															while (y < sl && x + y < vl)
+															{
+																if (memcmp((void*)&val[x + y], (void*)&sep[y], sizeof(_char)))
+																{
+																	y = sl;
+																}
+																y++;
+															}
+
+															if (y == sl)
+															{
+																for (; mk < x; mk++)
+																{
+																	rstr.push_back(val[mk]);
+																}
+																x += (sl - 1);
+																mk = x + 1;
+
+																if (!rstr.empty())
+																{
+																	ret_->push_back(rstr);
+																	rstr.clear();
+																}
+
+																if (ksep)
+																{
+																	std::string nsep(sep);
+																	ret_->push_back(nsep);
+																}
+															}
+														}
+													}
+													else
+													{
+														size_t y = 1;
+
+														while (y < sl && x + y < vl)
+														{
+															if (memcmp((void*)&val[x + y], &sep[y], sizeof(_char)))
+															{
+																y = sl;
+															}
+															y++;
+														}
+
+														if (y == sl)
+														{
+															for (; mk < x; mk++)
+															{
+																rstr.push_back(val[mk]);
+															}
+															x += (sl - 1);
+															mk = x + 1;
+
+															if (!rstr.empty())
+															{
+																ret_->push_back(rstr);
+																rstr.clear();
+															}
+
+															if (ksep)
+															{
+																std::string nsep(sep);
+																ret_->push_back(nsep);
+															}
+														}
+													}
+												}
+											}
+										}
+									}
+								}
+							}
+						}
+					}
+				}
+
+				for (; mk < vl; mk++)
+				{
+					rstr.push_back(val[mk]);
+				}
+				if (!rstr.empty())
+				{
+					ret_->push_back(rstr);
+				}
+				if (lit > -1)
+				{
+					carr_64 ncar;
+					ret = bot_sprintf(ncar.carr, ncar.siz, "Open literal '%c' at: %u", msy.nrts_lit[lit], (uint)litloc);
+					std::string rstr(ncar.carr);
+					ret_->push_back(rstr);
+					ret = -1;
+				}
+				else if (!ord.empty())
+				{
+					carr_64 ncar;
+					ret = bot_sprintf(ncar.carr, ncar.siz, "Open bracket '%c' at: %u", msy.nrts_ord[ord[0]], (uint)ordl[0]);
+					std::string rstr(ncar.carr);
+					ret_->push_back(rstr);
+					ret = -1;
+				}
+				else
+				{
+					ret = 0;
+				}
+			}
+			else
+			{
+				carr_64 ncar;
+				ret = bot_sprintf(ncar.carr, ncar.siz, "Bad Size: vl: %u", (uint)vl);
+				std::string rstr(ncar.carr);
+				ret_->push_back(rstr);
+				ret = -1;
+			}
+		}
+		break;
+	}
+	case BOT_RTV_CCHAR:
+	{
+		void* ptr = va_arg(args, void*);
+		c_char* sep = reinterpret_cast<c_char*>(ptr);
+
+		if (sep)
+		{
+			ret = -1;
+
+			if (vl && vl < (size_t)BOT_STRLEN_MAX)
+			{
+				size_t sl = bot_cstrlen(sep);
+				slint lign = -1;
+				slint lit = -1;
+				slint litloc = 0;
+				std::vector<size_t> ord;
+				std::vector<size_t> ordl;
+				std::string rstr;
+				size_t mk = 0;
+				_char ig = '\\';
+
+				for (size_t x = f; x < t + 1; x++)
+				{
+					if (lit > -1)
+					{
+						for (size_t xl = 0; xl < msy.nrts_lit.size(); xl++)
+						{
+							if (!memcmp((void*)&msy.nrts_lit[xl], (void*)&val[x], sizeof(_char)))
+							{
+								if (memcmp((void*)&ig, (void*)&val[x - 1], sizeof(_char)))
+								{
+									if (lit == (slint)xl)
+									{
+										if (!strcmp(sep, &msy.nrts_lit[xl]))
+										{
+											for (; mk < x + sl; mk++)
+											{
+												rstr.push_back(val[mk]);
+											}
+											x += (sl - 1);
+											mk = x + 1;
+
+											if (!rstr.empty())
+											{
+												ret_->push_back(rstr);
+												rstr.clear();
+											}
+										}
+										lit = -1;
+										litloc = (slint)x;
+									}
+									xl = msy.nrts_lit.size();
+								}
+								else
+								{
+									if (x > 1)
+									{
+										if (!memcmp((void*)&ig, (void*)&val[x - 2], sizeof(_char)))
+										{
+											if (lit == (slint)xl)
+											{
+												if (!strcmp(sep, &msy.nrts_lit[xl]))
+												{
+													for (; mk < x + sl; mk++)
+													{
+														rstr.push_back(val[mk]);
+													}
+													x += (sl - 1);
+													mk = x + 1;
+
+													if (!rstr.empty())
+													{
+														ret_->push_back(rstr);
+														rstr.clear();
+													}
+												}
+												lit = -1;
+												litloc = (slint)x;
+											}
+											xl = msy.nrts_lit.size();
+										}
+									}
+								}
+							}
+						}
+					}
+					else
+					{
+						if (lign > -1)
+						{
+							for (size_t yl = 0; yl < msy.nrts_lign_.size(); yl++)
+							{
+								if (!memcmp((void*)&msy.nrts_lign_[yl][0], (void*)&val[x], sizeof(_char)))
+								{
+									size_t zl = 1;
+
+									while (zl < msy.nrts_lign[yl].length() && zl < vl)
+									{
+										if (memcmp((void*)&msy.nrts_lign_[yl][zl], (void*)&val[x + zl], sizeof(_char)))
+										{
+											zl = msy.nrts_lign[yl].length();
+										}
+										zl++;
+									}
+
+									if (zl == msy.nrts_lign[yl].length())
+									{
+										if (lign == (slint)yl)
+										{
+											lign = -1;
+											yl = msy.nrts_lign_.size();
+										}
+									}
+								}
+							}
+						}
+						if (lign < 0)
+						{
+							for (size_t xl = 0; xl < msy.nrts_lit.size(); xl++)
+							{
+								if (!memcmp((void*)&msy.nrts_lit[xl], (void*)&val[x], sizeof(_char)))
+								{
+									if (!strcmp(sep, &msy.nrts_lit[xl]))
+									{
+										for (; mk < x; mk++)
+										{
+											rstr.push_back(val[mk]);
+										}
+
+										if (!rstr.empty())
+										{
+											ret_->push_back(rstr);
+											rstr.clear();
+										}
+									}
+									lit = (slint)xl;
+									litloc = (slint)x;
+									xl = msy.nrts_lit.size();
+								}
+							}
+							if (lit < 0)
+							{
+								if (lign < 0)
+								{
+									for (size_t yl = 0; yl < msy.nrts_lign.size(); yl++)
+									{
+										if (!memcmp((void*)&msy.nrts_lign[yl][0], (void*)&val[x], sizeof(_char)))
+										{
+											size_t zl = 1;
+
+											while (zl < msy.nrts_lign[yl].length() && zl < vl)
+											{
+												if (memcmp((void*)&msy.nrts_lign[yl][zl], (void*)&val[x + zl], sizeof(_char)))
+												{
+													zl = msy.nrts_lign[yl].length();
+												}
+												zl++;
+											}
+
+											if (zl == msy.nrts_lign[yl].length())
+											{
+												lign = (slint)yl;
+												yl = msy.nrts_lign.size();
+											}
+										}
+									}
+									if (lign < 0)
+									{
+										for (size_t xl = 0; xl < msy.nrts_ord.size(); xl++)
+										{
+											if (!memcmp((void*)&msy.nrts_ord[xl], (void*)&val[x], sizeof(_char)))
+											{
+												if (ord.empty())
+												{
+													if (!strcmp(sep, &msy.nrts_ord[xl]) || !strcmp(sep, &msy.nrts_ord_[xl]))
+													{
+														for (; mk < x; mk++)
+														{
+															rstr.push_back(val[mk]);
+														}
+
+														if (!rstr.empty())
+														{
+															ret_->push_back(rstr);
+															rstr.clear();
+														}
+													}
+												}
+												ord.push_back(xl);
+												ordl.push_back(x);
+												xl = msy.nrts_ord.size();
+											}
+										}
+										if (!ord.empty())
+										{
+											for (size_t xl = 0; xl < msy.nrts_ord_.size(); xl++)
+											{
+												if (!memcmp((void*)&msy.nrts_ord_[xl], (void*)&val[x], sizeof(_char)))
+												{
+													if (ord[ord.size() - 1] == xl)
+													{
+														ord.pop_back();
+														ordl.pop_back();
+
+														if (ord.empty())
+														{
+															if (!strcmp(sep, &msy.nrts_ord[xl]) || !strcmp(sep, &msy.nrts_ord_[xl]))
+															{
+																for (; mk < x + sl; mk++)
+																{
+																	rstr.push_back(val[mk]);
+																}
+																x += (sl - 1);
+																mk = x + 1;
+
+																if (!rstr.empty())
+																{
+																	ret_->push_back(rstr);
+																	rstr.clear();
+																}
+															}
+														}
+													}
+													xl = msy.nrts_ord_.size();
+												}
+											}
+										}
+										else
+										{
+											if (!memcmp((void*)&val[x], (void*)&sep[0], sizeof(_char)))
+											{
+												if (memcmp((void*)&ig, (void*)&val[x - 1], sizeof(_char)))
+												{
+													if (x > 1)
+													{
+														if (memcmp((void*)&ig, (void*)&val[x - 2], sizeof(_char)))
+														{
+															size_t y = 1;
+
+															while (y < sl && x + y < vl)
+															{
+																if (memcmp((void*)&val[x + y], (void*)&sep[y], sizeof(_char)))
+																{
+																	y = sl;
+																}
+																y++;
+															}
+
+															if (y == sl)
+															{
+																for (; mk < x; mk++)
+																{
+																	rstr.push_back(val[mk]);
+																}
+																x += (sl - 1);
+																mk = x + 1;
+
+																if (!rstr.empty())
+																{
+																	ret_->push_back(rstr);
+																	rstr.clear();
+																}
+
+																if (ksep)
+																{
+																	std::string nsep(sep);
+																	ret_->push_back(nsep);
+																}
+															}
+														}
+													}
+													else
+													{
+														size_t y = 1;
+
+														while (y < sl && x + y < vl)
+														{
+															if (memcmp((void*)&val[x + y], &sep[y], sizeof(_char)))
+															{
+																y = sl;
+															}
+															y++;
+														}
+
+														if (y == sl)
+														{
+															for (; mk < x; mk++)
+															{
+																rstr.push_back(val[mk]);
+															}
+															x += (sl - 1);
+															mk = x + 1;
+
+															if (!rstr.empty())
+															{
+																ret_->push_back(rstr);
+																rstr.clear();
+															}
+
+															if (ksep)
+															{
+																std::string nsep(sep);
+																ret_->push_back(nsep);
+															}
+														}
+													}
+												}
+											}
+										}
+									}
+								}
+							}
+						}
+					}
+				}
+
+				for (; mk < vl; mk++)
+				{
+					rstr.push_back(val[mk]);
+				}
+				if (!rstr.empty())
+				{
+					ret_->push_back(rstr);
+				}
+				if (lit > -1)
+				{
+					carr_64 ncar;
+					ret = bot_sprintf(ncar.carr, ncar.siz, "Open literal '%c' at: %u", msy.nrts_lit[lit], (uint)litloc);
+					std::string rstr(ncar.carr);
+					ret_->push_back(rstr);
+					ret = -1;
+				}
+				else if (!ord.empty())
+				{
+					carr_64 ncar;
+					ret = bot_sprintf(ncar.carr, ncar.siz, "Open bracket '%c' at: %u", msy.nrts_ord[ord[0]], (uint)ordl[0]);
+					std::string rstr(ncar.carr);
+					ret_->push_back(rstr);
+					ret = -1;
+				}
+				else
+				{
+					ret = 0;
+				}
+			}
+			else
+			{
+				carr_64 ncar;
+				ret = bot_sprintf(ncar.carr, ncar.siz, "Bad Size: vl: %u", (uint)vl);
+				std::string rstr(ncar.carr);
+				ret_->push_back(rstr);
+				ret = -1;
+			}
+		}
+		break;
+	}
+	case BOT_RTV_STR:
+	{
+		void* ptr = va_arg(args, void*);
+		std::string* sep = reinterpret_cast<std::string*>(ptr);
+
+		if (sep)
+		{
+			ret = -1;
+
+			if (vl && vl < (size_t)BOT_STRLEN_MAX)
+			{
+				slint lign = -1;
+				slint lit = -1;
+				slint litloc = 0;
+				std::vector<size_t> ord;
+				std::vector<size_t> ordl;
+				std::string rstr;
+				size_t mk = 0;
+				_char ig = '\\';
+
+				for (size_t x = f; x < t + 1; x++)
+				{
+					if (lit > -1)
+					{
+						for (size_t xl = 0; xl < msy.nrts_lit.size(); xl++)
+						{
+							if (!memcmp((void*)&msy.nrts_lit[xl], (void*)&val[x], sizeof(_char)))
+							{
+								if (memcmp((void*)&ig, (void*)&val[x - 1], sizeof(_char)))
+								{
+									if (lit == (slint)xl)
+									{
+										if (!strcmp(sep->c_str(), &msy.nrts_lit[xl]))
+										{
+											for (; mk < x + sep->length(); mk++)
+											{
+												rstr.push_back(val[mk]);
+											}
+											x += (sep->length() - 1);
+											mk = x + 1;
+
+											if (!rstr.empty())
+											{
+												ret_->push_back(rstr);
+												rstr.clear();
+											}
+										}
+										lit = -1;
+										litloc = (slint)x;
+									}
+									xl = msy.nrts_lit.size();
+								}
+								else
+								{
+									if (x > 1)
+									{
+										if (!memcmp((void*)&ig, (void*)&val[x - 2], sizeof(_char)))
+										{
+											if (lit == (slint)xl)
+											{
+												if (!strcmp(sep->c_str(), &msy.nrts_lit[xl]))
+												{
+													for (; mk < x + sep->length(); mk++)
+													{
+														rstr.push_back(val[mk]);
+													}
+													x += (sep->length() - 1);
+													mk = x + 1;
+
+													if (!rstr.empty())
+													{
+														ret_->push_back(rstr);
+														rstr.clear();
+													}
+												}
+												lit = -1;
+												litloc = (slint)x;
+											}
+											xl = msy.nrts_lit.size();
+										}
+									}
+								}
+							}
+						}
+					}
+					else
+					{
+						if (lign > -1)
+						{
+							for (size_t yl = 0; yl < msy.nrts_lign_.size(); yl++)
+							{
+								if (!memcmp((void*)&msy.nrts_lign_[yl][0], (void*)&val[x], sizeof(_char)))
+								{
+									size_t zl = 1;
+
+									while (zl < msy.nrts_lign[yl].length() && zl < vl)
+									{
+										if (memcmp((void*)&msy.nrts_lign_[yl][zl], (void*)&val[x + zl], sizeof(_char)))
+										{
+											zl = msy.nrts_lign[yl].length();
+										}
+										zl++;
+									}
+
+									if (zl == msy.nrts_lign[yl].length())
+									{
+										if (lign == (slint)yl)
+										{
+											lign = -1;
+											yl = msy.nrts_lign_.size();
+										}
+									}
+								}
+							}
+						}
+						if (lign < 0)
+						{
+							for (size_t xl = 0; xl < msy.nrts_lit.size(); xl++)
+							{
+								if (!memcmp((void*)&msy.nrts_lit[xl], (void*)&val[x], sizeof(_char)))
+								{
+									if (!strcmp(sep->c_str(), &msy.nrts_lit[xl]))
+									{
+										for (; mk < x; mk++)
+										{
+											rstr.push_back(val[mk]);
+										}
+
+										if (!rstr.empty())
+										{
+											ret_->push_back(rstr);
+											rstr.clear();
+										}
+									}
+									lit = (slint)xl;
+									litloc = (slint)x;
+									xl = msy.nrts_lit.size();
+								}
+							}
+							if (lit < 0)
+							{
+								if (lign < 0)
+								{
+									for (size_t yl = 0; yl < msy.nrts_lign.size(); yl++)
+									{
+										if (!memcmp((void*)&msy.nrts_lign[yl][0], (void*)&val[x], sizeof(_char)))
+										{
+											size_t zl = 1;
+
+											while (zl < msy.nrts_lign[yl].length() && zl < vl)
+											{
+												if (memcmp((void*)&msy.nrts_lign[yl][zl], (void*)&val[x + zl], sizeof(_char)))
+												{
+													zl = msy.nrts_lign[yl].length();
+												}
+												zl++;
+											}
+
+											if (zl == msy.nrts_lign[yl].length())
+											{
+												lign = (slint)yl;
+												yl = msy.nrts_lign.size();
+											}
+										}
+									}
+									if (lign < 0)
+									{
+										for (size_t xl = 0; xl < msy.nrts_ord.size(); xl++)
+										{
+											if (!memcmp((void*)&msy.nrts_ord[xl], (void*)&val[x], sizeof(_char)))
+											{
+												if (ord.empty())
+												{
+													if (!strcmp(sep->c_str(), &msy.nrts_ord[xl]) || !strcmp(sep->c_str(), &msy.nrts_ord_[xl]))
+													{
+														for (; mk < x; mk++)
+														{
+															rstr.push_back(val[mk]);
+														}
+
+														if (!rstr.empty())
+														{
+															ret_->push_back(rstr);
+															rstr.clear();
+														}
+													}
+												}
+												ord.push_back(xl);
+												ordl.push_back(x);
+												xl = msy.nrts_ord.size();
+											}
+										}
+										if (!ord.empty())
+										{
+											for (size_t xl = 0; xl < msy.nrts_ord_.size(); xl++)
+											{
+												if (!memcmp((void*)&msy.nrts_ord_[xl], (void*)&val[x], sizeof(_char)))
+												{
+													if (ord[ord.size() - 1] == xl)
+													{
+														ord.pop_back();
+														ordl.pop_back();
+
+														if (ord.empty())
+														{
+															if (!strcmp(sep->c_str(), &msy.nrts_ord[xl]) || !strcmp(sep->c_str(), &msy.nrts_ord_[xl]))
+															{
+																for (; mk < x + sep->length(); mk++)
+																{
+																	rstr.push_back(val[mk]);
+																}
+																x += (sep->length() - 1);
+																mk = x + 1;
+
+																if (!rstr.empty())
+																{
+																	ret_->push_back(rstr);
+																	rstr.clear();
+																}
+															}
+														}
+													}
+													xl = msy.nrts_ord_.size();
+												}
+											}
+										}
+										else
+										{
+											if (!memcmp((void*)&val[x], (void*)&sep->at(0), sizeof(_char)))
+											{
+												if (memcmp((void*)&ig, (void*)&val[x - 1], sizeof(_char)))
+												{
+													if (x > 1)
+													{
+														if (memcmp((void*)&ig, (void*)&val[x - 2], sizeof(_char)))
+														{
+															size_t y = 1;
+
+															while (y < sep->length() && x + y < vl)
+															{
+																if (memcmp((void*)&val[x + y], &sep->at(y), sizeof(_char)))
+																{
+																	y = sep->length();
+																}
+																y++;
+															}
+
+															if (y == sep->length())
+															{
+																for (; mk < x; mk++)
+																{
+																	rstr.push_back(val[mk]);
+																}
+																x += (sep->length() - 1);
+																mk = x + 1;
+
+																if (!rstr.empty())
+																{
+																	ret_->push_back(rstr);
+																	rstr.clear();
+																}
+
+																if (ksep)
+																{
+																	ret_->push_back(*sep);
+																}
+															}
+														}
+													}
+													else
+													{
+														size_t y = 1;
+
+														while (y < sep->length() && x + y < vl)
+														{
+															if (memcmp((void*)&val[x + y], &sep->at(y), sizeof(_char)))
+															{
+																y = sep->length();
+															}
+															y++;
+														}
+
+														if (y == sep->length())
+														{
+															for (; mk < x; mk++)
+															{
+																rstr.push_back(val[mk]);
+															}
+															x += (sep->length() - 1);
+															mk = x + 1;
+
+															if (!rstr.empty())
+															{
+																ret_->push_back(rstr);
+																rstr.clear();
+															}
+
+															if (ksep)
+															{
+																ret_->push_back(*sep);
+															}
+														}
+													}
+												}
+											}
+										}
+									}
+								}
+							}
+						}
+					}
+				}
+
+				for (; mk < vl; mk++)
+				{
+					rstr.push_back(val[mk]);
+				}
+				if (!rstr.empty())
+				{
+					ret_->push_back(rstr);
+				}
+				if (lit > -1)
+				{
+					carr_64 ncar;
+					ret = bot_sprintf(ncar.carr, ncar.siz, "Open literal '%c' at: %u", msy.nrts_lit[lit], (uint)litloc);
+					std::string rstr(ncar.carr);
+					ret_->push_back(rstr);
+					ret = -1;
+				}
+				else if (!ord.empty())
+				{
+					carr_64 ncar;
+					ret = bot_sprintf(ncar.carr, ncar.siz, "Open bracket '%c' at: %u", msy.nrts_ord[ord[0]], (uint)ordl[0]);
+					std::string rstr(ncar.carr);
+					ret_->push_back(rstr);
+					ret = -1;
+				}
+				else
+				{
+					ret = 0;
+				}
+			}
+			else
+			{
+				carr_64 ncar;
+				ret = bot_sprintf(ncar.carr, ncar.siz, "Bad Size: vl: %u", (uint)vl);
+				std::string rstr(ncar.carr);
+				ret_->push_back(rstr);
+				ret = -1;
+			}
+		}
+		break;
+	}
+	case BOT_RTV_VCHAR:
+	{
+		void* ptr = va_arg(args, void*);
+		std::vector<_char>* sep = reinterpret_cast<std::vector<_char>*>(ptr);
+
+		if (sep)
+		{
+			ret = -1;
+
+			if (vl && vl < (size_t)BOT_STRLEN_MAX)
+			{
+				slint lign = -1;
+				slint lit = -1;
+				slint litloc = 0;
+				std::vector<size_t> ord;
+				std::vector<size_t> ordl;
+				std::string rstr;
+				size_t mk = 0;
+				_char ig = '\\';
+
+				for (size_t x = f; x < t + 1; x++)
+				{
+					if (lit > -1)
+					{
+						for (size_t xl = 0; xl < msy.nrts_lit.size(); xl++)
+						{
+							if (!memcmp((void*)&msy.nrts_lit[xl], (void*)&val[x], sizeof(_char)))
+							{
+								if (memcmp((void*)&ig, (void*)&val[x - 1], sizeof(_char)))
+								{
+									if (lit == (slint)xl)
+									{
+										for (size_t xt = 0; xt < sep->size(); xt++)
+										{
+											if (!memcmp((void*)&sep->at(xt), (void*)&msy.nrts_lit[xl], sizeof(_char)))
+											{
+												for (; mk < x + sizeof(_char); mk++)
+												{
+													rstr.push_back(val[mk]);
+												}
+												x += (sizeof(_char) - 1);
+												mk = x + 1;
+
+												if (!rstr.empty())
+												{
+													ret_->push_back(rstr);
+													rstr.clear();
+												}
+												xt = sep->size();
+											}
+										}
+										lit = -1;
+										litloc = (slint)x;
+									}
+									xl = msy.nrts_lit.size();
+								}
+								else
+								{
+									if (x > 1)
+									{
+										if (!memcmp((void*)&ig, (void*)&val[x - 2], sizeof(_char)))
+										{
+											if (lit == (slint)xl)
+											{
+												for (size_t xt = 0; xt < sep->size(); xt++)
+												{
+													if (!memcmp((void*)&sep->at(xt), (void*)&msy.nrts_lit[xl], sizeof(_char)))
+													{
+														for (; mk < x + sizeof(_char); mk++)
+														{
+															rstr.push_back(val[mk]);
+														}
+														x += (sizeof(_char) - 1);
+														mk = x + 1;
+
+														if (!rstr.empty())
+														{
+															ret_->push_back(rstr);
+															rstr.clear();
+														}
+														xt = sep->size();
+													}
+												}
+												lit = -1;
+												litloc = (slint)x;
+											}
+											xl = msy.nrts_lit.size();
+										}
+									}
+								}
+							}
+						}
+					}
+					else
+					{
+						if (lign > -1)
+						{
+							for (size_t yl = 0; yl < msy.nrts_lign_.size(); yl++)
+							{
+								if (!memcmp((void*)&msy.nrts_lign_[yl][0], (void*)&val[x], sizeof(_char)))
+								{
+									size_t zl = 1;
+
+									while (zl < msy.nrts_lign[yl].length() && zl < vl)
+									{
+										if (memcmp((void*)&msy.nrts_lign_[yl][zl], (void*)&val[x + zl], sizeof(_char)))
+										{
+											zl = msy.nrts_lign[yl].length();
+										}
+										zl++;
+									}
+
+									if (zl == msy.nrts_lign[yl].length())
+									{
+										if (lign == (slint)yl)
+										{
+											lign = -1;
+											yl = msy.nrts_lign_.size();
+										}
+									}
+								}
+							}
+						}
+						if (lign < 0)
+						{
+							for (size_t xl = 0; xl < msy.nrts_lit.size(); xl++)
+							{
+								if (!memcmp((void*)&msy.nrts_lit[xl], (void*)&val[x], sizeof(_char)))
+								{
+									for (size_t xt = 0; xt < sep->size(); xt++)
+									{
+										if (!memcmp((void*)&sep->at(xt), (void*)&msy.nrts_lit[xl], sizeof(_char)))
+										{
+											for (; mk < x; mk++)
+											{
+												rstr.push_back(val[mk]);
+											}
+
+											if (!rstr.empty())
+											{
+												ret_->push_back(rstr);
+												rstr.clear();
+											}
+											xt = sep->size();
+										}
+									}
+									lit = (slint)xl;
+									litloc = (slint)x;
+									xl = msy.nrts_lit.size();
+								}
+							}
+							if (lit < 0)
+							{
+								if (lign < 0)
+								{
+									for (size_t yl = 0; yl < msy.nrts_lign.size(); yl++)
+									{
+										if (!memcmp((void*)&msy.nrts_lign[yl][0], (void*)&val[x], sizeof(_char)))
+										{
+											size_t zl = 1;
+
+											while (zl < msy.nrts_lign[yl].length() && zl < vl)
+											{
+												if (memcmp((void*)&msy.nrts_lign[yl][zl], (void*)&val[x + zl], sizeof(_char)))
+												{
+													zl = msy.nrts_lign[yl].length();
+												}
+												zl++;
+											}
+
+											if (zl == msy.nrts_lign[yl].length())
+											{
+												lign = (slint)yl;
+												yl = msy.nrts_lign.size();
+											}
+										}
+									}
+									if (lign < 0)
+									{
+										for (size_t xl = 0; xl < msy.nrts_ord.size(); xl++)
+										{
+											if (!memcmp((void*)&msy.nrts_ord[xl], (void*)&val[x], sizeof(_char)))
+											{
+												if (ord.empty())
+												{
+													for (size_t xt = 0; xt < sep->size(); xt++)
+													{
+														if (!memcmp((void*)&sep->at(xt), (void*)&msy.nrts_ord[xl], sizeof(_char)) || !memcmp((void*)&sep->at(xt), (void*)&msy.nrts_ord_[xl], sizeof(_char)))
+														{
+															for (; mk < x; mk++)
+															{
+																rstr.push_back(val[mk]);
+															}
+
+															if (!rstr.empty())
+															{
+																ret_->push_back(rstr);
+																rstr.clear();
+															}
+															xt = sep->size();
+														}
+													}
+												}
+												ord.push_back(xl);
+												ordl.push_back(x);
+												xl = msy.nrts_ord.size();
+											}
+										}
+										if (!ord.empty())
+										{
+											for (size_t xl = 0; xl < msy.nrts_ord_.size(); xl++)
+											{
+												if (!memcmp((void*)&msy.nrts_ord_[xl], (void*)&val[x], sizeof(_char)))
+												{
+													if (ord[ord.size() - 1] == xl)
+													{
+														ord.pop_back();
+														ordl.pop_back();
+
+														if (ord.empty())
+														{
+															for (size_t xt = 0; xt < sep->size(); xt++)
+															{
+																if (!memcmp((void*)&sep->at(xt), (void*)&msy.nrts_ord[xl], sizeof(_char)) || !memcmp((void*)&sep->at(xt), (void*)&msy.nrts_ord_[xl], sizeof(_char)))
+																{
+																	for (; mk < x + sizeof(_char); mk++)
+																	{
+																		rstr.push_back(val[mk]);
+																	}
+																	x += (sizeof(_char) - 1);
+																	mk = x + 1;
+
+																	if (!rstr.empty())
+																	{
+																		ret_->push_back(rstr);
+																		rstr.clear();
+																	}
+																	xt = sep->size();
+																}
+															}
+														}
+													}
+													xl = msy.nrts_ord_.size();
+												}
+											}
+										}
+										else
+										{
+											for (size_t xt = 0; xt < sep->size(); xt++)
+											{
+												if (!memcmp((void*)&val[x], (void*)&sep->at(xt), sizeof(_char)))
+												{
+													if (memcmp((void*)&ig, (void*)&val[x - 1], sizeof(_char)))
+													{
+														if (x > 1)
+														{
+															if (memcmp((void*)&ig, (void*)&val[x - 2], sizeof(_char)))
+															{
+																for (; mk < x; mk++)
+																{
+																	rstr.push_back(val[mk]);
+																}
+																x += sizeof(_char) - 1;
+																mk = x + 1;
+
+																if (!rstr.empty())
+																{
+																	ret_->push_back(rstr);
+																	rstr.clear();
+																}
+
+																if (ksep)
+																{
+																	std::string str;
+																	str.push_back(sep->at(xt));
+																	ret_->push_back(str);
+																}
+																xt = sep->size();
+															}
+														}
+														else
+														{
+															for (; mk < x; mk++)
+															{
+																rstr.push_back(val[mk]);
+															}
+															x += (sizeof(_char) - 1);
+															mk = x + 1;
+
+															if (!rstr.empty())
+															{
+																ret_->push_back(rstr);
+																rstr.clear();
+															}
+
+															if (ksep)
+															{
+																std::string str;
+																str.push_back(sep->at(xt));
+																ret_->push_back(str);
+															}
+															xt = sep->size();
+														}
+													}
+												}
+											}
+										}
+									}
+								}
+							}
+						}
+					}
+				}
+
+				for (; mk < vl; mk++)
+				{
+					rstr.push_back(val[mk]);
+				}
+				if (!rstr.empty())
+				{
+					ret_->push_back(rstr);
+				}
+				if (lit > -1)
+				{
+					carr_64 ncar;
+					ret = bot_sprintf(ncar.carr, ncar.siz, "Open literal '%c' at: %u", msy.nrts_lit[lit], (uint)litloc);
+					std::string rstr(ncar.carr);
+					ret_->push_back(rstr);
+					ret = -1;
+				}
+				else if (!ord.empty())
+				{
+					carr_64 ncar;
+					ret = bot_sprintf(ncar.carr, ncar.siz, "Open bracket '%c' at: %u", msy.nrts_ord[ord[0]], (uint)ordl[0]);
+					std::string rstr(ncar.carr);
+					ret_->push_back(rstr);
+					ret = -1;
+				}
+				else
+				{
+					ret = 0;
+				}
+			}
+			else
+			{
+				carr_64 ncar;
+				ret = bot_sprintf(ncar.carr, ncar.siz, "Bad Size: vl: %u", (uint)vl);
+				std::string rstr(ncar.carr);
+				ret_->push_back(rstr);
+				ret = -1;
+			}
+		}
+		break;
+	}
+	case BOT_RTV_VCCHAR:
+	{
+		void* ptr = va_arg(args, void*);
+		std::vector<c_char*>* sep = reinterpret_cast<std::vector<c_char*>*>(ptr);
+
+		if (sep)
+		{
+			ret = -1;
+
+			if (vl && vl < (size_t)BOT_STRLEN_MAX)
+			{
+				slint lign = -1;
+				slint lit = -1;
+				slint litloc = 0;
+				std::vector<size_t> ord;
+				std::vector<size_t> ordl;
+				std::string rstr;
+				size_t mk = 0;
+				_char ig = '\\';
+
+				for (size_t x = f; x < t + 1; x++)
+				{
+					if (lit > -1)
+					{
+						for (size_t xl = 0; xl < msy.nrts_lit.size(); xl++)
+						{
+							if (!memcmp((void*)&msy.nrts_lit[xl], (void*)&val[x], sizeof(_char)))
+							{
+								if (memcmp((void*)&ig, (void*)&val[x - 1], sizeof(_char)))
+								{
+									if (lit == (slint)xl)
+									{
+										for (size_t xt = 0; xt < sep->size(); xt++)
+										{
+											size_t sl = bot_cstrlen(sep->at(xt));
+
+											if (!strcmp(sep->at(xt), &msy.nrts_lit[xl]))
+											{
+												for (; mk < x + sl; mk++)
+												{
+													rstr.push_back(val[mk]);
+												}
+												x += (sl - 1);
+												mk = x + 1;
+
+												if (!rstr.empty())
+												{
+													ret_->push_back(rstr);
+													rstr.clear();
+												}
+												xt = sep->size();
+											}
+										}
+										lit = -1;
+										litloc = (slint)x;
+									}
+									xl = msy.nrts_lit.size();
+								}
+								else
+								{
+									if (x > 1)
+									{
+										if (!memcmp((void*)&ig, (void*)&val[x - 2], sizeof(_char)))
+										{
+											if (lit == (slint)xl)
+											{
+												for (size_t xt = 0; xt < sep->size(); xt++)
+												{
+													size_t sl = bot_cstrlen(sep->at(xt));
+
+													if (!strcmp(sep->at(xt), &msy.nrts_lit[xl]))
+													{
+														for (; mk < x + sl; mk++)
+														{
+															rstr.push_back(val[mk]);
+														}
+														x += (sl - 1);
+														mk = x + 1;
+
+														if (!rstr.empty())
+														{
+															ret_->push_back(rstr);
+															rstr.clear();
+														}
+														xt = sep->size();
+													}
+												}
+												lit = -1;
+												litloc = (slint)x;
+											}
+											xl = msy.nrts_lit.size();
+										}
+									}
+								}
+							}
+						}
+					}
+					else
+					{
+						if (lign > -1)
+						{
+							for (size_t yl = 0; yl < msy.nrts_lign_.size(); yl++)
+							{
+								if (!memcmp((void*)&msy.nrts_lign_[yl][0], (void*)&val[x], sizeof(_char)))
+								{
+									size_t zl = 1;
+
+									while (zl < msy.nrts_lign[yl].length() && zl < vl)
+									{
+										if (memcmp((void*)&msy.nrts_lign_[yl][zl], (void*)&val[x + zl], sizeof(_char)))
+										{
+											zl = msy.nrts_lign[yl].length();
+										}
+										zl++;
+									}
+
+									if (zl == msy.nrts_lign[yl].length())
+									{
+										if (lign == (slint)yl)
+										{
+											lign = -1;
+											yl = msy.nrts_lign_.size();
+										}
+									}
+								}
+							}
+						}
+						if (lign < 0)
+						{
+							for (size_t xl = 0; xl < msy.nrts_lit.size(); xl++)
+							{
+								if (!memcmp((void*)&msy.nrts_lit[xl], (void*)&val[x], sizeof(_char)))
+								{
+									for (size_t xt = 0; xt < sep->size(); xt++)
+									{
+										if (!strcmp(sep->at(xt), &msy.nrts_lit[xl]))
+										{
+											for (; mk < x; mk++)
+											{
+												rstr.push_back(val[mk]);
+											}
+
+											if (!rstr.empty())
+											{
+												ret_->push_back(rstr);
+												rstr.clear();
+											}
+											xt = sep->size();
+										}
+									}
+									lit = (slint)xl;
+									litloc = (slint)x;
+									xl = msy.nrts_lit.size();
+								}
+							}
+							if (lit < 0)
+							{
+								if (lign < 0)
+								{
+									for (size_t yl = 0; yl < msy.nrts_lign.size(); yl++)
+									{
+										if (!memcmp((void*)&msy.nrts_lign[yl][0], (void*)&val[x], sizeof(_char)))
+										{
+											size_t zl = 1;
+
+											while (zl < msy.nrts_lign[yl].length() && zl < vl)
+											{
+												if (memcmp((void*)&msy.nrts_lign[yl][zl], (void*)&val[x + zl], sizeof(_char)))
+												{
+													zl = msy.nrts_lign[yl].length();
+												}
+												zl++;
+											}
+
+											if (zl == msy.nrts_lign[yl].length())
+											{
+												lign = (slint)yl;
+												yl = msy.nrts_lign.size();
+											}
+										}
+									}
+									if (lign < 0)
+									{
+										for (size_t xl = 0; xl < msy.nrts_ord.size(); xl++)
+										{
+											if (!memcmp((void*)&msy.nrts_ord[xl], (void*)&val[x], sizeof(_char)))
+											{
+												if (ord.empty())
+												{
+													for (size_t xt = 0; xt < sep->size(); xt++)
+													{
+														if (!strcmp(sep->at(xt), &msy.nrts_ord[xl]) || !strcmp(sep->at(xt), &msy.nrts_ord_[xl]))
+														{
+															for (; mk < x; mk++)
+															{
+																rstr.push_back(val[mk]);
+															}
+
+															if (!rstr.empty())
+															{
+																ret_->push_back(rstr);
+																rstr.clear();
+															}
+															xt = sep->size();
+														}
+													}
+												}
+												ord.push_back(xl);
+												ordl.push_back(x);
+												xl = msy.nrts_ord.size();
+											}
+										}
+										if (!ord.empty())
+										{
+											for (size_t xl = 0; xl < msy.nrts_ord_.size(); xl++)
+											{
+												if (!memcmp((void*)&msy.nrts_ord_[xl], (void*)&val[x], sizeof(_char)))
+												{
+													if (ord[ord.size() - 1] == xl)
+													{
+														ord.pop_back();
+														ordl.pop_back();
+
+														if (ord.empty())
+														{
+															for (size_t xt = 0; xt < sep->size(); xt++)
+															{
+																if (!strcmp(sep->at(xt), &msy.nrts_ord[xl]) || !strcmp(sep->at(xt), &msy.nrts_ord_[xl]))
+																{
+																	size_t sl = bot_cstrlen(sep->at(xt));
+
+																	for (; mk < x + sl; mk++)
+																	{
+																		rstr.push_back(val[mk]);
+																	}
+																	x += (sl - 1);
+																	mk = x + 1;
+
+																	if (!rstr.empty())
+																	{
+																		ret_->push_back(rstr);
+																		rstr.clear();
+																	}
+																	xt = sep->size();
+																}
+															}
+														}
+													}
+													xl = msy.nrts_ord_.size();
+												}
+											}
+										}
+										else
+										{
+											for (size_t xt = 0; xt < sep->size(); xt++)
+											{
+												if (!memcmp((void*)&val[x], (void*)&sep->at(xt)[0], sizeof(_char)))
+												{
+													if (memcmp((void*)&ig, (void*)&val[x - 1], sizeof(_char)))
+													{
+														if (x > 1)
+														{
+															if (memcmp((void*)&ig, (void*)&val[x - 2], sizeof(_char)))
+															{
+																size_t sl = bot_cstrlen(sep->at(xt));
+																size_t y = 1;
+
+																while (y < sl && x + y < vl)
+																{
+																	if (memcmp((void*)&val[x + y], &sep->at(xt)[y], sizeof(_char)))
+																	{
+																		y = sl;
+																	}
+																	y++;
+																}
+
+																if (y == sl)
+																{
+																	for (; mk < x; mk++)
+																	{
+																		rstr.push_back(val[mk]);
+																	}
+																	x += (sl - 1);
+																	mk = x + 1;
+
+																	if (!rstr.empty())
+																	{
+																		ret_->push_back(rstr);
+																		rstr.clear();
+																	}
+
+																	if (ksep)
+																	{
+																		ret_->push_back(sep->at(xt));
+																	}
+																	xt = sep->size();
+																}
+															}
+														}
+														else
+														{
+															size_t sl = bot_cstrlen(sep->at(xt));
+															size_t y = 1;
+
+															while (y < sl && x + y < vl)
+															{
+																if (memcmp((void*)&val[x + y], &sep->at(xt)[y], sizeof(_char)))
+																{
+																	y = sl;
+																}
+																y++;
+															}
+
+															if (y == sl)
+															{
+																for (; mk < x; mk++)
+																{
+																	rstr.push_back(val[mk]);
+																}
+																x += (sl - 1);
+																mk = x + 1;
+
+																if (!rstr.empty())
+																{
+																	ret_->push_back(rstr);
+																	rstr.clear();
+																}
+
+																if (ksep)
+																{
+																	ret_->push_back(sep->at(xt));
+																}
+																xt = sep->size();
+															}
+														}
+													}
+												}
+											}
+										}
+									}
+								}
+							}
+						}
+					}
+				}
+
+				for (; mk < vl; mk++)
+				{
+					rstr.push_back(val[mk]);
+				}
+				if (!rstr.empty())
+				{
+					ret_->push_back(rstr);
+				}
+				if (lit > -1)
+				{
+					carr_64 ncar;
+					ret = bot_sprintf(ncar.carr, ncar.siz, "Open literal '%c' at: %u", msy.nrts_lit[lit], (uint)litloc);
+					std::string rstr(ncar.carr);
+					ret_->push_back(rstr);
+					ret = -1;
+				}
+				else if (!ord.empty())
+				{
+					carr_64 ncar;
+					ret = bot_sprintf(ncar.carr, ncar.siz, "Open bracket '%c' at: %u", msy.nrts_ord[ord[0]], (uint)ordl[0]);
+					std::string rstr(ncar.carr);
+					ret_->push_back(rstr);
+					ret = -1;
+				}
+				else
+				{
+					ret = 0;
+				}
+			}
+			else
+			{
+				carr_64 ncar;
+				ret = bot_sprintf(ncar.carr, ncar.siz, "Bad Size: vl: %u", (uint)vl);
+				std::string rstr(ncar.carr);
+				ret_->push_back(rstr);
+				ret = -1;
+			}
+		}
+		break;
+	}
+	case BOT_RTV_VSTR:
+	{
+		void* ptr = va_arg(args, void*);
+		std::vector<std::string>* sep = reinterpret_cast<std::vector<std::string>*>(ptr);
+
+		if (sep)
+		{
+			ret = -1;
+
+			if (vl && vl < (size_t)BOT_STRLEN_MAX)
+			{
+				slint lign = -1;
+				slint lit = -1;
+				slint litloc = 0;
+				std::vector<size_t> ord;
+				std::vector<size_t> ordl;
+				std::string rstr;
+				size_t mk = 0;
+				_char ig = '\\';
+
+				for (size_t x = f; x < t + 1; x++)
+				{
+					if (lit > -1)
+					{
+						for (size_t xl = 0; xl < msy.nrts_lit.size(); xl++)
+						{
+							if (!memcmp((void*)&msy.nrts_lit[xl], (void*)&val[x], sizeof(_char)))
+							{
+								if (memcmp((void*)&ig, (void*)&val[x - 1], sizeof(_char)))
+								{
+									if (lit == (slint)xl)
+									{
+										for (size_t xt = 0; xt < sep->size(); xt++)
+										{
+											if (!strcmp(sep->at(xt).c_str(), &msy.nrts_lit[xl]))
+											{
+												for (; mk < x + sep->at(xt).length(); mk++)
+												{
+													rstr.push_back(val[mk]);
+												}
+												x += (sep->at(xt).length() - 1);
+												mk = x + 1;
+
+												if (!rstr.empty())
+												{
+													ret_->push_back(rstr);
+													rstr.clear();
+												}
+												xt = sep->size();
+											}
+										}
+										lit = -1;
+										litloc = (slint)x;
+									}
+									xl = msy.nrts_lit.size();
+								}
+								else
+								{
+									if (x > 1)
+									{
+										if (!memcmp((void*)&ig, (void*)&val[x - 2], sizeof(_char)))
+										{
+											if (lit == (slint)xl)
+											{
+												for (size_t xt = 0; xt < sep->size(); xt++)
+												{
+													if (!strcmp(sep->at(xt).c_str(), &msy.nrts_lit[xl]))
+													{
+														for (; mk < x + sep->at(xt).length(); mk++)
+														{
+															rstr.push_back(val[mk]);
+														}
+														x += (sep->at(xt).length() - 1);
+														mk = x + 1;
+
+														if (!rstr.empty())
+														{
+															ret_->push_back(rstr);
+															rstr.clear();
+														}
+														xt = sep->size();
+													}
+												}
+												lit = -1;
+												litloc = (slint)x;
+											}
+											xl = msy.nrts_lit.size();
+										}
+									}
+								}
+							}
+						}
+					}
+					else
+					{
+						if (lign > -1)
+						{
+							for (size_t yl = 0; yl < msy.nrts_lign_.size(); yl++)
+							{
+								if (!memcmp((void*)&msy.nrts_lign_[yl][0], (void*)&val[x], sizeof(_char)))
+								{
+									size_t zl = 1;
+
+									while (zl < msy.nrts_lign[yl].length() && zl < vl)
+									{
+										if (memcmp((void*)&msy.nrts_lign_[yl][zl], (void*)&val[x + zl], sizeof(_char)))
+										{
+											zl = msy.nrts_lign[yl].length();
+										}
+										zl++;
+									}
+
+									if (zl == msy.nrts_lign[yl].length())
+									{
+										if (lign == (slint)yl)
+										{
+											lign = -1;
+											yl = msy.nrts_lign_.size();
+										}
+									}
+								}
+							}
+						}
+						if (lign < 0)
+						{
+							for (size_t xl = 0; xl < msy.nrts_lit.size(); xl++)
+							{
+								if (!memcmp((void*)&msy.nrts_lit[xl], (void*)&val[x], sizeof(_char)))
+								{
+									for (size_t xt = 0; xt < sep->size(); xt++)
+									{
+										if (!strcmp(sep->at(xt).c_str(), &msy.nrts_lit[xl]))
+										{
+											for (; mk < x; mk++)
+											{
+												rstr.push_back(val[mk]);
+											}
+
+											if (!rstr.empty())
+											{
+												ret_->push_back(rstr);
+												rstr.clear();
+											}
+											xt = sep->size();
+										}
+									}
+									lit = (slint)xl;
+									litloc = (slint)x;
+									xl = msy.nrts_lit.size();
+								}
+							}
+							if (lit < 0)
+							{
+								if (lign < 0)
+								{
+									for (size_t yl = 0; yl < msy.nrts_lign.size(); yl++)
+									{
+										if (!memcmp((void*)&msy.nrts_lign[yl][0], (void*)&val[x], sizeof(_char)))
+										{
+											size_t zl = 1;
+
+											while (zl < msy.nrts_lign[yl].length() && zl < vl)
+											{
+												if (memcmp((void*)&msy.nrts_lign[yl][zl], (void*)&val[x + zl], sizeof(_char)))
+												{
+													zl = msy.nrts_lign[yl].length();
+												}
+												zl++;
+											}
+
+											if (zl == msy.nrts_lign[yl].length())
+											{
+												lign = (slint)yl;
+												yl = msy.nrts_lign.size();
+											}
+										}
+									}
+									if (lign < 0)
+									{
+										for (size_t xl = 0; xl < msy.nrts_ord.size(); xl++)
+										{
+											if (!memcmp((void*)&msy.nrts_ord[xl], (void*)&val[x], sizeof(_char)))
+											{
+												if (ord.empty())
+												{
+													for (size_t xt = 0; xt < sep->size(); xt++)
+													{
+														if (!strcmp(sep->at(xt).c_str(), &msy.nrts_ord[xl]) || !strcmp(sep->at(xt).c_str(), &msy.nrts_ord_[xl]))
+														{
+															for (; mk < x; mk++)
+															{
+																rstr.push_back(val[mk]);
+															}
+
+															if (!rstr.empty())
+															{
+																ret_->push_back(rstr);
+																rstr.clear();
+															}
+															xt = sep->size();
+														}
+													}
+												}
+												ord.push_back(xl);
+												ordl.push_back(x);
+												xl = msy.nrts_ord.size();
+											}
+										}
+										if (!ord.empty())
+										{
+											for (size_t xl = 0; xl < msy.nrts_ord_.size(); xl++)
+											{
+												if (!memcmp((void*)&msy.nrts_ord_[xl], (void*)&val[x], sizeof(_char)))
+												{
+													if (ord[ord.size() - 1] == xl)
+													{
+														ord.pop_back();
+														ordl.pop_back();
+
+														if (ord.empty())
+														{
+															for (size_t xt = 0; xt < sep->size(); xt++)
+															{
+																if (!strcmp(sep->at(xt).c_str(), &msy.nrts_ord[xl]) || !strcmp(sep->at(xt).c_str(), &msy.nrts_ord_[xl]))
+																{
+																	for (; mk < x + sep->at(xt).length(); mk++)
+																	{
+																		rstr.push_back(val[mk]);
+																	}
+																	x += (sep->at(xt).length() - 1);
+																	mk = x + 1;
+
+																	if (!rstr.empty())
+																	{
+																		ret_->push_back(rstr);
+																		rstr.clear();
+																	}
+																	xt = sep->size();
+																}
+															}
+														}
+													}
+													xl = msy.nrts_ord_.size();
+												}
+											}
+										}
+										else
+										{
+											for (size_t xt = 0; xt < sep->size(); xt++)
+											{
+												if (!memcmp((void*)&val[x], (void*)&sep->at(xt)[0], sizeof(_char)))
+												{
+													if (memcmp((void*)&ig, (void*)&val[x - 1], sizeof(_char)))
+													{
+														if (x > 1)
+														{
+															if (memcmp((void*)&ig, (void*)&val[x - 2], sizeof(_char)))
+															{
+																size_t y = 1;
+
+																while (y < sep->at(xt).length() && x + y < vl)
+																{
+																	if (memcmp((void*)&val[x + y], &sep->at(xt)[y], sizeof(_char)))
+																	{
+																		y = sep->at(xt).length();
+																	}
+																	y++;
+																}
+
+																if (y == sep->at(xt).length())
+																{
+																	for (; mk < x; mk++)
+																	{
+																		rstr.push_back(val[mk]);
+																	}
+																	x += (sep->at(xt).length() - 1);
+																	mk = x + 1;
+
+																	if (!rstr.empty())
+																	{
+																		ret_->push_back(rstr);
+																		rstr.clear();
+																	}
+
+																	if (ksep)
+																	{
+																		ret_->push_back(sep->at(xt));
+																	}
+																	xt = sep->size();
+																}
+															}
+														}
+														else
+														{
+															size_t y = 1;
+
+															while (y < sep->at(xt).length() && x + y < vl)
+															{
+																if (memcmp((void*)&val[x + y], &sep->at(xt)[y], sizeof(_char)))
+																{
+																	y = sep->at(xt).length();
+																}
+																y++;
+															}
+
+															if (y == sep->at(xt).length())
+															{
+																for (; mk < x; mk++)
+																{
+																	rstr.push_back(val[mk]);
+																}
+																x += (sep->at(xt).length() - 1);
+																mk = x + 1;
+
+																if (!rstr.empty())
+																{
+																	ret_->push_back(rstr);
+																	rstr.clear();
+																}
+
+																if (ksep)
+																{
+																	ret_->push_back(sep->at(xt));
+																}
+																xt = sep->size();
+															}
+														}
+													}
+												}
+											}
+										}
+									}
+								}
+							}
+						}
+					}
+				}
+
+				for (; mk < vl; mk++)
+				{
+					rstr.push_back(val[mk]);
+				}
+				if (!rstr.empty())
+				{
+					ret_->push_back(rstr);
+				}
+				if (lit > -1)
+				{
+					carr_64 ncar;
+					ret = bot_sprintf(ncar.carr, ncar.siz, "Open literal '%c' at: %u", msy.nrts_lit[lit], (uint)litloc);
+					std::string rstr(ncar.carr);
+					ret_->push_back(rstr);
+					ret = -1;
+				}
+				else if (!ord.empty())
+				{
+					carr_64 ncar;
+					ret = bot_sprintf(ncar.carr, ncar.siz, "Open bracket '%c' at: %u", msy.nrts_ord[ord[0]], (uint)ordl[0]);
+					std::string rstr(ncar.carr);
+					ret_->push_back(rstr);
+					ret = -1;
+				}
+				else
+				{
+					ret = 0;
+				}
+			}
+			else
+			{
+				carr_64 ncar;
+				ret = bot_sprintf(ncar.carr, ncar.siz, "Bad Size: vl: %u", (uint)vl);
+				std::string rstr(ncar.carr);
+				ret_->push_back(rstr);
+				ret = -1;
+			}
+		}
+		break;
+	}
+	default:
+	{
+		break;
+	}
 	}
 	va_end(args);
 	return ret;
@@ -8807,6 +11674,12 @@ sint machine::BOTPath(std::string* str_, c_char* spath_)
 }
 sint machine::BOTOpenDir(c_char* dest_, DIR** dir_)
 {
+	if (debug_lvl >= 650 && debug_m)
+	{
+		carr_128 ncar;
+		sint oc = bot_sprintf(ncar.carr, ncar.siz, "::BOTOpenDir(c_char* dest_(%i), DIR** dir_(%i)))", (sint)dest_, (sint)dir_);
+		oc = Output(ncar.carr, 2);
+	}
 	if (!dest_ || !dir_)
 	{
 		return -1;
@@ -8819,6 +11692,12 @@ sint machine::BOTOpenDir(c_char* dest_, DIR** dir_)
 }
 sint machine::BOTCloseDir(DIR** dir_)
 {
+	if (debug_lvl >= 650 && debug_m)
+	{
+		carr_128 ncar;
+		sint oc = bot_sprintf(ncar.carr, ncar.siz, "::BOTCloseDir(DIR** dir_(%i))", (sint)dir_);
+		oc = Output(ncar.carr, 2);
+	}
 	if (!*dir_)
 	{
 		return -1;
@@ -8828,6 +11707,12 @@ sint machine::BOTCloseDir(DIR** dir_)
 }
 sint machine::BOTReadDir(std::vector<BOT_FILE_M>* flds_, c_char* dest_)
 {
+	if (debug_lvl >= 650 && debug_m)
+	{
+		carr_128 ncar;
+		sint oc = bot_sprintf(ncar.carr, ncar.siz, "::BOTReadDir(std::vector<BOT_FILE_M>* flds_(%i), c_char* dest_(%i))", (sint)flds_, (sint)dest_);
+		oc = Output(ncar.carr, 2);
+	}
 	if (!dest_)
 	{
 		return -1;
@@ -8892,7 +11777,7 @@ sint machine::BOTFindHomeDir()
 {
 	if (debug_lvl >= 600 && debug_m)
 	{
-		sint oc = SOutput("::BOTFindHomeDir()", 2);
+		sint oc = Output("::BOTFindHomeDir()", 2);
 	}
 
 	_char crf[128]{ 0 };
@@ -8971,7 +11856,7 @@ sint machine::BOTInitFDir(bool findself)
 	{
 		carr_64 ncar;
 		sint oc = bot_sprintf(ncar.carr, ncar.siz, "::BOTInitFDir(bool findself(%u))", (uint)findself);
-		oc = SOutput(ncar.carr, 2);
+		oc = Output(ncar.carr, 2);
 	}
 	_char dmk = '\\';
 	_char crf[128]{ 0 };
@@ -9260,7 +12145,7 @@ sint machine::OutputFileStats(BOT_FILE* file_, sint opt)
 	strftime(ctdata, 64, "%m/%d/%Y %H:%M:%S", &ctim);
 	_char instr[BOT_FILENAME_MAX + 1024] = { 0 };
 	sint oc = bot_sprintf(instr, BOT_FILENAME_MAX + 1024, "BOTFileStats:%s%s\nFilePath:\"%s\"\nSize:%llu\nSerialNum:%u\nLastAccessed:%s\nLastMod:%s\nLastChangeStatus:%s\nExists:%i", file_->name.c_str(), file_->type.c_str(), fpstr.c_str(), (ullint)file_->fst.filestats.st_size, file_->fst.filestats.st_ino, atdata, mtdata, ctdata, file_->fst.exists);
-	oc = SOutput(instr, 2);
+	oc = Output(instr, 2);
 	return 0;
 }
 sint machine::BOTFileStr(std::string* str_, BOT_FILE_M* file_)
@@ -9350,7 +12235,7 @@ sint machine::BOTConnMethod(BOT_FILE_M* val_)
 	{
 		carr_64 ncar;
 		sint oc = bot_sprintf(ncar.carr, ncar.siz, "::BOTConnMethod(BOT_FILE_M *val_(%i))", (sint)val_);
-		oc = SOutput(ncar.carr, 2);
+		oc = Output(ncar.carr, 2);
 	}
 
 	if (!val_)
@@ -9358,7 +12243,11 @@ sint machine::BOTConnMethod(BOT_FILE_M* val_)
 		return -1;
 	}
 
-	if (val_->type.empty())
+	if (!strcmp(UCASE(val_->type.c_str()).c_str(), "STDIO"))
+	{
+		val_->cm = BOT_IO_CON;
+	}
+	else if (val_->type.empty())
 	{
 		val_->cm = BOT_DIR_CON;
 	}
@@ -9383,7 +12272,7 @@ sint machine::GetOFConn(BOT_FILE_M* val_, sint* was_open)
 	{
 		carr_96 ncar;
 		sint oc = bot_sprintf(ncar.carr, ncar.siz, "::GetOFConn(BOT_FILE_M *val_(%i), sint* was_open(%i))", (sint)val_, sint(was_open));
-		oc = SOutput(ncar.carr, 2);
+		oc = Output(ncar.carr, 2);
 	}
 
 	if (!val_)
@@ -9392,6 +12281,20 @@ sint machine::GetOFConn(BOT_FILE_M* val_, sint* was_open)
 	}
 	switch (val_->cm)
 	{
+	case BOT_IO_CON:
+	{
+		sint ret = vtool.VIV(&h_mtxs, MTX_O);
+
+		if (ret > -1)
+		{
+			if (!h_mtxs[ret].locked)
+			{
+				ret = -1;
+			}
+		}
+		return ret;
+		break;
+	}
 	case BOT_DB_CON:
 	{
 		BOT_DB_M ndb(val_->name.c_str());
@@ -9400,6 +12303,61 @@ sint machine::GetOFConn(BOT_FILE_M* val_, sint* was_open)
 	}
 	case BOT_F_CON:
 	{
+		if (val_->fcon > -1)
+		{
+			if ((size_t)val_->fcon < f_con.size())
+			{
+				if (f_con[val_->fcon])
+				{
+					if (f_con[val_->fcon]->flid == val_->lid)
+					{
+						if (val_->omode > -1)
+						{
+							if (f_con[val_->fcon]->omode == val_->omode && f_con[val_->fcon]->encode == val_->encode)
+							{
+								if (f_con[val_->fcon]->fstrm.is_open())
+								{
+									return val_->fcon;
+								}
+								else
+								{
+									f_con[val_->fcon]->fstrm.open(BOTFileStr(val_).c_str(), val_->omode);
+
+									if (f_con[val_->fcon]->fstrm.is_open())
+									{
+										return val_->fcon;
+									}
+								}
+							}
+							else
+							{
+								if (f_con[val_->fcon]->fstrm.is_open())
+								{
+									f_con[val_->fcon]->fstrm.close();
+									f_con[val_->fcon]->fstrm.open(BOTFileStr(val_).c_str(), val_->omode);
+
+									if (f_con[val_->fcon]->fstrm.is_open())
+									{
+										if (f_con[val_->fcon]->encode != val_->encode)
+										{
+											f_con[val_->fcon]->encode = val_->encode;
+											sint ret = SetVecEleMem((void*)&val_->encode, MTX_FO, val_->lid, BOT_FS_ENC, false);
+										}
+
+										if (f_con[val_->fcon]->omode != val_->omode)
+										{
+											f_con[val_->fcon]->omode = val_->omode;
+											sint ret = SetVecEleMem((void*)&val_->omode, MTX_FO, val_->lid, BOT_FS_OMODE, false);
+										}
+										return val_->fcon;
+									}
+								}
+							}
+						}
+					}
+				}
+			}
+		}
 		for (size_t siz = 0; siz < f_con.size(); siz++)
 		{
 			if (f_con[siz])
@@ -9408,16 +12366,53 @@ sint machine::GetOFConn(BOT_FILE_M* val_, sint* was_open)
 				{
 					if (val_->omode > -1)
 					{
-						if (f_con[siz]->omode == val_->omode)
+						if (f_con[siz]->omode == val_->omode && f_con[siz]->encode == val_->encode)
 						{
-							val_->fcon = siz;
-							return siz;
+							if (f_con[siz]->fstrm.is_open())
+							{
+								val_->fcon = (sint)siz;
+								return val_->fcon;
+							}
+							else
+							{
+								f_con[siz]->fstrm.open(BOTFileStr(val_).c_str(), val_->omode);
+
+								if (f_con[siz]->fstrm.is_open())
+								{
+									val_->fcon = (sint)siz;
+									sint ret = SetVecEleMem((void*)&val_->fcon, MTX_FO, val_->lid, BOT_FS_FCON, false);
+									return val_->fcon;
+								}
+							}
 						}
-					}
-					else
-					{
-						val_->fcon = siz;
-						return siz;
+						else
+						{
+							if (f_con[siz]->fstrm.is_open())
+							{
+								f_con[siz]->fstrm.close();
+								f_con[siz]->fstrm.open(BOTFileStr(val_).c_str(), val_->omode);
+
+								if (f_con[siz]->fstrm.is_open())
+								{
+									val_->fcon = (sint)siz;
+
+									if (f_con[siz]->encode != val_->encode)
+									{
+										f_con[siz]->encode = val_->encode;
+										sint ret = SetVecEleMem((void*)&val_->encode, MTX_FO, val_->lid, BOT_FS_ENC, false);
+									}
+
+									if (f_con[siz]->omode != val_->omode)
+									{
+										f_con[siz]->omode = val_->omode;
+										sint ret = SetVecEleMem((void*)&val_->omode, MTX_FO, val_->lid, BOT_FS_OMODE, false);
+									}
+
+									sint ret = SetVecEleMem((void*)&val_->fcon, MTX_FO, val_->lid, BOT_FS_FCON, false);
+									return val_->fcon;
+								}
+							}
+						}
 					}
 				}
 			}
@@ -9436,7 +12431,7 @@ sint machine::GetFConn(BOT_FILE_M* val_, sint* was_open, slint mt)
 	{
 		carr_96 ncar;
 		sint oc = bot_sprintf(ncar.carr, ncar.siz, "::GetFConn(BOT_FILE_M *val_(%i)), sint* was_open(%i), sllint mt(%li))", (sint)val_, sint(was_open), mt);
-		oc = SOutput(ncar.carr, 2);
+		oc = Output(ncar.carr, 2);
 	}
 
 	if (!val_)
@@ -9471,6 +12466,14 @@ sint machine::GetFConn(BOT_FILE_M* val_, sint* was_open, slint mt)
 
 		switch (val_->cm)
 		{
+		case BOT_IO_CON:
+		{
+			sint ox = vtool.VIV(&h_mtxs, MTX_O);
+			ret = LockGMutex(MTX_O, &ox);
+			val_->fcon = ret;
+			ret = SetVecEleMem((void*)&val_->fcon, MTX_FO, val_->lid, BOT_FS_FCON, false);
+			break;
+		}
 		case BOT_DIR_CON:
 		{
 			ret = 0;
@@ -9507,7 +12510,7 @@ sint machine::GetFConn(BOT_FILE_M* val_, sint* was_open, slint mt)
 							{
 								f_con[ret]->Renew(val_, siz);
 								val_->fcon = ret;
-								ret = SetVecEleMem((void*)&ret, MTX_FO, val_->lid, BOT_FS_FCON, false);
+								ret = SetVecEleMem((void*)&val_->fcon, MTX_FO, val_->lid, BOT_FS_FCON, false);
 								mt = -1;
 							}
 							else
@@ -9552,7 +12555,7 @@ sint machine::CloseFConn(BOT_FILE_M* xfile_, bool clear_conn)
 	{
 		carr_96 ncar;
 		sint oc = bot_sprintf(ncar.carr, ncar.siz, "::CloseFConn(BOT_FILE_M *xfile_(%i), bool clear_conn(%u))", (sint)xfile_, (uint)clear_conn);
-		oc = SOutput(ncar.carr, 2);
+		oc = Output(ncar.carr, 2);
 	}
 
 	if (!xfile_)
@@ -9564,6 +12567,11 @@ sint machine::CloseFConn(BOT_FILE_M* xfile_, bool clear_conn)
 
 	switch (xfile_->cm)
 	{
+	case BOT_IO_CON:
+	{
+		ret = UnlockGMutex(MTX_O);
+		break;
+	}
 	case BOT_DB_CON:
 	{
 		BOT_DB_M ndb(xfile_->name.c_str(), -1, xfile_->omode);
@@ -9619,7 +12627,7 @@ sint machine::BOTScanFileSyms(BOT_FILE_M *file_)
 	{
 		carr_64 ncar;
 		sint oc = bot_sprintf(ncar.carr, ncar.siz, "::BOTScanFileSyms(BOT_FILE_M *file_(%i))", (sint)file_);
-		oc = SOutput(ncar.carr, 2);
+		oc = Output(ncar.carr, 2);
 	}
 
 	if (!file_)
@@ -9636,10 +12644,10 @@ sint machine::BOTScanFileSyms(BOT_FILE_M *file_)
 	}
 	else if (S_ISREG(file_->fst.filestats.st_mode))
 	{
-		if (file_->cm)
+		if (file_->cm != (sint)BOT_F_CON)
 		{
 			sv_mth = file_->cm;
-			file_->cm = 0;
+			file_->cm = (sint)BOT_F_CON;
 		}
 		ret = GetFConn(file_);
 
@@ -9718,7 +12726,7 @@ sint machine::DetSep(BOT_FILE_M* file_)
 	{
 		carr_64 ncar;
 		sint oc = bot_sprintf(ncar.carr, ncar.siz, "::DetSep(BOT_FILE_M *file_(%i))", (sint)file_);
-		oc = SOutput(ncar.carr, 2);
+		oc = Output(ncar.carr, 2);
 	}
 	if (!file_)
 	{
@@ -9971,7 +12979,7 @@ sint machine::BOTRendFileSyms(BOT_FILE_M *file_)
 	{
 		carr_64 ncar;
 		sint oc = bot_sprintf(ncar.carr, ncar.siz, "::BOTRendFileSyms(BOT_FILE_M *file_(%i))", (sint)file_);
-		oc = SOutput(ncar.carr, 2);
+		oc = Output(ncar.carr, 2);
 	}
 	if (!file_)
 	{
@@ -9989,10 +12997,10 @@ sint machine::BOTRendFileSyms(BOT_FILE_M *file_)
 	{
 		sint sv_mth = -1;
 
-		if (file_->cm)
+		if (file_->cm != (sint)BOT_F_CON)
 		{
 			sv_mth = file_->cm;
-			file_->cm = 0;
+			file_->cm = (sint)BOT_F_CON;
 		}
 		ret = GetFConn(file_);
 
@@ -10124,7 +13132,7 @@ sint machine::BOTKnownFormat(BOT_FILE_M* file_)
 	{
 		carr_64 ncar;
 		sint oc = bot_sprintf(ncar.carr, ncar.siz, "::BOTKnownFormat(BOT_FILE_M* file_(%i))", (sint)file_);
-		oc = SOutput(ncar.carr, 2);
+		oc = Output(ncar.carr, 2);
 	}
 
 	if (!file_)
@@ -10134,7 +13142,7 @@ sint machine::BOTKnownFormat(BOT_FILE_M* file_)
 
 	MACSYM in_sym;
 	BOT_STMT t(false, 0, "code", "filetype", 1, (void*)&in_sym);
-	sint ret = t.AddCond(0, "DATA", sql_comp_keywords[5], file_->type.c_str());
+	sint ret = t.AddCond(0, "DATA", msy.sql_comp_keywords[5].c_str(), file_->type.c_str());
 	ret = BOTFileIN(file_, false, 0, (ullint)BOT_FSCAN_LIM, BOT_RTV_MACS, &t, BOT_RTV_MAX);
 
 	if (ret > -1)
@@ -10155,13 +13163,13 @@ sint machine::BOTFileStats(BOT_FILE_M *file_, bool doscan, sint scan_lvl)
 	{
 		carr_96 ncar;
 		sint oc = bot_sprintf(ncar.carr, ncar.siz, "::BOTFileStats(BOT_FILE_M *file_(%i), bool doscan(%u), sint scan_lvl(%i))", (sint)file_, (uint)doscan, scan_lvl);
-		oc = SOutput(ncar.carr, 2);
+		oc = Output(ncar.carr, 2);
 
 		if (debug_lvl >= 10)
 		{
 			std::string xcar;
 			oc = bot_sprintfs(&xcar, false, "%s%s%s", file_->path.c_str(), file_->name.c_str(), file_->type.c_str());
-			oc = SOutput(xcar.c_str(), 2);
+			oc = Output(xcar.c_str(), 2);
 		}
 	}
 
@@ -10173,6 +13181,11 @@ sint machine::BOTFileStats(BOT_FILE_M *file_, bool doscan, sint scan_lvl)
 	if (file_->cm < 0)
 	{
 		sint ret = BOTConnMethod(file_);
+	}
+
+	if (file_->cm == BOT_IO_CON)
+	{
+		return 0;
 	}
 
 #ifdef _WIN32
@@ -10394,13 +13407,16 @@ sint machine::BOTCreateFile(BOT_FILE_M* file_, sint* was_open)
 	{
 		carr_96 ncar;
 		sint oc = bot_sprintf(ncar.carr, ncar.siz, "::BOTCreateFile(BOT_FILE_M *file_(%i), sint* was_open(%i))", (sint)file_, (sint)was_open);
-		oc = SOutput(ncar.carr, 2);
+		oc = Output(ncar.carr, 2);
 	}
 	if (!file_ || !was_open)
 	{
 		return -1;
 	}
-
+	if (file_->cm == BOT_IO_CON)
+	{
+		return 0;
+	}
 	sint ret = -1;
 
 	if (strcmp(cur_path.c_str(), file_->path.c_str()))
@@ -10449,7 +13465,7 @@ sint machine::BOTCreateFile(BOT_FILE_M* file_, sint* was_open)
 						{
 							std::string ncar;
 							sint oc = bot_sprintfs(&ncar, false, "failed to open and then failed to create directory: \"%s\"", (sint)dirf.path.c_str());
-							oc = SOutput(ncar.c_str(), 1);
+							oc = Output(ncar.c_str(), 1);
 						}
 						return -1;
 					}
@@ -10461,7 +13477,7 @@ sint machine::BOTCreateFile(BOT_FILE_M* file_, sint* was_open)
 						{
 							std::string ncar;
 							sint oc = bot_sprintfs(&ncar, false, "failed to acquite stats for created directory: \"%s\"", (sint)dirf.path.c_str());
-							oc = SOutput(ncar.c_str(), 1);
+							oc = Output(ncar.c_str(), 1);
 						}
 						return -1;
 					}
@@ -10518,7 +13534,7 @@ sint machine::BOTCreateFile(BOT_FILE_M* file_, sint* was_open)
 				{
 					carr_512 ncar;
 					sint op = bot_sprintf(ncar.carr, ncar.siz, "error %i creating db: %s", ret, BOTFileStr(file_).c_str());
-					op = SOutput(ncar.carr, 1);
+					op = Output(ncar.carr, 1);
 				}
 			}
 			if (!*was_open)
@@ -10600,12 +13616,17 @@ sint machine::BOTRenameFile(BOT_FILE_M* file_, c_char* nnm)
 	{
 		carr_96 ncar;
 		sint oc = bot_sprintf(ncar.carr, ncar.siz, "::BOTRenameFile(BOT_FILE_M *xfile_(%i), c_char* nnm(%i))", (sint)file_, (sint)nnm);
-		oc = SOutput(ncar.carr, 2);
+		oc = Output(ncar.carr, 2);
 	}
 
 	if (!file_)
 	{
 		return -1;
+	}
+
+	if (file_->cm == BOT_IO_CON)
+	{
+		return 0;
 	}
 	sint ret = -1;
 	switch (file_->cm)
@@ -10640,7 +13661,7 @@ sint machine::BOTRemoveFile(BOT_FILE_M *xfile_)
 	{
 		carr_64 ncar;
 		sint oc = bot_sprintf(ncar.carr, ncar.siz, "::BOTRemoveFile(BOT_FILE_M *xfile_(%i))", (sint)xfile_);
-		oc = SOutput(ncar.carr, 2);
+		oc = Output(ncar.carr, 2);
 	}
 
 	if (!xfile_)
@@ -10648,6 +13669,10 @@ sint machine::BOTRemoveFile(BOT_FILE_M *xfile_)
 		return -1;
 	}
 
+	if (xfile_->cm == BOT_IO_CON)
+	{
+		return -1;
+	}
 	sint ret = -1;
 	switch (xfile_->cm)
 	{
@@ -10684,7 +13709,7 @@ sint machine::BOTOpenFile(sint flid, sint *was_open, bool cine, bool r_to_st, bo
 	{
 		carr_128 ncar;
 		sint oc = bot_sprintf(ncar.carr, ncar.siz, "::BOTOpenFile(sint flid(%i), sint *was_open(%i), bool cine(%u), bool r_to_st(%u), bool dtp(%u))", flid, (sint)was_open, (uint)cine, (uint)r_to_st, (uint)dtp);
-		oc = SOutput(ncar.carr, 2);
+		oc = Output(ncar.carr, 2);
 	}
 
 	BOT_FILE_M nf;
@@ -10702,7 +13727,7 @@ sint machine::BOTOpenFile(BOT_FILE_M* mfile_, sint *was_open, bool cine, bool r_
 	{
 		carr_168 ncar;
 		sint oc = bot_sprintf(ncar.carr, ncar.siz, "::BOTOpenFile(BOT_FILE_M* mfile_(%i), sint *was_open(%i), bool cine(%u), bool r_to_st(%u), bool dtp(%u))", (sint)mfile_, (sint)was_open, (uint)cine, (uint)r_to_st, (uint)dtp);
-		oc = SOutput(ncar.carr, 2);
+		oc = Output(ncar.carr, 2);
 	}
 
 	if (!mfile_ || !was_open)
@@ -10785,7 +13810,12 @@ sint machine::BOTOpenFile(BOT_FILE_M* mfile_, sint *was_open, bool cine, bool r_
 
 	if (mfile_->fst.exists < 0)
 	{
-		if (cine)
+		if (mfile_->cm == BOT_IO_CON)
+		{
+			mfile_->fst.exists = 1;
+			gc = SetVecEleMem(&mfile_->fst, MTX_FO, mfile_->lid, BOT_FS_STATE, false);
+		}
+		else if (cine)
 		{
 			gc = BOTCreateFile(mfile_, was_open);
 
@@ -10852,6 +13882,11 @@ sint machine::BOTOpenFile(BOT_FILE_M* mfile_, sint *was_open, bool cine, bool r_
 		}
 	}
 
+	if (mfile_->cm == BOT_IO_CON)
+	{
+		return 0;
+	}
+
 	if (S_ISREG(mfile_->fst.filestats.st_mode))
 	{
 		if (strcmp(cur_path.c_str(), mfile_->path.c_str()))
@@ -10899,15 +13934,6 @@ sint machine::BOTOpenFile(BOT_FILE_M* mfile_, sint *was_open, bool cine, bool r_
 
 						if (hx > -1)
 						{
-							/*if (!fpad[mfile_->fcon])
-							{
-								fpad[mfile_->fcon] = (_char*)malloc(mfile_->fst.filestats.st_size + 1);
-							}
-							else
-							{
-								_char* np = (_char*)realloc(fpad[mfile_->fcon], mfile_->fst.filestats.st_size + 1);
-							}*/
-
 							fileo_vec.d_vec[mfile_->lid].dat = fpad[mfile_->fcon];
 
 							if (!gc)
@@ -10919,7 +13945,7 @@ sint machine::BOTOpenFile(BOT_FILE_M* mfile_, sint *was_open, bool cine, bool r_
 						{
 							mfile_->Renew(&fileo_vec.d_vec[mfile_->lid]);
 							gc = SetVecEle((void*)mfile_, MTX_FO, mfile_->lid);
-							gc = BOTFileIN(mfile_, false, 0, mfile_->fst.filestats.st_size, BOT_RTV_CHAR, fileo_vec.d_vec[mfile_->lid].dat, BOT_RTV_MAX);
+							gc = BOTFileIN(mfile_, false, 0, mfile_->fst.filestats.st_size, BOT_RTV_CHARP, fileo_vec.d_vec[mfile_->lid].dat, BOT_RTV_MAX);
 						}
 
 						if (!ox)
@@ -10956,7 +13982,7 @@ sint machine::BOTFindInFile(BOT_FILE_M* file_, bool indat, size_t f, size_t t, v
 	{
 		carr_192 ncar;
 		sint oc = bot_sprintf(ncar.carr, ncar.siz, "::BOTFindInFile(BOT_FILE_M* file_(%i), bool indat(%u), size_t f(%u), size_t t(%u), void* f_(%i), size_t len(%u))", (sint)file_, (uint)indat, f, t, (sint)f_, len);
-		oc = SOutput(ncar.carr, 2);
+		oc = Output(ncar.carr, 2);
 	}
 
 	if (!file_ || !f_ || !len || len > (size_t)BOT_STRLEN_MAX || f > t)
@@ -10964,76 +13990,95 @@ sint machine::BOTFindInFile(BOT_FILE_M* file_, bool indat, size_t f, size_t t, v
 		return -1;
 	}
 
+	if (!t)
+	{
+		if (file_->fst.filestats.st_size)
+		{
+			t = file_->fst.filestats.st_size - 1;
+		}
+		else
+		{
+			return -1;
+		}
+	}
+
 	sllint xret = 0;
 	sint ret = -1;
 	_char* af = reinterpret_cast<_char*>(f_);
 
-	if (!t)
-	{
-		t = file_->fst.filestats.st_size - 1;
-	}
-
 	if (!indat)
 	{
-		sint ox = -1;
+		if (file_->cm == BOT_IO_CON)
+		{
 
-		if (file_->fcon < 0)
-		{
-			ret = BOTOpenFile(file_, &ox);
 		}
-		else
+		else if (file_->cm == BOT_F_CON)
 		{
-			ret = 0;
-		}
-		if (ret > -1)
-		{
-			xret = (sllint)f_con[file_->fcon];
+			sint ox = -1;
 
-			if (file_->omode == BOT_FILE_INS || file_->omode == BOT_FILE_OVRL || file_->omode == BOT_FILE_READ || file_->omode == BOT_FILE_READATE)
+			if (file_->fcon < 0)
 			{
-				size_t ph = file_->fst.ia_loc;
-				size_t x = 0;
+				ret = BOTOpenFile(file_, &ox);
+			}
+			else if (!f_con[file_->fcon]->fstrm.is_open())
+			{
+				ret = BOTOpenFile(file_, &ox);
+			}
+			else
+			{
+				ret = 0;
+			}
+			if (ret > -1)
+			{
+				xret = (sllint)f_con[file_->fcon];
 
-				for (x = 0; x < file_->fst.e_loc; x++)
+				if (file_->omode == BOT_FILE_INS || file_->omode == BOT_FILE_OVRL || file_->omode == BOT_FILE_READ || file_->omode == BOT_FILE_READATE)
 				{
-					_char n;
-					ret = BOTFileIN(file_, false, f, t, BOT_RTV_CHAR, &n);
-					size_t y = 0;
+					size_t ph = file_->fst.ia_loc;
+					size_t x = 0;
 
-					if (!memcmp((void*)&af[y], (void*)&n, sizeof(_char)))
+					for (x = 0; x < file_->fst.e_loc; x++)
 					{
-						y++;
+						_char n;
+						ret = BOTFileIN(file_, false, f, t, BOT_RTV_CHARP, &n, BOT_RTV_MAX);
+						size_t y = 0;
 
-						while (y < len)
+						if (!memcmp((void*)&af[y], (void*)&n, sizeof(_char)))
 						{
-							if (memcmp((void*)&af[y], (void*)&n, sizeof(_char)))
-							{
-								y = len;
-							}
 							y++;
-						}
 
-						if (y == len)
-						{
-							BOT_CRS nc(xret, lid, x, x + (len - 1));
-							ret = PushToVecEleMem((void*)&nc, MTX_FO, file_->lid, BOT_FS_CRSV, 2, false);
-							ret = 0;
-							x = file_->fst.e_loc + 1;
+							while (y < len)
+							{
+								if (memcmp((void*)&af[y], (void*)&n, sizeof(_char)))
+								{
+									y = len;
+								}
+								y++;
+							}
+
+							if (y == len)
+							{
+								BOT_CRS nc(xret, lid, x, x + (len - 1));
+								ret = PushToVecEleMem((void*)&nc, MTX_FO, file_->lid, BOT_FS_CRSV, 2, false);
+								ret = 0;
+								x = file_->fst.e_loc + 1;
+							}
 						}
 					}
-				}
 
-				if (x == file_->fst.e_loc)
-				{
-					f_con[file_->fcon]->fstrm.seekg(ph);
+					if (x == file_->fst.e_loc)
+					{
+						f_con[file_->fcon]->fstrm.seekg(ph);
+					}
 				}
 			}
-		}
 
-		if (!ox)
-		{
-			ret = BOTCloseFile(file_);
+			if (!ox)
+			{
+				ret = BOTCloseFile(file_);
+			}
 		}
+		else {}
 	}
 	else
 	{
@@ -11065,15 +14110,122 @@ sint machine::BOTFileOUT(BOT_FILE_M* file_, size_t f, bool to_fdat, ...)
 
 	sint ret = -1;
 
-	if (file_->cm == BOT_F_CON)
+	if (!to_fdat)
 	{
-		if (!to_fdat)
+		if (file_->cm == BOT_IO_CON)
 		{
 			sint ox = -1;
 
 			if (file_->fcon < 0)
 			{
-				ret = BOTOpenFile(file_, &ox, true);
+				ret = GetFConn(file_, &ox);
+			}
+			if (file_->fcon > -1)
+			{
+				bool done = false;
+				va_list args;
+				va_start(args, to_fdat);
+
+				while (!done)
+				{
+					sint as_opt = va_arg(args, sint);
+
+					switch (as_opt)
+					{
+					case -1:
+					case BOT_RTV_MAX:
+					{
+						done = true;
+						break;
+					}
+					case BOT_RTV_SINT:
+					{
+						sint val_ = va_arg(args, sint);
+						std::cout.put(val_);
+						file_->fst.oa_loc++;
+						ret = 0;
+						break;
+					}
+					case BOT_RTV_CHAR:
+					{
+						sint val = va_arg(args, sint);
+						_char val_ = (_char)val;
+						std::cout.put(val_);
+						file_->fst.oa_loc++;
+						ret = 0;
+						break;
+					}
+					case BOT_RTV_CHARP:
+					{
+						_char* val_ = va_arg(args, _char*);
+
+						if (val_)
+						{
+							size_t nt = bot_strlen(val_);
+							for (size_t x = 0; x < nt; x++)
+							{
+								std::cout.put(val_[x]);
+							}
+							file_->fst.oa_loc += nt;
+							ret = 0;
+						}
+						break;
+					}
+					case BOT_RTV_CCHAR:
+					{
+						c_char* val_ = va_arg(args, c_char*);
+
+						if (val_)
+						{
+							size_t nt = bot_cstrlen(val_);
+							for (size_t x = 0; x < nt; x++)
+							{
+								std::cout.put(val_[x]);
+							}
+							file_->fst.oa_loc += nt;
+							ret = 0;
+						}
+						break;
+					}
+					case BOT_RTV_STR:
+					{
+						std::string* val_ = va_arg(args, std::string*);
+
+						if (val_)
+						{
+							for (size_t x = 0; x < val_->length(); x++)
+							{
+								std::cout.put(val_->at(x));
+							}
+							file_->fst.oa_loc += val_->length();
+							ret = 0;
+						}
+						break;
+					}
+					default:
+					{
+						done = true;
+						break;
+					}
+					}
+
+				}
+				va_end(args);
+			}
+			if (!ox)
+			{
+				ox = CloseFConn(file_, true);
+			}
+			return 0;
+		}
+		else if (file_->cm == BOT_F_CON)
+		{
+			sint ox = -1;
+			ret = GetOFConn(file_, &ox);
+
+			if (ret < 0)
+			{
+				ret = BOTOpenFile(file_, &ox);
 			}
 
 			if (file_->fcon > -1)
@@ -11082,8 +14234,6 @@ sint machine::BOTFileOUT(BOT_FILE_M* file_, size_t f, bool to_fdat, ...)
 				boto_file = true;
 				ud = UpdMTXPrio();
 				bool done = false;
-				va_list args;
-				va_start(args, to_fdat);
 
 				if (f > (size_t)file_->fst.filestats.st_size)
 				{
@@ -11093,6 +14243,9 @@ sint machine::BOTFileOUT(BOT_FILE_M* file_, size_t f, bool to_fdat, ...)
 				{
 					f_con[file_->fcon]->fstrm.seekp(f);
 				}
+
+				va_list args;
+				va_start(args, to_fdat);
 
 				while (!done)
 				{
@@ -11258,18 +14411,642 @@ sint machine::BOTFileOUT(BOT_FILE_M* file_, size_t f, bool to_fdat, ...)
 				ox = BOTCloseFile(file_);
 			}
 		}
-		else
+		else if (file_->cm == BOT_DB_CON)
+		{
+			std::vector<BOT_STMT> tvec;
+			bool done = false;
+			va_list args;
+			va_start(args, to_fdat);
+
+			while (!done)
+			{
+				sint as_opt = va_arg(args, sint);
+
+				switch (as_opt)
+				{
+				case -1:
+				case BOT_RTV_MAX:
+				{
+					done = true;
+					break;
+				}
+				case BOT_RTV_CCHAR:
+				{
+					c_char* op_ = va_arg(args, c_char*);
+
+					if (op_)
+					{
+						size_t osiz = strlen(op_);
+
+						if (osiz && osiz < BOT_STRLEN_MAX)
+						{
+							BOT_STMT t;
+							t.stmt.append(op_);
+							tvec.push_back(t);
+						}
+					}
+					break;
+				}
+				case BOT_RTV_STR:
+				{
+					std::string* str = va_arg(args, std::string*);
+
+					if (str)
+					{
+						if (!str->empty())
+						{
+							BOT_STMT t;
+							t.stmt.append(str->c_str());
+							tvec.push_back(t);
+						}
+					}
+					break;
+				}
+				case BOT_RTV_VSTR:
+				{
+					std::vector<std::string>* strvec = va_arg(args, std::vector<std::string>*);
+
+					if (strvec)
+					{
+						if (!strvec->empty())
+						{
+							for (size_t siz = 0; siz < strvec->size(); siz++)
+							{
+								BOT_STMT t;
+								t.stmt.append(strvec->at(siz).c_str());
+								tvec.push_back(t);
+								strvec->at(siz).clear();
+							}
+							strvec->clear();
+						}
+					}
+					break;
+				}
+				default:
+				{
+					done = true;
+					break;
+				}
+				}
+			}
+			va_end(args);
+
+			if (!tvec.empty())
+			{
+				ret = Commit(&tvec);
+			}
+		}
+		else {}
+	}
+	else
+	{
+		sint ox = -1;
+		sint hx = LockGMutex(MTX_FO, &ox);
+
+		if (hx > -1)
+		{
+			boto_file = true;
+			sint ud = UpdMTXPrio();
+			bool done = false;
+			va_list args;
+			va_start(args, to_fdat);
+
+			while (!done)
+			{
+				sint as_opt = va_arg(args, sint);
+
+				switch (as_opt)
+				{
+				case -1:
+				case BOT_RTV_MAX:
+				{
+					done = true;
+					break;
+				}
+				case BOT_RTV_UINT:
+				{
+					if (file_->omode == BOT_FILE_OVRL)
+					{
+
+					}
+					else if (file_->omode == BOT_FILE_APND || file_->omode == BOT_FILE_INS)
+					{
+						if (fileo_vec.d_vec[file_->lid].Alloc(file_->dsiz + sizeof(uint)))
+						{
+							uint val_ = va_arg(args, uint);
+							uint xval = 0;
+							memcpy((void*)&xval, (void*)&fileo_vec.d_vec[file_->lid].dat[f], sizeof(uint));
+							memcpy((void*)&fileo_vec.d_vec[file_->lid].dat[f], (void*)&val_, sizeof(uint));
+
+							for (size_t x = f + 1; x < fileo_vec.d_vec[file_->lid].dsiz; x++)
+							{
+								memcpy((void*)&val_, (void*)&fileo_vec.d_vec[file_->lid].dat[x], sizeof(uint));
+								memcpy((void*)&fileo_vec.d_vec[file_->lid].dat[x], (void*)&xval, sizeof(uint));
+								memcpy((void*)&xval, (void*)&val_, sizeof(uint));
+							}
+							uint term = (uint)'\0';
+							memcpy((void*)&fileo_vec.d_vec[file_->lid].dat[fileo_vec.d_vec[file_->lid].dsiz - 1], (void*)&term, sizeof(uint));
+							ret = 0;
+							BOT_CRS crs(0, lid, f + sizeof(sint));
+							ud = PushToVecEleMem((void*)&crs, MTX_FO, file_->lid, BOT_FS_CRSV, 2, false);
+						}
+					}
+					else {}
+					break;
+				}
+				case BOT_RTV_UCHAR:
+				{
+					if (file_->omode == BOT_FILE_OVRL)
+					{
+
+					}
+					else if (file_->omode == BOT_FILE_APND || file_->omode == BOT_FILE_INS)
+					{
+						if (fileo_vec.d_vec[file_->lid].Alloc(file_->dsiz + sizeof(u_char)))
+						{
+							uint val_ = va_arg(args, uint);
+							u_char val = (u_char)val_;
+							u_char xval = 0;
+							memcpy((void*)&xval, (void*)&fileo_vec.d_vec[file_->lid].dat[f], sizeof(u_char));
+							memcpy((void*)&fileo_vec.d_vec[file_->lid].dat[f], (void*)&val_, sizeof(u_char));
+
+							for (size_t x = f + 1; x < fileo_vec.d_vec[file_->lid].dsiz; x++)
+							{
+								memcpy((void*)&val_, (void*)&fileo_vec.d_vec[file_->lid].dat[x], sizeof(u_char));
+								memcpy((void*)&fileo_vec.d_vec[file_->lid].dat[x], (void*)&xval, sizeof(u_char));
+								memcpy((void*)&xval, (void*)&val_, sizeof(u_char));
+							}
+							u_char term = (u_char)'\0';
+							memcpy((void*)&fileo_vec.d_vec[file_->lid].dat[fileo_vec.d_vec[file_->lid].dsiz - 1], (void*)&term, sizeof(u_char));
+							ret = 0;
+							BOT_CRS crs(0, lid, f + sizeof(u_char));
+							ud = PushToVecEleMem((void*)&crs, MTX_FO, file_->lid, BOT_FS_CRSV, 2, false);
+						}
+					}
+					else {}
+					break;
+				}
+				case BOT_RTV_SINT:
+				{
+					if (file_->omode == BOT_FILE_OVRL)
+					{
+
+					}
+					else if (file_->omode == BOT_FILE_APND || file_->omode == BOT_FILE_INS)
+					{
+						if (fileo_vec.d_vec[file_->lid].Alloc(file_->dsiz + sizeof(sint)))
+						{
+							sint val_ = va_arg(args, sint);
+							sint xval = 0;
+							memcpy((void*)&xval, (void*)&fileo_vec.d_vec[file_->lid].dat[f], sizeof(sint));
+							memcpy((void*)&fileo_vec.d_vec[file_->lid].dat[f], (void*)&val_, sizeof(sint));
+
+							for (size_t x = f + 1; x < fileo_vec.d_vec[file_->lid].dsiz; x++)
+							{
+								memcpy((void*)&val_, (void*)&fileo_vec.d_vec[file_->lid].dat[x], sizeof(sint));
+								memcpy((void*)&fileo_vec.d_vec[file_->lid].dat[x], (void*)&xval, sizeof(sint));
+								memcpy((void*)&xval, (void*)&val_, sizeof(sint));
+							}
+							sint term = (sint)'\0';
+							memcpy((void*)&fileo_vec.d_vec[file_->lid].dat[fileo_vec.d_vec[file_->lid].dsiz - 1], (void*)&term, sizeof(sint));
+							ret = 0;
+							BOT_CRS crs(0, lid, f + sizeof(sint));
+							ud = PushToVecEleMem((void*)&crs, MTX_FO, file_->lid, BOT_FS_CRSV, 2, false);
+						}
+					}
+					else {}
+					break;
+				}
+				case BOT_RTV_CHAR:
+				{
+					if (file_->omode == BOT_FILE_OVRL)
+					{
+
+					}
+					else if (file_->omode == BOT_FILE_APND || file_->omode == BOT_FILE_INS)
+					{
+						if (fileo_vec.d_vec[file_->lid].Alloc(file_->dsiz + sizeof(_char)))
+						{
+							sint val_ = va_arg(args, sint);
+							_char val = (_char)val_;
+							_char xval = 0;
+							memcpy((void*)&xval, (void*)&fileo_vec.d_vec[file_->lid].dat[f], sizeof(_char));
+							memcpy((void*)&fileo_vec.d_vec[file_->lid].dat[f], (void*)&val_, sizeof(_char));
+
+							for (size_t x = f + 1; x < fileo_vec.d_vec[file_->lid].dsiz; x++)
+							{
+								memcpy((void*)&val_, (void*)&fileo_vec.d_vec[file_->lid].dat[x], sizeof(_char));
+								memcpy((void*)&fileo_vec.d_vec[file_->lid].dat[x], (void*)&xval, sizeof(_char));
+								memcpy((void*)&xval, (void*)&val_, sizeof(_char));
+							}
+							_char term = '\0';
+							memcpy((void*)&fileo_vec.d_vec[file_->lid].dat[fileo_vec.d_vec[file_->lid].dsiz - 1], (void*)&term, sizeof(_char));
+							ret = 0;
+							BOT_CRS crs(0, lid, f + sizeof(_char));
+							ud = PushToVecEleMem((void*)&crs, MTX_FO, file_->lid, BOT_FS_CRSV, 2, false);
+						}
+					}
+					else {}
+					break;
+				}
+				case BOT_RTV_UCHARP:
+				{
+					u_char* val_ = va_arg(args, u_char*);
+
+					if (val_)
+					{
+						size_t nt = bot_ustrlen(val_);
+
+						if (file_->omode == BOT_FILE_OVRL)
+						{
+							if (f + nt > fileo_vec.d_vec[file_->lid].dsiz - 1)
+							{
+								if (fileo_vec.d_vec[file_->lid].Alloc(fileo_vec.d_vec[file_->lid].dsiz + ((f + nt) - fileo_vec.d_vec[file_->lid].dsiz)))
+								{
+									ud = SetVecEleMem((void*)&fileo_vec.d_vec[file_->lid].dsiz, MTX_FO, file_->lid, BOT_FS_DSIZ, false);
+									size_t x = f;
+
+									while (x < (f + nt))
+									{
+										if (memcmp((void*)&fileo_vec.d_vec[file_->lid].dat[x], (void*)&val_[x - f], sizeof(u_char)))
+										{
+											memcpy((void*)&fileo_vec.d_vec[file_->lid].dat[x], (void*)&val_[x - f], sizeof(u_char));
+										}
+										x++;
+									}
+								}
+							}
+							else
+							{
+								size_t x = f;
+
+								while (x < (f + nt))
+								{
+									if (memcmp((void*)&fileo_vec.d_vec[file_->lid].dat[x], (void*)&val_[x - f], sizeof(u_char)))
+									{
+										memcpy((void*)&fileo_vec.d_vec[file_->lid].dat[x], (void*)&val_[x - f], sizeof(u_char));
+									}
+									x++;
+								}
+							}
+							u_char term = (u_char)'\0';
+							memcpy((void*)&fileo_vec.d_vec[file_->lid].dat[fileo_vec.d_vec[file_->lid].dsiz - 1], (void*)&term, sizeof(u_char));
+						}
+						else if (file_->omode == BOT_FILE_APND || file_->omode == BOT_FILE_INS)
+						{
+							size_t osiz = fileo_vec.d_vec[file_->lid].dsiz;
+
+							if (fileo_vec.d_vec[file_->lid].Alloc(fileo_vec.d_vec[file_->lid].dsiz + nt))
+							{
+								u_char* xval = (u_char*)malloc(nt + 1);
+
+								if (xval)
+								{
+									ud = SetVecEleMem((void*)&fileo_vec.d_vec[file_->lid].dsiz, MTX_FO, file_->lid, BOT_FS_DSIZ, false);
+									memcpy((void*)xval, (void*)&fileo_vec.d_vec[file_->lid].dat[f], nt);
+									memcpy((void*)&fileo_vec.d_vec[file_->lid].dat[f], (void*)val_, nt);
+									u_char term = (u_char)'\0';
+									memcpy((void*)&xval[nt], (void*)&term, sizeof(u_char));
+									size_t x = f + nt;
+
+									while (x + nt < fileo_vec.d_vec[file_->lid].dsiz)
+									{
+										memcpy((void*)val_, (void*)&fileo_vec.d_vec[file_->lid].dat[x], nt);
+										memcpy((void*)&fileo_vec.d_vec[file_->lid].dat[x], (void*)xval, nt);
+										memcpy((void*)xval, (void*)val_, nt);
+										x += nt;
+									}
+
+									if (x < fileo_vec.d_vec[file_->lid].dsiz)
+									{
+										memcpy((void*)&fileo_vec.d_vec[file_->lid].dat[x], (void*)xval, fileo_vec.d_vec[file_->lid].dsiz - x);
+									}
+
+									memcpy((void*)&fileo_vec.d_vec[file_->lid].dat[fileo_vec.d_vec[file_->lid].dsiz - 1], (void*)&term, sizeof(u_char));
+									free(xval);
+									ret = 0;
+									BOT_CRS crs(0, lid, f + nt);
+									ud = PushToVecEleMem((void*)&crs, MTX_FO, file_->lid, BOT_FS_CRSV, 2, false);
+								}
+							}
+						}
+						else {}
+					}
+					break;
+				}
+				case BOT_RTV_CHARP:
+				{
+					_char* val_ = va_arg(args, _char*);
+
+					if (val_)
+					{
+						size_t nt = bot_strlen(val_);
+
+						if (file_->omode == BOT_FILE_OVRL)
+						{
+							if (f + nt > fileo_vec.d_vec[file_->lid].dsiz - 1)
+							{
+								if (fileo_vec.d_vec[file_->lid].Alloc(fileo_vec.d_vec[file_->lid].dsiz + ((f + nt) - fileo_vec.d_vec[file_->lid].dsiz)))
+								{
+									ud = SetVecEleMem((void*)&fileo_vec.d_vec[file_->lid].dsiz, MTX_FO, file_->lid, BOT_FS_DSIZ, false);
+									size_t x = f;
+
+									while (x < (f + nt))
+									{
+										if (memcmp((void*)&fileo_vec.d_vec[file_->lid].dat[x], (void*)&val_[x - f], sizeof(_char)))
+										{
+											memcpy((void*)&fileo_vec.d_vec[file_->lid].dat[x], (void*)&val_[x - f], sizeof(_char));
+										}
+										x++;
+									}
+								}
+							}
+							else
+							{
+								size_t x = f;
+
+								while (x < (f + nt))
+								{
+									if (memcmp((void*)&fileo_vec.d_vec[file_->lid].dat[x], (void*)&val_[x - f], sizeof(_char)))
+									{
+										memcpy((void*)&fileo_vec.d_vec[file_->lid].dat[x], (void*)&val_[x - f], sizeof(_char));
+									}
+									x++;
+								}
+							}
+							_char term = '\0';
+							memcpy((void*)&fileo_vec.d_vec[file_->lid].dat[fileo_vec.d_vec[file_->lid].dsiz - 1], (void*)&term, sizeof(_char));
+						}
+						else if (file_->omode == BOT_FILE_APND || file_->omode == BOT_FILE_INS)
+						{
+							size_t osiz = fileo_vec.d_vec[file_->lid].dsiz;
+
+							if (fileo_vec.d_vec[file_->lid].Alloc(fileo_vec.d_vec[file_->lid].dsiz + nt))
+							{
+								_char* xval = (_char*)malloc(nt + 1);
+
+								if (xval)
+								{
+									ud = SetVecEleMem((void*)&fileo_vec.d_vec[file_->lid].dsiz, MTX_FO, file_->lid, BOT_FS_DSIZ, false);
+									memcpy((void*)xval, (void*)&fileo_vec.d_vec[file_->lid].dat[f], nt);
+									memcpy((void*)&fileo_vec.d_vec[file_->lid].dat[f], (void*)val_, nt);
+									_char term = '\0';
+									memcpy((void*)&xval[nt], (void*)&term, sizeof(_char));
+									size_t x = f + nt;
+
+									while (x + nt < fileo_vec.d_vec[file_->lid].dsiz)
+									{
+										memcpy((void*)val_, (void*)&fileo_vec.d_vec[file_->lid].dat[x], nt);
+										memcpy((void*)&fileo_vec.d_vec[file_->lid].dat[x], (void*)xval, nt);
+										memcpy((void*)xval, (void*)val_, nt);
+										x += nt;
+									}
+
+									if (x < fileo_vec.d_vec[file_->lid].dsiz)
+									{
+										memcpy((void*)&fileo_vec.d_vec[file_->lid].dat[x], (void*)xval, nt);
+									}
+
+									memcpy((void*)&fileo_vec.d_vec[file_->lid].dat[fileo_vec.d_vec[file_->lid].dsiz - 1], (void*)&term, sizeof(_char));
+									free(xval);
+									ret = 0;
+									BOT_CRS crs(0, lid, f + nt);
+									ud = PushToVecEleMem((void*)&crs, MTX_FO, file_->lid, BOT_FS_CRSV, 2, false);
+								}
+							}
+						}
+						else {}
+					}
+					break;
+				}
+				case BOT_RTV_STR:
+				{
+					std::string* str = va_arg(args, std::string*);
+
+					if (str)
+					{
+						if (!str->empty())
+						{
+							if (file_->omode == BOT_FILE_OVRL)
+							{
+								if (f + str->length() > fileo_vec.d_vec[file_->lid].dsiz - 1)
+								{
+									if (fileo_vec.d_vec[file_->lid].Alloc(fileo_vec.d_vec[file_->lid].dsiz + ((f + str->length()) - fileo_vec.d_vec[file_->lid].dsiz)))
+									{
+										ud = SetVecEleMem((void*)&fileo_vec.d_vec[file_->lid].dsiz, MTX_FO, file_->lid, BOT_FS_DSIZ, false);
+										size_t x = f;
+
+										while (x < (f + str->length()))
+										{
+											if (memcmp((void*)&fileo_vec.d_vec[file_->lid].dat[x], (void*)&str[x - f], sizeof(_char)))
+											{
+												memcpy((void*)&fileo_vec.d_vec[file_->lid].dat[x], (void*)&str[x - f], sizeof(_char));
+											}
+											x++;
+										}
+									}
+								}
+								else
+								{
+									size_t x = f;
+
+									while (x < (f + str->length()))
+									{
+										if (memcmp((void*)&fileo_vec.d_vec[file_->lid].dat[x], (void*)&str[x - f], sizeof(_char)))
+										{
+											memcpy((void*)&fileo_vec.d_vec[file_->lid].dat[x], (void*)&str[x - f], sizeof(_char));
+										}
+										x++;
+									}
+								}
+								_char term = '\0';
+								memcpy((void*)&fileo_vec.d_vec[file_->lid].dat[fileo_vec.d_vec[file_->lid].dsiz - 1], (void*)&term, sizeof(_char));
+							}
+							else if (file_->omode == BOT_FILE_APND || file_->omode == BOT_FILE_INS)
+							{
+								size_t osiz = fileo_vec.d_vec[file_->lid].dsiz;
+
+								if (fileo_vec.d_vec[file_->lid].Alloc(fileo_vec.d_vec[file_->lid].dsiz + str->length()))
+								{
+									ud = SetVecEleMem((void*)&fileo_vec.d_vec[file_->lid].dsiz, MTX_FO, file_->lid, BOT_FS_DSIZ, false);
+									_char* val_ = (_char*)malloc(str->length() + 1);
+									_char* xval = (_char*)malloc(str->length() + 1);
+
+									if (val_ && xval)
+									{
+										_char term = '\0';
+										memcpy((void*)xval, (void*)&fileo_vec.d_vec[file_->lid].dat[f], str->length());
+										memcpy((void*)&fileo_vec.d_vec[file_->lid].dat[f], (void*)str->c_str(), str->length());
+										memcpy((void*)&val_[str->length()], (void*)&term, sizeof(_char));
+										memcpy((void*)&xval[str->length()], (void*)&term, sizeof(_char));
+										size_t x = f + str->length();
+
+										while (x + str->length() < fileo_vec.d_vec[file_->lid].dsiz)
+										{
+											memcpy((void*)val_, (void*)&fileo_vec.d_vec[file_->lid].dat[x], str->length());
+											memcpy((void*)&fileo_vec.d_vec[file_->lid].dat[x], (void*)xval, str->length());
+											memcpy((void*)xval, (void*)val_, str->length());
+											x += str->length();
+										}
+
+										if (x < fileo_vec.d_vec[file_->lid].dsiz)
+										{
+											memcpy((void*)&fileo_vec.d_vec[file_->lid].dat[x], (void*)xval, fileo_vec.d_vec[file_->lid].dsiz - x);
+										}
+
+										memcpy((void*)&fileo_vec.d_vec[file_->lid].dat[fileo_vec.d_vec[file_->lid].dsiz - 1], (void*)&term, sizeof(_char));
+										free(val_);
+										free(xval);
+										ret = 0;
+										BOT_CRS crs(0, lid, f + str->length());
+										ud = PushToVecEleMem((void*)&crs, MTX_FO, file_->lid, BOT_FS_CRSV, 2, false);
+									}
+								}
+							}
+							else {}
+						}
+					}
+					break;
+				}
+				case BOT_RTV_VSTR:
+				{
+					std::vector<std::string>* strvec = va_arg(args, std::vector<std::string>*);
+
+					if (strvec)
+					{
+						if (!strvec->empty())
+						{
+							size_t tot = 0;
+
+							for (size_t siz = 0; siz < strvec->size(); siz++)
+							{
+								tot += strvec->at(siz).length();;
+							}
+
+							if (BOT_FILE_OVRL)
+							{
+								if (f + tot < file_->dsiz)
+								{
+									size_t x = f;
+
+									for (size_t siz = 0; siz < strvec->size(); siz++)
+									{
+										memcpy((void*)&fileo_vec.d_vec[file_->lid].dat[x], (void*)strvec->at(siz).c_str(), strvec->at(siz).length());
+										x += strvec->at(siz).length();
+										strvec->at(siz).clear();
+									}
+									ret = 0;
+									strvec->clear();
+									BOT_CRS crs(0, lid, f + tot);
+									ud = PushToVecEleMem((void*)&crs, MTX_FO, file_->lid, BOT_FS_CRSV, 2, false);
+								}
+								else
+								{
+
+								}
+							}
+							else if (file_->omode == BOT_FILE_APND || file_->omode == BOT_FILE_INS)
+							{
+								if (fileo_vec.d_vec[file_->lid].Alloc(fileo_vec.d_vec[file_->lid].dsiz + tot))
+								{
+									ud = SetVecEleMem((void*)&fileo_vec.d_vec[file_->lid].dsiz, MTX_FO, file_->lid, BOT_FS_DSIZ, false);
+									_char* val_ = (_char*)malloc(tot + 1);
+									_char* xval = (_char*)malloc(tot + 1);
+
+									if (val_ && xval)
+									{
+										_char term = '\0';
+										memcpy((void*)&val_[tot], (void*)&term, sizeof(_char));
+										memcpy((void*)&xval[tot], (void*)&term, sizeof(_char));
+										size_t x = f;
+
+										for (size_t siz = 0; siz < strvec->size(); siz++)
+										{
+											memcpy((void*)xval[x - f], (void*)&fileo_vec.d_vec[file_->lid].dat[x], strvec->at(siz).length());
+											memcpy((void*)&fileo_vec.d_vec[file_->lid].dat[x], (void*)strvec->at(siz).c_str(), strvec->at(siz).length());
+											x += strvec->at(siz).length();
+											strvec->at(siz).clear();
+										}
+
+										while (x + tot < fileo_vec.d_vec[file_->lid].dsiz)
+										{
+											memcpy((void*)val_, (void*)&fileo_vec.d_vec[file_->lid].dat[x], tot);
+											memcpy((void*)&fileo_vec.d_vec[file_->lid].dat[x], (void*)xval, tot);
+											memcpy((void*)xval, (void*)val_, tot);
+											x += tot;
+										}
+
+										if (x < file_->dsiz)
+										{
+											memcpy((void*)&fileo_vec.d_vec[file_->lid].dat[x], (void*)xval, fileo_vec.d_vec[file_->lid].dsiz - x);
+										}
+										memcpy((void*)&fileo_vec.d_vec[file_->lid].dat[fileo_vec.d_vec[file_->lid].dsiz - 1], (void*)&term, sizeof(_char));
+										free(val_);
+										free(xval);
+										ret = 0;
+										strvec->clear();
+										BOT_CRS crs(0, lid, f + tot);
+										ud = PushToVecEleMem((void*)&crs, MTX_FO, file_->lid, BOT_FS_CRSV, 2, false);
+									}
+								}
+							}
+							else {}
+						}
+					}
+					break;
+				}
+				default:
+				{
+					done = true;
+					break;
+				}
+				}
+			}
+
+			va_end(args);
+
+			if (!ret)
+			{
+				sint xret = SetVecEleMem(fileo_vec.d_vec[file_->lid].dat, MTX_FO, file_->lid, BOT_FS_DATP);
+				xret = GetVecEle(file_, MTX_FO, file_->lid);
+			}
+
+			boto_file = false;
+			ud = UpdMTXPrio();
+
+			if (!ox)
+			{
+				ox = UnlockGMutex(MTX_FO);
+			}
+		}
+	}
+	return ret;
+}
+
+sint machine::BOTFileIN(BOT_FILE_M* file_, bool f_fdat, size_t from, size_t to, ...)
+{
+	if (!file_ || to < from)
+	{
+		return -1;
+	}
+
+	sint ret = -1;
+
+	if (!f_fdat)
+	{
+		if (file_->cm == BOT_IO_CON)
 		{
 			sint ox = -1;
-			sint hx = LockGMutex(MTX_FO, &ox);
 
-			if (hx > -1)
+			if (file_->fcon < 0)
 			{
-				boto_file = true;
-				sint ud = UpdMTXPrio();
+				ret = GetFConn(file_, &ox);
+			}
+			if (file_->fcon > -1)
+			{
 				bool done = false;
 				va_list args;
-				va_start(args, to_fdat);
+				va_start(args, to);
 
 				while (!done)
 				{
@@ -11283,235 +15060,27 @@ sint machine::BOTFileOUT(BOT_FILE_M* file_, size_t f, bool to_fdat, ...)
 						done = true;
 						break;
 					}
-					case BOT_RTV_UINT:
+					case BOT_RTV_SINTP:
 					{
-						if (file_->omode == BOT_FILE_OVRL)
-						{
+						sint* delm = va_arg(args, sint*);
+						sint* val_ = va_arg(args, sint*);
 
-						}
-						else if (file_->omode == BOT_FILE_APND || file_->omode == BOT_FILE_INS)
+						if (val_ && delm)
 						{
-							uint val_ = va_arg(args, uint);
-							uint xval = 0;
+							size_t nt = bot_strlen((_char*)val_);
+							_char term = '\0';
 
-							for (size_t x = f; x < file_->dsiz; x++)
+							for (size_t x = 0; x < nt; x++)
 							{
-								if (x == f)
+								val_[x] = std::cin.get();
+
+								if (!memcmp((void*)&val_[x], (void*)&term, sizeof(_char)))
 								{
-									memcpy((void*)&xval, (void*)&fileo_vec.d_vec[file_->lid].dat[x], sizeof(uint));
-									memcpy((void*)&fileo_vec.d_vec[file_->lid].dat[x], (void*)&val_, sizeof(uint));
-								}
-								else
-								{
-									memcpy((void*)&val_, (void*)&fileo_vec.d_vec[file_->lid].dat[x], sizeof(uint));
-									memcpy((void*)&fileo_vec.d_vec[file_->lid].dat[x], (void*)&xval, sizeof(uint));
-									memcpy((void*)&xval, (void*)&val_, sizeof(uint));
+									x = nt;
 								}
 							}
-							uint term = (uint)'\0';
-							memcpy((void*)&fileo_vec.d_vec[file_->lid].dat[(fileo_vec.d_vec[file_->lid].dsiz + sizeof(uint)) - 1], (void*)&term, sizeof(uint));
+							file_->fst.oa_loc += nt;
 							ret = 0;
-							BOT_CRS crs(0, lid, f + sizeof(sint));
-							ud = PushToVecEleMem((void*)&crs, MTX_FO, file_->lid, BOT_FS_CRSV, 2, false);
-						}
-						else {}
-						break;
-					}
-					case BOT_RTV_UCHAR:
-					{
-						if (file_->omode == BOT_FILE_APND || file_->omode == BOT_FILE_OVRL)
-						{
-
-						}
-						else if (file_->omode == BOT_FILE_INS)
-						{
-							uint val_ = va_arg(args, uint);
-							u_char val = (u_char)val_;
-							u_char xval = 0;
-
-							for (size_t x = f; x < file_->dsiz; x++)
-							{
-								if (x == f)
-								{
-									memcpy((void*)&xval, (void*)&fileo_vec.d_vec[file_->lid].dat[x], sizeof(u_char));
-									memcpy((void*)&fileo_vec.d_vec[file_->lid].dat[x], (void*)&val_, sizeof(u_char));
-								}
-								else
-								{
-									memcpy((void*)&val_, (void*)&fileo_vec.d_vec[file_->lid].dat[x], sizeof(u_char));
-									memcpy((void*)&fileo_vec.d_vec[file_->lid].dat[x], (void*)&xval, sizeof(u_char));
-									memcpy((void*)&xval, (void*)&val_, sizeof(u_char));
-								}
-							}
-							u_char term = (u_char)'\0';
-							memcpy((void*)&fileo_vec.d_vec[file_->lid].dat[(fileo_vec.d_vec[file_->lid].dsiz + sizeof(u_char)) - 1], (void*)&term, sizeof(u_char));
-							ret = 0;
-							BOT_CRS crs(0, lid, f + sizeof(u_char));
-							ud = PushToVecEleMem((void*)&crs, MTX_FO, file_->lid, BOT_FS_CRSV, 2, false);
-						}
-						else {}
-						break;
-					}
-					case BOT_RTV_SINT:
-					{
-						if (fileo_vec.d_vec[file_->lid].Alloc(file_->dsiz + sizeof(sint)))
-						{
-							if (file_->omode == BOT_FILE_APND || file_->omode == BOT_FILE_OVRL)
-							{
-
-							}
-							else if (file_->omode == BOT_FILE_INS)
-							{
-								sint val_ = va_arg(args, sint);
-								sint xval = 0;
-
-								for (size_t x = f; x < file_->dsiz; x++)
-								{
-									if (x == f)
-									{
-										memcpy((void*)&xval, (void*)&fileo_vec.d_vec[file_->lid].dat[x], sizeof(sint));
-										memcpy((void*)&fileo_vec.d_vec[file_->lid].dat[x], (void*)&val_, sizeof(sint));
-									}
-									else
-									{
-										memcpy((void*)&val_, (void*)&fileo_vec.d_vec[file_->lid].dat[x], sizeof(sint));
-										memcpy((void*)&fileo_vec.d_vec[file_->lid].dat[x], (void*)&xval, sizeof(sint));
-										memcpy((void*)&xval, (void*)&val_, sizeof(sint));
-									}
-								}
-								sint term = (sint)'\0';
-								memcpy((void*)&fileo_vec.d_vec[file_->lid].dat[(fileo_vec.d_vec[file_->lid].dsiz + sizeof(sint)) - 1], (void*)&term, sizeof(sint));
-								ret = 0;
-								BOT_CRS crs(0, lid, f + sizeof(sint));
-								ud = PushToVecEleMem((void*)&crs, MTX_FO, file_->lid, BOT_FS_CRSV, 2, false);
-							}
-							else {}
-						}
-						break;
-					}
-					case BOT_RTV_CHAR:
-					{
-						if (fileo_vec.d_vec[file_->lid].Alloc(file_->dsiz + sizeof(_char)))
-						{
-							if (file_->omode == BOT_FILE_APND || file_->omode == BOT_FILE_OVRL)
-							{
-
-							}
-							else if (file_->omode == BOT_FILE_INS)
-							{
-								sint val_ = va_arg(args, sint);
-								_char val = (_char)val_;
-								_char xval = 0;
-
-								for (size_t x = f; x < file_->dsiz; x++)
-								{
-									if (x == f)
-									{
-										memcpy((void*)&xval, (void*)&fileo_vec.d_vec[file_->lid].dat[x], sizeof(_char));
-										memcpy((void*)&fileo_vec.d_vec[file_->lid].dat[x], (void*)&val_, sizeof(_char));
-									}
-									else
-									{
-										memcpy((void*)&val_, (void*)&fileo_vec.d_vec[file_->lid].dat[x], sizeof(_char));
-										memcpy((void*)&fileo_vec.d_vec[file_->lid].dat[x], (void*)&xval, sizeof(_char));
-										memcpy((void*)&xval, (void*)&val_, sizeof(_char));
-									}
-								}
-								_char term = '\0';
-								memcpy((void*)&fileo_vec.d_vec[file_->lid].dat[(fileo_vec.d_vec[file_->lid].dsiz + sizeof(_char)) - 1], (void*)&term, sizeof(_char));
-								ret = 0;
-								BOT_CRS crs(0, lid, f + sizeof(_char));
-								ud = PushToVecEleMem((void*)&crs, MTX_FO, file_->lid, BOT_FS_CRSV, 2, false);
-							}
-							else {}
-						}
-						break;
-					}
-					case BOT_RTV_UCHARP:
-					{
-						u_char* val_ = va_arg(args, u_char*);
-
-						if (val_)
-						{
-							size_t nt = bot_ustrlen(val_);
-
-							if (file_->omode == BOT_FILE_OVRL)
-							{
-								if (f + nt > fileo_vec.d_vec[file_->lid].dsiz - 1)
-								{
-									if (fileo_vec.d_vec[file_->lid].Alloc(fileo_vec.d_vec[file_->lid].dsiz + ((f + nt) - fileo_vec.d_vec[file_->lid].dsiz)))
-									{
-										ud = SetVecEleMem((void*)&fileo_vec.d_vec[file_->lid].dsiz, MTX_FO, file_->lid, BOT_FS_DSIZ, false);
-										size_t x = f;
-
-										while (x < (f + nt))
-										{
-											if (memcmp((void*)&fileo_vec.d_vec[file_->lid].dat[x], (void*)&val_[x - f], sizeof(u_char)))
-											{
-												memcpy((void*)&fileo_vec.d_vec[file_->lid].dat[x], (void*)&val_[x - f], sizeof(u_char));
-											}
-											x++;
-										}
-									}
-								}
-								else
-								{
-									size_t x = f;
-
-									while (x < (f + nt))
-									{
-										if (memcmp((void*)&fileo_vec.d_vec[file_->lid].dat[x], (void*)&val_[x - f], sizeof(u_char)))
-										{
-											memcpy((void*)&fileo_vec.d_vec[file_->lid].dat[x], (void*)&val_[x - f], sizeof(u_char));
-										}
-										x++;
-									}
-								}
-								u_char term = (u_char)'\0';
-								memcpy((void*)&fileo_vec.d_vec[file_->lid].dat[fileo_vec.d_vec[file_->lid].dsiz - 1], (void*)&term, sizeof(u_char));
-							}
-							else if (file_->omode == BOT_FILE_APND || file_->omode == BOT_FILE_INS)
-							{
-								size_t osiz = fileo_vec.d_vec[file_->lid].dsiz;
-
-								if (fileo_vec.d_vec[file_->lid].Alloc(fileo_vec.d_vec[file_->lid].dsiz + nt))
-								{
-									u_char* xval = (u_char*)malloc(nt + 1);
-
-									if (xval)
-									{
-										ud = SetVecEleMem((void*)&fileo_vec.d_vec[file_->lid].dsiz, MTX_FO, file_->lid, BOT_FS_DSIZ, false);
-										memcpy((void*)xval, (void*)&fileo_vec.d_vec[file_->lid].dat[f], nt);
-										memcpy((void*)&fileo_vec.d_vec[file_->lid].dat[f], (void*)val_, nt);
-										u_char term = (u_char)'\0';
-										memcpy((void*)&xval[nt], (void*)&term, sizeof(u_char));
-										size_t x = f + nt;
-
-										while (x + nt < file_->dsiz)
-										{
-											memcpy((void*)val_, (void*)&fileo_vec.d_vec[file_->lid].dat[x], nt);
-											memcpy((void*)&fileo_vec.d_vec[file_->lid].dat[x], (void*)xval, nt);
-											memcpy((void*)xval, (void*)val_, nt);
-											x += nt;
-										}
-
-										if (x < fileo_vec.d_vec[file_->lid].dsiz)
-										{
-											memcpy((void*)val_, (void*)&fileo_vec.d_vec[file_->lid].dat[x], fileo_vec.d_vec[file_->lid].dsiz - osiz);
-											memcpy((void*)&fileo_vec.d_vec[file_->lid].dat[x], (void*)xval, nt);
-											x += nt;
-											memcpy((void*)&fileo_vec.d_vec[file_->lid].dat[x], (void*)val_, fileo_vec.d_vec[file_->lid].dsiz - osiz);
-										}
-
-										memcpy((void*)&fileo_vec.d_vec[file_->lid].dat[fileo_vec.d_vec[file_->lid].dsiz - 1], (void*)&term, sizeof(u_char));
-										free(xval);
-										ret = 0;
-										BOT_CRS crs(0, lid, f + nt);
-										ud = PushToVecEleMem((void*)&crs, MTX_FO, file_->lid, BOT_FS_CRSV, 2, false);
-									}
-								}
-							}
-							else {}
 						}
 						break;
 					}
@@ -11522,263 +15091,43 @@ sint machine::BOTFileOUT(BOT_FILE_M* file_, size_t f, bool to_fdat, ...)
 						if (val_)
 						{
 							size_t nt = bot_strlen(val_);
-
-							if (file_->omode == BOT_FILE_OVRL)
+							for (size_t x = 0; x < nt; x++)
 							{
-								if (f + nt > fileo_vec.d_vec[file_->lid].dsiz - 1)
-								{
-									if (fileo_vec.d_vec[file_->lid].Alloc(fileo_vec.d_vec[file_->lid].dsiz + ((f + nt) - fileo_vec.d_vec[file_->lid].dsiz)))
-									{
-										ud = SetVecEleMem((void*)&fileo_vec.d_vec[file_->lid].dsiz, MTX_FO, file_->lid, BOT_FS_DSIZ, false);
-										size_t x = f;
-
-										while (x < (f + nt))
-										{
-											if (memcmp((void*)&fileo_vec.d_vec[file_->lid].dat[x], (void*)&val_[x - f], sizeof(_char)))
-											{
-												memcpy((void*)&fileo_vec.d_vec[file_->lid].dat[x], (void*)&val_[x - f], sizeof(_char));
-											}
-											x++;
-										}
-									}
-								}
-								else
-								{
-									size_t x = f;
-
-									while (x < (f + nt))
-									{
-										if (memcmp((void*)&fileo_vec.d_vec[file_->lid].dat[x], (void*)&val_[x - f], sizeof(_char)))
-										{
-											memcpy((void*)&fileo_vec.d_vec[file_->lid].dat[x], (void*)&val_[x - f], sizeof(_char));
-										}
-										x++;
-									}
-								}
-								_char term = '\0';
-								memcpy((void*)&fileo_vec.d_vec[file_->lid].dat[fileo_vec.d_vec[file_->lid].dsiz - 1], (void*)&term, sizeof(_char));
+								std::cout.put(val_[x]);
 							}
-							else if (file_->omode == BOT_FILE_APND || file_->omode == BOT_FILE_INS)
+							file_->fst.oa_loc += nt;
+							ret = 0;
+						}
+						break;
+					}
+					case BOT_RTV_CCHAR:
+					{
+						c_char* val_ = va_arg(args, c_char*);
+
+						if (val_)
+						{
+							size_t nt = bot_cstrlen(val_);
+							for (size_t x = 0; x < nt; x++)
 							{
-								size_t osiz = fileo_vec.d_vec[file_->lid].dsiz;
-
-								if (fileo_vec.d_vec[file_->lid].Alloc(fileo_vec.d_vec[file_->lid].dsiz + nt))
-								{
-									_char* xval = (_char*)malloc(nt + 1);
-
-									if (xval)
-									{
-										ud = SetVecEleMem((void*)&fileo_vec.d_vec[file_->lid].dsiz, MTX_FO, file_->lid, BOT_FS_DSIZ, false);
-										memcpy((void*)xval, (void*)&fileo_vec.d_vec[file_->lid].dat[f], nt);
-										memcpy((void*)&fileo_vec.d_vec[file_->lid].dat[f], (void*)val_, nt);
-										_char term = '\0';
-										memcpy((void*)&xval[nt], (void*)&term, sizeof(_char));
-										size_t x = f + nt;
-
-										while (x + nt < file_->dsiz)
-										{
-											memcpy((void*)val_, (void*)&fileo_vec.d_vec[file_->lid].dat[x], nt);
-											memcpy((void*)&fileo_vec.d_vec[file_->lid].dat[x], (void*)xval, nt);
-											memcpy((void*)xval, (void*)val_, nt);
-											x += nt;
-										}
-
-										if (x < fileo_vec.d_vec[file_->lid].dsiz)
-										{
-											memcpy((void*)val_, (void*)&fileo_vec.d_vec[file_->lid].dat[x], fileo_vec.d_vec[file_->lid].dsiz - osiz);
-											memcpy((void*)&fileo_vec.d_vec[file_->lid].dat[x], (void*)xval, nt);
-											x += nt;
-											memcpy((void*)&fileo_vec.d_vec[file_->lid].dat[x], (void*)val_, fileo_vec.d_vec[file_->lid].dsiz - osiz);
-										}
-
-										memcpy((void*)&fileo_vec.d_vec[file_->lid].dat[fileo_vec.d_vec[file_->lid].dsiz - 1], (void*)&term, sizeof(_char));
-										free(xval);
-										ret = 0;
-										BOT_CRS crs(0, lid, f + nt);
-										ud = PushToVecEleMem((void*)&crs, MTX_FO, file_->lid, BOT_FS_CRSV, 2, false);
-									}
-								}
+								std::cout.put(val_[x]);
 							}
-							else {}
+							file_->fst.oa_loc += nt;
+							ret = 0;
 						}
 						break;
 					}
 					case BOT_RTV_STR:
 					{
-						std::string* str = va_arg(args, std::string*);
+						std::string* val_ = va_arg(args, std::string*);
 
-						if (str)
+						if (val_)
 						{
-							if (!str->empty())
+							for (size_t x = 0; x < val_->length(); x++)
 							{
-								if (file_->omode == BOT_FILE_OVRL)
-								{
-									if (f + str->length() > fileo_vec.d_vec[file_->lid].dsiz - 1)
-									{
-										if (fileo_vec.d_vec[file_->lid].Alloc(fileo_vec.d_vec[file_->lid].dsiz + ((f + str->length()) - fileo_vec.d_vec[file_->lid].dsiz)))
-										{
-											ud = SetVecEleMem((void*)&fileo_vec.d_vec[file_->lid].dsiz, MTX_FO, file_->lid, BOT_FS_DSIZ, false);
-											size_t x = f;
-
-											while (x < (f + str->length()))
-											{
-												if (memcmp((void*)&fileo_vec.d_vec[file_->lid].dat[x], (void*)&str[x - f], sizeof(_char)))
-												{
-													memcpy((void*)&fileo_vec.d_vec[file_->lid].dat[x], (void*)&str[x - f], sizeof(_char));
-												}
-												x++;
-											}
-										}
-									}
-									else
-									{
-										size_t x = f;
-
-										while (x < (f + str->length()))
-										{
-											if (memcmp((void*)&fileo_vec.d_vec[file_->lid].dat[x], (void*)&str[x - f], sizeof(_char)))
-											{
-												memcpy((void*)&fileo_vec.d_vec[file_->lid].dat[x], (void*)&str[x - f], sizeof(_char));
-											}
-											x++;
-										}
-									}
-									_char term = '\0';
-									memcpy((void*)&fileo_vec.d_vec[file_->lid].dat[fileo_vec.d_vec[file_->lid].dsiz - 1], (void*)&term, sizeof(_char));
-								}
-								else if (file_->omode == BOT_FILE_APND || file_->omode == BOT_FILE_INS)
-								{
-									size_t osiz = fileo_vec.d_vec[file_->lid].dsiz;
-
-									if (fileo_vec.d_vec[file_->lid].Alloc(fileo_vec.d_vec[file_->lid].dsiz + str->length()))
-									{
-										ud = SetVecEleMem((void*)&fileo_vec.d_vec[file_->lid].dsiz, MTX_FO, file_->lid, BOT_FS_DSIZ, false);
-										_char* val_ = (_char*)malloc(str->length() + 1);
-										_char* xval = (_char*)malloc(str->length() + 1);
-
-										if (val_ && xval)
-										{
-											memcpy((void*)xval, (void*)&fileo_vec.d_vec[file_->lid].dat[f], str->length());
-											memcpy((void*)&fileo_vec.d_vec[file_->lid].dat[f], (void*)str->c_str(), str->length());
-											_char term = '\0';
-											memcpy((void*)&val_[str->length()], (void*)&term, sizeof(_char));
-											memcpy((void*)&xval[str->length()], (void*)&term, sizeof(_char));
-											size_t x = f + str->length();
-
-											while (x + str->length() < osiz)
-											{
-												memcpy((void*)val_, (void*)&fileo_vec.d_vec[file_->lid].dat[x], str->length());
-												memcpy((void*)&fileo_vec.d_vec[file_->lid].dat[x], (void*)xval, str->length());
-												memcpy((void*)xval, (void*)val_, str->length());
-												x += str->length();
-											}
-
-											if (x < fileo_vec.d_vec[file_->lid].dsiz)
-											{
-												memcpy((void*)val_, (void*)&fileo_vec.d_vec[file_->lid].dat[x], fileo_vec.d_vec[file_->lid].dsiz - osiz);
-												memcpy((void*)&fileo_vec.d_vec[file_->lid].dat[x], (void*)xval, str->length());
-												x += str->length();
-												memcpy((void*)&fileo_vec.d_vec[file_->lid].dat[x], (void*)val_, fileo_vec.d_vec[file_->lid].dsiz - osiz);
-											}
-
-											memcpy((void*)&fileo_vec.d_vec[file_->lid].dat[fileo_vec.d_vec[file_->lid].dsiz - 1], (void*)&term, sizeof(_char));
-											free(val_);
-											free(xval);
-											ret = 0;
-											BOT_CRS crs(0, lid, f + str->length());
-											ud = PushToVecEleMem((void*)&crs, MTX_FO, file_->lid, BOT_FS_CRSV, 2, false);
-										}
-									}
-								}
-								else {}
+								std::cout.put(val_->at(x));
 							}
-						}
-						break;
-					}
-					case BOT_RTV_VSTR:
-					{
-						std::vector<std::string>* strvec = va_arg(args, std::vector<std::string>*);
-
-						if (strvec)
-						{
-							if (!strvec->empty())
-							{
-								size_t tot = 0;
-
-								for (size_t siz = 0; siz < strvec->size(); siz++)
-								{
-									tot += strvec->at(siz).length();;
-								}
-
-								if (BOT_FILE_OVRL)
-								{
-									if (f + tot < file_->dsiz)
-									{
-										size_t x = f;
-
-										for (size_t siz = 0; siz < strvec->size(); siz++)
-										{
-											memcpy((void*)&fileo_vec.d_vec[file_->lid].dat[x], (void*)strvec->at(siz).c_str(), strvec->at(siz).length());
-											x += strvec->at(siz).length();
-											strvec->at(siz).clear();
-										}
-										ret = 0;
-										strvec->clear();
-										BOT_CRS crs(0, lid, f + tot);
-										ud = PushToVecEleMem((void*)&crs, MTX_FO, file_->lid, BOT_FS_CRSV, 2, false);
-									}
-									else
-									{
-
-									}
-								}
-								else if (file_->omode == BOT_FILE_APND || file_->omode == BOT_FILE_INS)
-								{
-									if (fileo_vec.d_vec[file_->lid].Alloc(fileo_vec.d_vec[file_->lid].dsiz + tot))
-									{
-										ud = SetVecEleMem((void*)&fileo_vec.d_vec[file_->lid].dsiz, MTX_FO, file_->lid, BOT_FS_DSIZ, false);
-										_char* val_ = (_char*)malloc(tot + 1);
-										_char* xval = (_char*)malloc(tot + 1);
-
-										if (val_ && xval)
-										{
-											_char term = '\0';
-											memcpy((void*)&val_[tot], (void*)&term, sizeof(_char));
-											memcpy((void*)&xval[tot], (void*)&term, sizeof(_char));
-											size_t x = f;
-
-											for (size_t siz = 0; siz < strvec->size(); siz++)
-											{
-												memcpy((void*)xval[x - f], (void*)&fileo_vec.d_vec[file_->lid].dat[x], strvec->at(siz).length());
-												memcpy((void*)&fileo_vec.d_vec[file_->lid].dat[x], (void*)strvec->at(siz).c_str(), strvec->at(siz).length());
-												x += strvec->at(siz).length();
-												strvec->at(siz).clear();
-											}
-
-											while (x + tot < file_->dsiz)
-											{
-												memcpy((void*)val_, (void*)&fileo_vec.d_vec[file_->lid].dat[x], tot);
-												memcpy((void*)&fileo_vec.d_vec[file_->lid].dat[x], (void*)xval, tot);
-												memcpy((void*)xval, (void*)val_, tot);
-												x += tot;
-											}
-
-											if (x < file_->dsiz)
-											{
-												memcpy((void*)&fileo_vec.d_vec[file_->lid].dat[x], (void*)xval, file_->dsiz - x);
-											}
-											memcpy((void*)&fileo_vec.d_vec[file_->lid].dat[fileo_vec.d_vec[file_->lid].dsiz - 1], (void*)&term, sizeof(_char));
-											free(val_);
-											free(xval);
-											ret = 0;
-											strvec->clear();
-											BOT_CRS crs(0, lid, f + tot);
-											ud = PushToVecEleMem((void*)&crs, MTX_FO, file_->lid, BOT_FS_CRSV, 2, false);
-										}
-									}
-								}
-								else {}
-							}
+							file_->fst.oa_loc += val_->length();
+							ret = 0;
 						}
 						break;
 					}
@@ -11788,144 +15137,40 @@ sint machine::BOTFileOUT(BOT_FILE_M* file_, size_t f, bool to_fdat, ...)
 						break;
 					}
 					}
-				}
 
+				}
 				va_end(args);
-
-				if (!ret)
-				{
-					sint xret = SetVecEleMem(fileo_vec.d_vec[file_->lid].dat, MTX_FO, file_->lid, BOT_FS_DATP);
-					xret = GetVecEle(file_, MTX_FO, file_->lid);
-				}
-
-				boto_file = false;
-				ud = UpdMTXPrio();
-
-				if (!ox)
-				{
-					ox = UnlockGMutex(MTX_FO);
-				}
 			}
+			if (!ox)
+			{
+				ox = CloseFConn(file_);
+			}
+			return 0;
 		}
-	}
-	else if (file_->cm == BOT_DB_CON)
-	{
-		std::vector<BOT_STMT> tvec;
-		bool done = false;
-		va_list args;
-		va_start(args, to_fdat);
-
-		while (!done)
+		else if (file_->cm == BOT_F_CON)
 		{
-			sint as_opt = va_arg(args, sint);
-
-			switch (as_opt)
+			if (!to || to > (size_t)file_->fst.filestats.st_size)
 			{
-			case -1:
-			case BOT_RTV_MAX:
-			{
-				done = true;
-				break;
-			}
-			case BOT_RTV_CCHAR:
-			{
-				c_char* op_ = va_arg(args, c_char*);
-
-				if (op_)
+				if (file_->fst.filestats.st_size)
 				{
-					size_t osiz = strlen(op_);
-
-					if (osiz && osiz < BOT_STRLEN_MAX)
-					{
-						BOT_STMT t;
-						t.stmt.append(op_);
-						tvec.push_back(t);
-					}
+					to = (size_t)file_->fst.filestats.st_size - 1;
 				}
-				break;
-			}
-			case BOT_RTV_STR:
-			{
-				std::string* str = va_arg(args, std::string*);
-
-				if (str)
+				else
 				{
-					if (!str->empty())
-					{
-						BOT_STMT t;
-						t.stmt.append(str->c_str());
-						tvec.push_back(t);
-					}
+					return -1;
 				}
-				break;
 			}
-			case BOT_RTV_VSTR:
-			{
-				std::vector<std::string>* strvec = va_arg(args, std::vector<std::string>*);
 
-				if (strvec)
-				{
-					if (!strvec->empty())
-					{
-						for (size_t siz = 0; siz < strvec->size(); siz++)
-						{
-							BOT_STMT t;
-							t.stmt.append(strvec->at(siz).c_str());
-							tvec.push_back(t);
-							strvec->at(siz).clear();
-						}
-						strvec->clear();
-					}
-				}
-				break;
-			}
-			default:
-			{
-				done = true;
-				break;
-			}
-			}
-		}
-		va_end(args);
-
-		if (!tvec.empty())
-		{
-			ret = Commit(&tvec);
-		}
-	}
-	else {}
-	return ret;
-}
-
-sint machine::BOTFileIN(BOT_FILE_M* file_, bool f_fdat, size_t from, size_t to, ...)
-{
-	if (!file_ || to < from)
-	{
-		return -1;
-	}
-
-	sint ret = -1;
-
-	if (file_->cm == BOT_F_CON)
-	{
-		if (!f_fdat)
-		{
 			sint ox = -1;
+			ret = GetOFConn(file_, &ox);
 
-			if (file_->fcon < 0)
+			if (ret < 0)
 			{
 				ret = BOTOpenFile(file_, &ox);
 			}
-			//if (f_con[file_->fcon]->flid > -1 && f_con[file_->fcon]->flid == file_->lid)
-			//{
 
 			if (file_->fcon > -1)
 			{
-				if (!to || to > (size_t)file_->fst.filestats.st_size)
-				{
-					to = (size_t)file_->fst.filestats.st_size;
-				}
-
 				f_con[file_->fcon]->fstrm.seekg(from);
 				ret = -1;
 				boto_file = true;
@@ -11946,14 +15191,14 @@ sint machine::BOTFileIN(BOT_FILE_M* file_, bool f_fdat, size_t from, size_t to, 
 						done = true;
 						break;
 					}
-					case BOT_RTV_SINT:
+					case BOT_RTV_SINTP:
 					{
 						sint* val_ = va_arg(args, sint*);
 
 						if (val_ != NULL)
 						{
 							_char nc;
-							for (ullint ct = 0; ct < to - from; ct++)
+							for (size_t ct = 0; ct < to - from; ct++)
 							{
 								if (f_con[file_->fcon]->fstrm.get(*((_char*)&nc)))
 								{
@@ -11969,14 +15214,14 @@ sint machine::BOTFileIN(BOT_FILE_M* file_, bool f_fdat, size_t from, size_t to, 
 						}
 						break;
 					}
-					case BOT_RTV_CHAR:
+					case BOT_RTV_CHARP:
 					{
 						_char* val_ = va_arg(args, _char*);
 
 						if (val_ != NULL)
 						{
 							_char nc;
-							for (ullint ct = 0; ct < to - from; ct++)
+							for (size_t ct = 0; ct < to - from; ct++)
 							{
 								if (f_con[file_->fcon]->fstrm.get(nc))
 								{
@@ -11992,14 +15237,14 @@ sint machine::BOTFileIN(BOT_FILE_M* file_, bool f_fdat, size_t from, size_t to, 
 						}
 						break;
 					}
-					case BOT_RTV_UINT:
+					case BOT_RTV_UINTP:
 					{
 						uint* val_ = va_arg(args, uint*);
 
 						if (val_ != NULL)
 						{
 							u_char nc;
-							for (ullint ct = 0; ct < to - from; ct++)
+							for (size_t ct = 0; ct < to - from; ct++)
 							{
 								if (f_con[file_->fcon]->fstrm.get(*((_char*)&nc)))
 								{
@@ -12015,14 +15260,14 @@ sint machine::BOTFileIN(BOT_FILE_M* file_, bool f_fdat, size_t from, size_t to, 
 						}
 						break;
 					}
-					case BOT_RTV_UCHAR:
+					case BOT_RTV_UCHARP:
 					{
 						u_char* val_ = va_arg(args, u_char*);
 
 						if (val_ != NULL)
 						{
 							u_char nc;
-							for (ullint ct = 0; ct < to - from; ct++)
+							for (size_t ct = 0; ct < to - from; ct++)
 							{
 								if (f_con[file_->fcon]->fstrm.get(*((_char*)&nc)))
 								{
@@ -12197,304 +15442,414 @@ sint machine::BOTFileIN(BOT_FILE_M* file_, bool f_fdat, size_t from, size_t to, 
 				ox = BOTCloseFile(file_);
 			}
 		}
-		else
+		else if (file_->cm == BOT_DB_CON)
 		{
-			if (!to || to > file_->dsiz - 1)
+			bool done = false;
+			va_list args;
+			va_start(args, to);
+
+			while (!done)
 			{
-				to = file_->dsiz - 1;
+				sint as_opt = va_arg(args, sint);
+				BOT_STMT* qval_ = va_arg(args, BOT_STMT*);
+
+				if (qval_ != NULL)
+				{
+					ret = Query(qval_, as_opt);
+				}
+
+				if (ret < 0)
+				{
+					done = true;
+				}
+			}
+			va_end(args);
+		}
+		else {}
+	}
+	else
+	{
+		if (!file_->dsiz)
+		{
+			return -1;
+		}
+
+		if (!to || to > file_->dsiz - 1)
+		{
+			to = file_->dsiz - 1;
+		}
+
+		ret = -1;
+		sint ox = -1;
+		sint hx = LockGMutex(MTX_FO, &ox);
+
+		if (hx > -1)
+		{
+			bool done = false;
+			va_list args;
+			va_start(args, to);
+			boto_file = true;
+			sint ud = UpdMTXPrio();
+
+			while (!done)
+			{
+				sint as_opt = va_arg(args, sint);
+
+				switch (as_opt)
+				{
+				case -1:
+				case BOT_RTV_MAX:
+				{
+					done = true;
+					break;
+				}
+				case BOT_RTV_SINT:
+				{
+					sint* val_ = va_arg(args, sint*);
+
+					if (val_ != NULL)
+					{
+						for (ullint ct = from; ct < to - from; ct++)
+						{
+							memcpy((void*)val_, (void*)&fileo_vec.d_vec[file_->lid].dat[ct], sizeof(sint));
+						}
+						sint nc = (sint)'\0';
+						memcpy((void*)&val_[to], (void*)&nc, sizeof(sint));
+						BOT_CRS ncs(0, lid, to);
+						ud = PushToVecEleMem((void*)&ncs, MTX_FO, file_->lid, BOT_FS_CRSV, 2, false);
+						ret = 0;
+					}
+					break;
+				}
+				case BOT_RTV_CHAR:
+				{
+					_char* val_ = va_arg(args, _char*);
+
+					if (val_ != NULL)
+					{
+						for (ullint ct = from; ct < to - from; ct++)
+						{
+							memcpy((void*)val_, (void*)&fileo_vec.d_vec[file_->lid].dat[ct], sizeof(_char));
+						}
+						_char nc = '\0';
+						memcpy((void*)&val_[to], (void*)&nc, sizeof(_char));
+						BOT_CRS ncs(0, lid, to);
+						ud = PushToVecEleMem((void*)&ncs, MTX_FO, file_->lid, BOT_FS_CRSV, 2, false);
+						ret = 0;
+					}
+					break;
+				}
+				case BOT_RTV_UINT:
+				{
+					uint* val_ = va_arg(args, uint*);
+
+					if (val_ != NULL)
+					{
+						for (ullint ct = from; ct < to - from; ct++)
+						{
+							memcpy((void*)val_, (void*)&fileo_vec.d_vec[file_->lid].dat[ct], sizeof(uint));
+						}
+						uint nc = (uint)'\0';
+						memcpy((void*)&val_[to], (void*)&nc, sizeof(uint));
+						BOT_CRS ncs(0, lid, to);
+						ud = PushToVecEleMem((void*)&ncs, MTX_FO, file_->lid, BOT_FS_CRSV, 2, false);
+						ret = 0;
+					}
+					break;
+				}
+				case BOT_RTV_UCHAR:
+				{
+					u_char* val_ = va_arg(args, u_char*);
+
+					if (val_ != NULL)
+					{
+						for (ullint ct = from; ct < to - from; ct++)
+						{
+							memcpy((void*)val_, (void*)&fileo_vec.d_vec[file_->lid].dat[ct], sizeof(u_char));
+						}
+						u_char nc = (u_char)'\0';
+						memcpy((void*)&val_[to], (void*)&nc, sizeof(u_char));
+						BOT_CRS ncs(0, lid, to);
+						ud = PushToVecEleMem((void*)&ncs, MTX_FO, file_->lid, BOT_FS_CRSV, 2, false);
+						ret = 0;
+					}
+					break;
+				}
+				case BOT_RTV_REAL:
+				{
+					float* val_ = va_arg(args, float*);
+
+					if (val_ != NULL)
+					{
+						for (ullint ct = from; ct < to - from; ct++)
+						{
+							memcpy((void*)val_, (void*)&fileo_vec.d_vec[file_->lid].dat[ct], sizeof(float));
+						}
+						BOT_CRS ncs(0, lid, to);
+						ud = PushToVecEleMem((void*)&ncs, MTX_FO, file_->lid, BOT_FS_CRSV, 2, false);
+						ret = 0;
+					}
+					break;
+				}
+				case BOT_RTV_CCHAR:
+				{
+					c_char* op_ = va_arg(args, c_char*);
+
+					if (op_ != NULL)
+					{
+
+					}
+					break;
+				}
+				case BOT_RTV_STR:
+				{
+					std::string* str_ = va_arg(args, std::string*);
+
+					if (str_ != NULL)
+					{
+						for (ullint ct = from; ct < to - from && ct < BOT_STRLEN_MAX; ct++)
+						{
+							str_->push_back(fileo_vec.d_vec[file_->lid].dat[ct]);
+						}
+						BOT_CRS ncs(0, lid, to);
+						ud = PushToVecEleMem((void*)&ncs, MTX_FO, file_->lid, BOT_FS_CRSV, 2, false);
+						ret = 0;
+					}
+					break;
+				}
+				case BOT_RTV_VSINT:
+				{
+					std::vector<sint>* val_ = va_arg(args, std::vector<sint>*);
+
+					if (val_ != NULL)
+					{
+						for (ullint ct = from; ct < to - from && val_->size() < BOTVEC_LIM; ct++)
+						{
+							val_->push_back((sint)fileo_vec.d_vec[file_->lid].dat[ct]);
+						}
+						BOT_CRS ncs(0, lid, to);
+						ud = PushToVecEleMem((void*)&ncs, MTX_FO, file_->lid, BOT_FS_CRSV, 2, false);
+						ret = 0;
+					}
+					break;
+				}
+				case BOT_RTV_VCHAR:
+				{
+					std::vector<_char>* val_ = va_arg(args, std::vector<_char>*);
+
+					if (val_ != NULL)
+					{
+						for (ullint ct = from; ct < to - from && val_->size() < BOTVEC_LIM; ct++)
+						{
+							val_->push_back(fileo_vec.d_vec[file_->lid].dat[ct]);
+						}
+						BOT_CRS ncs(0, lid, to);
+						ud = PushToVecEleMem((void*)&ncs, MTX_FO, file_->lid, BOT_FS_CRSV, 2, false);
+						ret = 0;
+					}
+					break;
+				}
+				case BOT_RTV_VUINT:
+				{
+					std::vector<uint>* val_ = va_arg(args, std::vector<uint>*);
+
+					if (val_ != NULL)
+					{
+						for (ullint ct = from; ct < to - from && val_->size() < BOTVEC_LIM; ct++)
+						{
+							val_->push_back((uint)fileo_vec.d_vec[file_->lid].dat[ct]);
+						}
+						BOT_CRS ncs(0, lid, to);
+						ud = PushToVecEleMem((void*)&ncs, MTX_FO, file_->lid, BOT_FS_CRSV, 2, false);
+						ret = 0;
+					}
+					break;
+				}
+				case BOT_RTV_VUCHAR:
+				{
+					std::vector<u_char>* val_ = va_arg(args, std::vector<u_char>*);
+
+					if (val_ != NULL)
+					{
+						for (ullint ct = from; ct < to - from && val_->size() < BOTVEC_LIM; ct++)
+						{
+							val_->push_back((u_char)fileo_vec.d_vec[file_->lid].dat[ct]);
+						}
+						BOT_CRS ncs(0, lid, to);
+						ud = PushToVecEleMem((void*)&ncs, MTX_FO, file_->lid, BOT_FS_CRSV, 2, false);
+						ret = 0;
+					}
+					break;
+				}
+				case BOT_RTV_VREAL:
+				{
+					std::vector<float>* val_ = va_arg(args, std::vector<float>*);
+
+					if (val_ != NULL)
+					{
+						float nc;
+						for (ullint ct = from; ct < to - from && val_->size() < BOTVEC_LIM; ct++)
+						{
+							memcpy((void*)&nc, (void*)&fileo_vec.d_vec[file_->lid].dat[ct], sizeof(float));
+							val_->push_back(nc);
+						}
+						BOT_CRS ncs(0, lid, to);
+						ud = PushToVecEleMem((void*)&ncs, MTX_FO, file_->lid, BOT_FS_CRSV, 2, false);
+						ret = 0;
+					}
+					break;
+				}
+				case BOT_RTV_VSTR:
+				{
+					std::vector<std::string>* strvec_ = va_arg(args, std::vector<std::string>*);
+
+					if (strvec_ != NULL)
+					{
+						std::string nstr;
+						for (ullint ct = from; ct < to - from && nstr.length() < BOT_STRLEN_MAX && strvec_->size() < BOTVEC_LIM; ct++)
+						{
+							nstr.push_back(fileo_vec.d_vec[file_->lid].dat[ct]);
+						}
+						strvec_->push_back(nstr);
+						BOT_CRS ncs(0, lid, to);
+						ud = PushToVecEleMem((void*)&ncs, MTX_FO, file_->lid, BOT_FS_CRSV, 2, false);
+						ret = 0;
+					}
+					break;
+				}
+				default:
+				{
+					done = true;
+					break;
+				}
+				}
+
+				if (file_->dsiz - 1 == to)
+				{
+					done = true;
+				}
+			}
+			va_end(args);
+			boto_file = false;
+			ud = UpdMTXPrio();
+
+			if (!ox)
+			{
+				ox = UnlockGMutex(MTX_FO);
 			}
 
-			ret = -1;
+			if (!ret)
+			{
+				ud = GetVecEle((void*)file_, MTX_FO, file_->lid);
+			}
+		}
+	}
+	return ret;
+}
+sint machine::BOTFileER(BOT_FILE_M* file_, bool f_fdat, size_t from, size_t to)
+{
+	if (!file_)
+	{
+		return -1;
+	}
 
+	sint ret = -1;
+
+	if (!f_fdat)
+	{
+		if (file_->cm == BOT_F_CON)
+		{
+			ret = BOTFileStats(file_);
+			sint sv_mth = file_->omode;
+			sint ox = -1;
+
+			if (file_->omode != BOT_FILE_OVRL)
+			{
+				file_->omode = BOT_FILE_OVRL;
+			}
+
+			if (file_->fcon < 0)
+			{
+				ret = BOTOpenFile(file_, &ox);
+			}
+
+			if (file_->fcon > -1)
+			{
+				if ((size_t)f_con[file_->fcon]->fstrm.tellp() != from)
+				{
+					f_con[file_->fcon]->fstrm.seekp(from);
+				}
+
+				if (to + 1 < (size_t)file_->fst.filestats.st_size)
+				{
+					if ((size_t)f_con[file_->fcon]->fstrm.tellg() != to + 1)
+					{
+						f_con[file_->fcon]->fstrm.seekg(to + 1);
+					}
+				}
+
+				for (size_t x = from; x < (size_t)file_->fst.filestats.st_size; x++)
+				{
+					if (to + 1 < (size_t)file_->fst.filestats.st_size)
+					{
+						f_con[file_->fcon]->fstrm.put(f_con[file_->fcon]->fstrm.get());
+					}
+					else
+					{
+						x = file_->fst.filestats.st_size;
+					}
+					to++;
+				}
+
+				file_->omode = std::ios::trunc;
+				sint nx = -1;
+				ret = BOTOpenFile(file_, &nx);
+				file_->omode = sv_mth;
+
+				if (!ox)
+				{
+					ox = BOTCloseFile(file_);
+				}
+			}
+		}
+	}
+	else
+	{
+		if (file_->datp)
+		{
 			sint ox = -1;
 			sint hx = LockGMutex(MTX_FO, &ox);
 
 			if (hx > -1)
 			{
-				bool done = false;
-				va_list args;
-				va_start(args, to);
-				boto_file = true;
-				sint ud = UpdMTXPrio();
-
-				while (!done)
+				_char n = '\0';
+				size_t y = to + 1;
+				for (size_t x = from; x < file_->dsiz; x++)
 				{
-					sint as_opt = va_arg(args, sint);
-
-					switch (as_opt)
+					if (y < file_->dsiz)
 					{
-					case -1:
-					case BOT_RTV_MAX:
+						memcpy((void*)&file_->datp[x], (void*)&file_->datp[y], sizeof(_char));
+					}
+					else
 					{
-						done = true;
-						break;
+						memcpy((void*)&file_->datp[x], (void*)&n, sizeof(_char));
 					}
-					case BOT_RTV_SINT:
-					{
-						sint* val_ = va_arg(args, sint*);
-
-						if (val_ != NULL)
-						{
-							for (ullint ct = from; ct < to - from; ct++)
-							{
-								memcpy((void*)val_, (void*)&fileo_vec.d_vec[file_->lid].dat[ct], sizeof(sint));
-							}
-							sint nc = (sint)'\0';
-							memcpy((void*)&val_[to], (void*)&nc, sizeof(sint));
-							BOT_CRS ncs(0, lid, to);
-							ud = PushToVecEleMem((void*)&ncs, MTX_FO, file_->lid, BOT_FS_CRSV, 2, false);
-							ret = 0;
-						}
-						break;
-					}
-					case BOT_RTV_CHAR:
-					{
-						_char* val_ = va_arg(args, _char*);
-
-						if (val_ != NULL)
-						{
-							for (ullint ct = from; ct < to - from; ct++)
-							{
-								memcpy((void*)val_, (void*)&fileo_vec.d_vec[file_->lid].dat[ct], sizeof(_char));
-							}
-							_char nc = '\0';
-							memcpy((void*)&val_[to], (void*)&nc, sizeof(_char));
-							BOT_CRS ncs(0, lid, to);
-							ud = PushToVecEleMem((void*)&ncs, MTX_FO, file_->lid, BOT_FS_CRSV, 2, false);
-							ret = 0;
-						}
-						break;
-					}
-					case BOT_RTV_UINT:
-					{
-						uint* val_ = va_arg(args, uint*);
-
-						if (val_ != NULL)
-						{
-							for (ullint ct = from; ct < to - from; ct++)
-							{
-								memcpy((void*)val_, (void*)&fileo_vec.d_vec[file_->lid].dat[ct], sizeof(uint));
-							}
-							uint nc = (uint)'\0';
-							memcpy((void*)&val_[to], (void*)&nc, sizeof(uint));
-							BOT_CRS ncs(0, lid, to);
-							ud = PushToVecEleMem((void*)&ncs, MTX_FO, file_->lid, BOT_FS_CRSV, 2, false);
-							ret = 0;
-						}
-						break;
-					}
-					case BOT_RTV_UCHAR:
-					{
-						u_char* val_ = va_arg(args, u_char*);
-
-						if (val_ != NULL)
-						{
-							for (ullint ct = from; ct < to - from; ct++)
-							{
-								memcpy((void*)val_, (void*)&fileo_vec.d_vec[file_->lid].dat[ct], sizeof(u_char));
-							}
-							u_char nc = (u_char)'\0';
-							memcpy((void*)&val_[to], (void*)&nc, sizeof(u_char));
-							BOT_CRS ncs(0, lid, to);
-							ud = PushToVecEleMem((void*)&ncs, MTX_FO, file_->lid, BOT_FS_CRSV, 2, false);
-							ret = 0;
-						}
-						break;
-					}
-					case BOT_RTV_REAL:
-					{
-						float* val_ = va_arg(args, float*);
-
-						if (val_ != NULL)
-						{
-							for (ullint ct = from; ct < to - from; ct++)
-							{
-								memcpy((void*)val_, (void*)&fileo_vec.d_vec[file_->lid].dat[ct], sizeof(float));
-							}
-							BOT_CRS ncs(0, lid, to);
-							ud = PushToVecEleMem((void*)&ncs, MTX_FO, file_->lid, BOT_FS_CRSV, 2, false);
-							ret = 0;
-						}
-						break;
-					}
-					case BOT_RTV_CCHAR:
-					{
-						c_char* op_ = va_arg(args, c_char*);
-
-						if (op_ != NULL)
-						{
-
-						}
-						break;
-					}
-					case BOT_RTV_STR:
-					{
-						std::string* str_ = va_arg(args, std::string*);
-
-						if (str_ != NULL)
-						{
-							for (ullint ct = from; ct < to - from && ct < BOT_STRLEN_MAX; ct++)
-							{
-								str_->push_back(fileo_vec.d_vec[file_->lid].dat[ct]);
-							}
-							BOT_CRS ncs(0, lid, to);
-							ud = PushToVecEleMem((void*)&ncs, MTX_FO, file_->lid, BOT_FS_CRSV, 2, false);
-							ret = 0;
-						}
-						break;
-					}
-					case BOT_RTV_VSINT:
-					{
-						std::vector<sint>* val_ = va_arg(args, std::vector<sint>*);
-
-						if (val_ != NULL)
-						{
-							for (ullint ct = from; ct < to-from && val_->size() < BOTVEC_LIM; ct++)
-							{
-								val_->push_back((sint)fileo_vec.d_vec[file_->lid].dat[ct]);
-							}
-							BOT_CRS ncs(0, lid, to);
-							ud = PushToVecEleMem((void*)&ncs, MTX_FO, file_->lid, BOT_FS_CRSV, 2, false);
-							ret = 0;
-						}
-						break;
-					}
-					case BOT_RTV_VCHAR:
-					{
-						std::vector<_char>* val_ = va_arg(args, std::vector<_char>*);
-
-						if (val_ != NULL)
-						{
-							for (ullint ct = from; ct < to - from && val_->size() < BOTVEC_LIM; ct++)
-							{
-								val_->push_back(fileo_vec.d_vec[file_->lid].dat[ct]);
-							}
-							BOT_CRS ncs(0, lid, to);
-							ud = PushToVecEleMem((void*)&ncs, MTX_FO, file_->lid, BOT_FS_CRSV, 2, false);
-							ret = 0;
-						}
-						break;
-					}
-					case BOT_RTV_VUINT:
-					{
-						std::vector<uint>* val_ = va_arg(args, std::vector<uint>*);
-
-						if (val_ != NULL)
-						{
-							for (ullint ct = from; ct < to - from && val_->size() < BOTVEC_LIM; ct++)
-							{
-								val_->push_back((uint)fileo_vec.d_vec[file_->lid].dat[ct]);
-							}
-							BOT_CRS ncs(0, lid, to);
-							ud = PushToVecEleMem((void*)&ncs, MTX_FO, file_->lid, BOT_FS_CRSV, 2, false);
-							ret = 0;
-						}
-						break;
-					}
-					case BOT_RTV_VUCHAR:
-					{
-						std::vector<u_char>* val_ = va_arg(args, std::vector<u_char>*);
-
-						if (val_ != NULL)
-						{
-							for (ullint ct = from; ct < to - from && val_->size() < BOTVEC_LIM; ct++)
-							{
-								val_->push_back((u_char)fileo_vec.d_vec[file_->lid].dat[ct]);
-							}
-							BOT_CRS ncs(0, lid, to);
-							ud = PushToVecEleMem((void*)&ncs, MTX_FO, file_->lid, BOT_FS_CRSV, 2, false);
-							ret = 0;
-						}
-						break;
-					}
-					case BOT_RTV_VREAL:
-					{
-						std::vector<float>* val_ = va_arg(args, std::vector<float>*);
-
-						if (val_ != NULL)
-						{
-							float nc;
-							for (ullint ct = from; ct < to - from && val_->size() < BOTVEC_LIM; ct++)
-							{
-								memcpy((void*)&nc, (void*)&fileo_vec.d_vec[file_->lid].dat[ct], sizeof(float));
-								val_->push_back(nc);
-							}
-							BOT_CRS ncs(0, lid, to);
-							ud = PushToVecEleMem((void*)&ncs, MTX_FO, file_->lid, BOT_FS_CRSV, 2, false);
-							ret = 0;
-						}
-						break;
-					}
-					case BOT_RTV_VSTR:
-					{
-						std::vector<std::string>* strvec_ = va_arg(args, std::vector<std::string>*);
-
-						if (strvec_ != NULL)
-						{
-							std::string nstr;
-							for (ullint ct = from; ct < to - from && nstr.length() < BOT_STRLEN_MAX  && strvec_->size() < BOTVEC_LIM; ct++)
-							{
-								nstr.push_back(fileo_vec.d_vec[file_->lid].dat[ct]);
-							}
-							strvec_->push_back(nstr);
-							BOT_CRS ncs(0, lid, to);
-							ud = PushToVecEleMem((void*)&ncs, MTX_FO, file_->lid, BOT_FS_CRSV, 2, false);
-							ret = 0;
-						}
-						break;
-					}
-					default:
-					{
-						done = true;
-						break;
-					}
-					}
-
-					if (file_->dsiz - 1 == to)
-					{
-						done = true;
-					}
+					y++;
 				}
-				va_end(args);
-				boto_file = false;
-				ud = UpdMTXPrio();
+
+				if (fileo_vec.d_vec[file_->lid].Alloc(file_->dsiz - (to - from)))
+				{
+					ret = SetVecEleMem((void*)&fileo_vec.d_vec[file_->lid].dsiz, MTX_FO, file_->lid, BOT_FS_DSIZ, false);
+				}
 
 				if (!ox)
 				{
 					ox = UnlockGMutex(MTX_FO);
 				}
-
-				if (!ret)
-				{
-					ud = GetVecEle((void*)file_, MTX_FO, file_->lid);
-				}
 			}
 		}
 	}
-	else if (file_->cm == BOT_DB_CON)
-	{
-		bool done = false;
-		va_list args;
-		va_start(args, to);
 
-		while (!done)
-		{
-			sint as_opt = va_arg(args, sint);
-			BOT_STMT* qval_ = va_arg(args, BOT_STMT*);
-
-			if (qval_ != NULL)
-			{
-				ret = Query(qval_, as_opt);
-			}
-
-			if (ret < 0)
-			{
-				done = true;
-			}
-		}
-		va_end(args);
-	}
-	else {}
 	return ret;
 }
 sint machine::BOTCloseFile(sint flid, bool clear_conn, bool del, bool clear_dat)
@@ -12503,7 +15858,7 @@ sint machine::BOTCloseFile(sint flid, bool clear_conn, bool del, bool clear_dat)
 	{
 		carr_128 instr;
 		sint oc = bot_sprintf(instr.carr, instr.siz, "::BOTCloseFile(sint flid(%i), bool clear_conn(%u), bool del(%u), bool clear_dat(%u))", flid, (uint)clear_conn, (uint)del, (uint)clear_dat);
-		oc = SOutput(instr.carr, 2);
+		oc = Output(instr.carr, 2);
 	}
 
 	if (flid < 0)
@@ -12526,7 +15881,7 @@ sint machine::BOTCloseFile(BOT_FILE_M* xfile_, bool clear_conn, bool del, bool c
 	{
 		carr_128 instr;
 		sint oc = bot_sprintf(instr.carr, instr.siz, "::BOTCloseFile(BOT_FILE_M* xfile_(%i), bool clear_conn(%u), bool del(%u), bool clear_dat(%u))", (sint)xfile_, (uint)clear_conn, (uint)del, (uint)clear_dat);
-		oc = SOutput(instr.carr, 2);
+		oc = Output(instr.carr, 2);
 	}
 
 	if (!xfile_)
@@ -12643,7 +15998,7 @@ sint machine::BOTSaveFile(BOT_FILE_M* file_, c_char* to_, bool ow)
 	{
 		carr_256 instr;
 		sint oc = bot_sprintf(instr.carr, instr.siz, "::BOTSaveFile(BOT_FILE_M* file_(%i), c_char* to_(%i), bool ow(%u))", (sint)file_, (sint)to_, (uint)ow);
-		oc = SOutput(instr.carr, 2);
+		oc = Output(instr.carr, 2);
 	}
 	if (!file_)
 	{
@@ -12836,7 +16191,7 @@ sllint machine::nsRest(sllint i, bool keep_mtx)
 	{
 		carr_128 instr;
 		sint oc = bot_sprintf(instr.carr, instr.siz, "nsRest(sllint i(%lli), bool keep_mtx(%u))", i, (uint)keep_mtx);
-		oc = SOutput(instr.carr, 2);
+		oc = Output(instr.carr, 2);
 	}
 	stk_ct++;
 	std::chrono::steady_clock::time_point t_I = std::chrono::steady_clock::now();
@@ -12910,7 +16265,7 @@ sllint machine::nsRest(sllint i, bool keep_mtx)
 		{
 			carr_128 outp;
 			i = bot_sprintf(outp.carr, outp.siz, "attempted to rest:%lins, rested for:%lins", i, slpct);
-			i = SOutput(outp.carr, 2);
+			i = Output(outp.carr, 2);
 		}
 	}
 	return slpct;
@@ -12921,7 +16276,7 @@ sllint machine::Rest(sllint i, bool keep_mtx)
 	{
 		carr_128 instr;
 		sint oc = bot_sprintf(instr.carr, instr.siz, "Rest(sllint i(%lli), bool keep_mtx(%u))", i, (uint)keep_mtx);
-		oc = SOutput(instr.carr, 2);
+		oc = Output(instr.carr, 2);
 	}
 	stk_ct++;
 	std::chrono::steady_clock::time_point t_I = std::chrono::steady_clock::now();
@@ -13000,14 +16355,41 @@ sllint machine::Rest(sllint i, bool keep_mtx)
 		{
 			carr_128 outp;
 			sint op = bot_sprintf(outp.carr, outp.siz, "attempted to rest:%lims, rested for:%lims", i, (sllint)span.count());
-			op = SOutput(outp.carr, 2);
+			op = Output(outp.carr, 2);
 		}
 	}
 	return slpct;
 }
 
 // Console I/O Functions
-sint machine::Output(c_char* op_, ...)
+
+sint machine::BOTCOutput(std::string* np)
+{
+	if (!np)
+	{
+		return -1;
+	}
+
+	sint h = -1;
+	sint p = LockGMutex(MTX_O, &h);
+
+	if (p > -1)
+	{
+		for (size_t x = 0; x < np->length(); x++)
+		{
+			std::cout.put(np->at(x));
+		}
+
+		if (!h)
+		{
+			h = UnlockGMutex(MTX_O);
+		}
+		return 0;
+	}
+	return -1;
+}
+
+sint machine::Output(c_char* op_, sint opt, bool newl)
 {
 	carr_64 tdata;
 	sint xc = GetTimeMS(tdata.carr);
@@ -13022,10 +16404,51 @@ sint machine::Output(c_char* op_, ...)
 	{
 		xc = bot_sprintf(instr.carr, instr.siz, " [%i][machine] ", lid);
 	}
-	std::string str;
-	str.append(tdata.carr);
+	std::string str(tdata.carr);
 	str.append(instr.carr);
 	str.append(op_);
+
+	if (newl)
+	{
+		str.push_back('\n');
+	}
+
+	if (opt > -1)
+	{
+		xc = LogPut(str.c_str(), opt);
+
+		if (!opt)
+		{
+			rc = BOTCOutput(&str);
+		}
+	}
+	return xc;
+}
+
+sint machine::Output(bool newl, c_char* op_, ...)
+{
+	carr_64 tdata;
+	sint xc = GetTimeMS(tdata.carr);
+	carr_256 instr;
+	sint rc = GetPCliMem(BOT_C_PRIV, &xc);
+
+	if (xc > 99)
+	{
+		xc = bot_sprintf(instr.carr, instr.siz, " [%i][%s] ", lid, ptn.c_str());
+	}
+	else
+	{
+		xc = bot_sprintf(instr.carr, instr.siz, " [%i][machine] ", lid);
+	}
+	std::string str(tdata.carr);
+	str.append(instr.carr);
+	str.append(op_);
+
+	if (newl)
+	{
+		str.push_back('\n');
+	}
+
 	va_list args;
 	va_start(args, op_);
 
@@ -13033,7 +16456,7 @@ sint machine::Output(c_char* op_, ...)
 	{
 		rc = va_arg(args, sint);
 
-		if (rc < 0 || rc > (uint)BOT_OP_OPTS)
+		if (rc < 0 || rc >(uint)BOT_OP_OPTS)
 		{
 			x = (uint)BOT_OP_OPTS;
 		}
@@ -13045,40 +16468,76 @@ sint machine::Output(c_char* op_, ...)
 			{
 				if (!rc)
 				{
-					xc = BotOut(str.c_str());
+					rc = BOTCOutput(&str);
 				}
 				x = (uint)BOT_OP_OPTS;
 			}
 		}
 	}
+	va_end(args);
 	return xc;
 }
-sint machine::BotOut(sint num, ...)
-{
-	sint ret = -1;
-	if (num > 0)
-	{
-		std::string str;
-		va_list args;
-		va_start(args, num);
 
-		for (sint x = num; x > 0 && str.length() < (uint)BOT_STRLEN_MAX; x--)
-		{
-			str.append(va_arg(args, c_char*));
-		}
-		ret = BotOut(str.c_str());
-	}
-	return ret;
-}
-sint machine::BotOut(c_char* str_)
+sint machine::BOTCInput(std::string* np, carr_64* tdata)
 {
+	if (!tdata)
+	{
+		return -1;
+	}
+	
 	sint h = -1;
 	sint p = LockGMutex(MTX_O, &h);
 
 	if (p > -1)
 	{
-		std::cout << str_ << std::endl;
+		sllint rst = 0;
+		sint chk = '\n';
+		sint spc = ' ';
+		sint tab = '\t';
+		sint trm = '\0';
+		sint x = -1;
+		sint rc = -1;
 
+		while (x > -2 && np->length() < (size_t)BOT_STRLEN_MAX)
+		{
+			rc = std::cin.get();
+
+			if (rc)
+			{
+				if (x < 0)
+				{
+					if (!memcmp((void*)&spc, (void*)&rc, sizeof(sint)) || !memcmp((void*)&tab, (void*)&rc, sizeof(sint)))
+					{
+
+					}
+					else if (!memcmp((void*)&trm, (void*)&rc, sizeof(sint)) || !memcmp((void*)&chk, (void*)&rc, sizeof(sint)))
+					{
+						x = -2;
+					}
+					else
+					{
+						np->push_back(rc);
+						x = 0;
+					}
+				}
+				else if (rc)
+				{
+					if (!memcmp((void*)&chk, (void*)&rc, sizeof(sint)) || !memcmp((void*)&trm, (void*)&rc, sizeof(sint)))
+					{
+						x = -2;
+					}
+					else
+					{
+						np->push_back(rc);
+					}
+				}
+			}
+			else
+			{
+				rst = nsRest(BOT_IO_REST);
+			}
+		}
+		x = GetTimeMS(tdata->carr);
 		if (!h)
 		{
 			h = UnlockGMutex(MTX_O);
@@ -13087,80 +16546,68 @@ sint machine::BotOut(c_char* str_)
 	}
 	return -1;
 }
-sint machine::SOutput(c_char* op_, sint o)
-{
-	carr_64 tdata;
-	sint xc = GetTimeMS(tdata.carr);
-	carr_256 instr;
-	sint rc = GetPCliMem(BOT_C_PRIV, &xc);
-
-	if (xc > 99)
-	{
-		xc = bot_sprintf(instr.carr, instr.siz, " [%i][%s] ", lid, ptn.c_str());
-	}
-	else
-	{
-		xc = bot_sprintf(instr.carr, instr.siz, " [%i][machine] ", lid);
-	}
-
-	std::string str;
-	str.append(tdata.carr);
-	str.append(instr.carr);
-	str.append(op_);
-
-	if (log_to[0] || log_to[1])
-	{
-		xc = LogPut(str.c_str(), o);
-	}
-
-	if (!o)
-	{
-		return BotOut(str.c_str());
-	}
-	return xc;
-}
-
-sint machine::Input(std::string* np, bool itrp)
+sint machine::Input(c_char* prp, std::string* np, bool itrp)
 {
 	if (debug_lvl >= 100 && debug_m)
 	{
 		carr_128 xcar;
-		sint op = bot_sprintf(xcar.carr, xcar.siz, "::Input(std::string* np(%i), bool itrp(%u))", (sint)np, (uint)itrp);
-		op = SOutput(xcar.carr, 2);
+		sint op = bot_sprintf(xcar.carr, xcar.siz, "::Input(c_char* prp(%i), std::string* np(%i), bool itrp(%u))", (sint)prp, (sint)np, (uint)itrp);
+		op = Output(xcar.carr, 2);
 	}
 	if (!np)
 	{
 		return -1;
 	}
+
+	if (prp)
+	{
+		sint op = Output(prp, 0, false);
+	}
+
+	std::vector<std::string> args;
+	std::vector<std::string> vec;
+	sint ret = vtool.CombV(&args, VTV_VSTR, VTV_VCHAR, &msy.nrts_sep, VTV_CCAR, "/#", VTV_MAX);
+	carr_64 tdata;
 	carr_512 instr;
 	std::string nstr;
 	std::string str;
-	carr_64 tdata;
 	sint xc = GetPCliMem(BOT_C_NAME, &nstr);
-	sint x = -1;
-	std::getline(std::cin, *np);
-	x = GetTimeMS(tdata.carr);
+	sint x = BOTCInput(np, &tdata);
 
-	if (np->length() < BOT_STRLEN_MAX)
+	if (np->length() > 1)
 	{
-		if (itrp)
+		if (!strcmp(np->substr(0, 2).c_str(), "/#"))
 		{
-			xc = InterpretInput(np);
+			ret = ArgSep(&vec, false, 0, np->length() - 1, np->c_str(), BOT_RTV_VSTR, &args);
+			np->clear();
+			ret = Command(&vec);
+			np->append(stool.VToStr(&vec, " ").c_str());
 		}
-		if (nstr.empty())
+		else
 		{
-			x = GetPCliMem(BOT_C_NAME, &nstr);
+			ret = ArgSep(&vec, true, 0, np->length() - 1, np->c_str(), BOT_RTV_VSTR, &args);
 		}
-		x = bot_sprintf(instr.carr, instr.siz, "%s [%i][%s] ", tdata.carr, lid, nstr.c_str());
-		str.append(instr.carr);
-		str.append(np->c_str());
-		x = LogPut(str.c_str(), 0);
-		x = LogPut(str.c_str(), 2);
 	}
 	else
 	{
-		np->clear();
+		vec.push_back(*np);
 	}
+
+	if (itrp)
+	{
+		
+	}
+
+	if (nstr.empty())
+	{
+		x = GetPCliMem(BOT_C_NAME, &nstr);
+	}
+
+	x = bot_sprintf(instr.carr, instr.siz, "%s [%i][%s] ", tdata.carr, lid, nstr.c_str());
+	str.append(instr.carr);
+	str.append(np->c_str());
+	x = LogPut(str.c_str(), 0);
+	x = LogPut(str.c_str(), 2);
 	str.clear();
 	nstr.clear();
 	bot_strclr(tdata.carr);
@@ -13168,77 +16615,18 @@ sint machine::Input(std::string* np, bool itrp)
 	return xc;
 }
 
-sint machine::InterpretInput(std::string *input_)
+sint machine::BOTConsole(c_char* prp)
 {
 	if (debug_lvl >= 100 && debug_m)
 	{
-		carr_64 outp;
-		sint op = bot_sprintf(outp.carr, outp.siz, "::InterpretInput(std::string *input_(%i))", (sint)input_);
-		op = SOutput(outp.carr, 2);
+		carr_64 xcar;
+		sint op = bot_sprintf(xcar.carr, xcar.siz, "::BOTConsole(c_char* prp(%i))", (sint)prp);
+		op = Output(xcar.carr, 2);
 	}
-
-	if (!input_)
-	{
-		return -1;
-	}
-
-	sint ret = 0;
-
-	if (input_->length() > 2)
-	{
-		_char com_c[3]{ '/', '#', '\0' };
-
-		if (!memcmp((void*)&input_->at(0), (void*)&com_c[0], 1) && !memcmp((void*)&input_->at(1), (void*)&com_c[1], 1))
-		{
-			std::vector<std::string> vec;
-			_char c = ' ';
-			carr_4 xc(" ");
-			ret = ArgSep(&vec, input_->c_str(), &xc);
-			//ret = stool.SeparateStrByChar(input_->c_str(), c, &vec);
-			input_->clear();
-			ret = Command(&vec);
-			input_->append(stool.VToStr((std::vector<std::string>*)&vec, " ").c_str());
-		}
-	}
-	return ret;
-}
-
-sint machine::BOTConsole()
-{
-	if (debug_lvl >= 100 && debug_m)
-	{
-		sint op = SOutput("::BOTConsole()", 2);
-	}
-	carr_512 instr;
-	std::string nstr;
-	std::string str;
+	
 	std::string np;
-	carr_64 tdata;
-	sint xc = GetPCliMem(BOT_C_NAME, &nstr);
-	sint x = -1;
-	std::getline(std::cin, np);
-	x = GetTimeMS(tdata.carr);
-
-	if (np.length() < BOT_STRLEN_MAX)
-	{
-		xc = InterpretInput(&np);
-
-		if (nstr.empty())
-		{
-			x = GetPCliMem(BOT_C_NAME, &nstr);
-		}
-		x = bot_sprintf(instr.carr, instr.siz, "%s [%i][%s] ", tdata.carr, lid, nstr.c_str());
-		str.append(instr.carr);
-		str.append(np.c_str());
-		x = LogPut(str.c_str(), 0);
-		x = LogPut(str.c_str(), 2);
-	}
-	np.clear();
-	str.clear();
-	nstr.clear();
-	bot_strclr(tdata.carr);
-	bot_strclr(instr.carr);
-	return xc;
+	sint rc = Input(prp, &np);
+	return rc;
 }
 
 // Str Manip
@@ -13249,7 +16637,7 @@ std::string machine::LEncStrI(c_char* str_, sint opt)
 	{
 		carr_128 ncar;
 		sint oc = bot_sprintf(ncar.carr, ncar.siz, "LEncStrI(string *str_(%i), sint opt(%i))", (sint)str_, opt);
-		oc = SOutput(ncar.carr, 2);
+		oc = Output(ncar.carr, 2);
 	}
 
 	std::string s;
@@ -13275,759 +16663,26 @@ std::string machine::LEncStrI(c_char* str_, sint opt)
 	{
 		nstr.append("enclosed string: ");
 		nstr.append(s.c_str());
-		sint oc = SOutput(nstr.c_str(), 2);
+		sint oc = Output(nstr.c_str(), 2);
 	}
 	return s;
-}
-sint machine::OrdLocs(std::vector<size_t>* ll_, std::vector<size_t>* locs_, c_char* str_)
-{
-	if (debug_lvl >= 1100 && debug_m)
-	{
-		carr_256 outp;
-		sint op = bot_sprintf(outp.carr, outp.siz, "::OrdLocs(vector<size_t>* ll_(%i), vector<size_t>* locs_(%i), c_char* str_(%u))", (sint)ll_, (sint)locs_, (sint)str_);
-		op = SOutput(outp.carr, 2);
-
-		if (debug_lvl >= 1100 && str_)
-		{
-			op = SOutput(str_, 2);
-		}
-	}
-
-	if (!ll_ || !locs_ || !str_)
-	{
-		return -1;
-	}
-
-	size_t slen = strlen(str_);
-
-	for (size_t siz = 0; siz < slen; siz++)
-	{
-		sint xc = vtool.VIV(&nrts_ord, &str_[siz]);
-
-		if (xc > -1)
-		{
-			sint lx = LitEnc(siz, ll_, str_);
-
-			if (lx < 0)
-			{
-				locs_->push_back(siz);
-				bool found = false;
-
-				for (size_t nsiz = siz + 1; nsiz < slen; nsiz++)
-				{
-					if (!memcmp(&str_[nsiz], &nrts_ord_[xc], 1))
-					{
-						lx = LitEnc(nsiz, ll_, str_);
-
-						if (lx < 0)
-						{
-							locs_->push_back(nsiz);
-							siz = nsiz + 1;
-							nsiz = slen;
-							found = true;
-						}
-					}
-				}
-				if (!found)
-				{
-					return -1;
-				}
-			}
-		}
-	}
-
-	if (!locs_->empty())
-	{
-		if (debug_lvl >= 1100 && debug_m)
-		{
-			carr_1024 nump;
-			sint oc = stool.VToStr(locs_, nump.carr, nump.siz);
-			carr_2048 outp;
-			sint op = bot_sprintf(outp.carr, outp.siz, "OrdLocs: %s", nump.carr);
-			oc = SOutput(outp.carr, 2);
-		}
-		return 0;
-	}
-	if (debug_lvl >= 1100 && debug_m)
-	{
-		sint oc = SOutput("no ordinals found.", 2);
-	}
-	return -1;
-}
-sint machine::OrdEnc(size_t at_loc, std::vector<size_t>* ll_, std::vector<size_t>* locs_, c_char* str_)
-{
-	if (debug_lvl >= 1100 && debug_m)
-	{
-		carr_256 outp;
-		sint op = bot_sprintf(outp.carr, outp.siz, "::OrdEnc(size_t at_loc(%u), vector<size_t>* ll_(%i), vector<size_t>* locs_(%i), c_char* str_(%i))", at_loc, (sint)ll_, (sint)locs_, (sint)str_);
-		op = SOutput(outp.carr, 2);
-
-		if (debug_lvl >= 720 && str_)
-		{
-			op = SOutput(str_, 2);
-		}
-	}
-
-	if (!ll_ || !locs_ || !str_)
-	{
-		return -1;
-	}
-
-	if (locs_->empty())
-	{
-		sint o = OrdLocs(ll_, locs_, str_);
-	}
-
-	sint ret = -1;
-
-	for (size_t siz = 1; siz < locs_->size(); siz += 2)
-	{
-		if (at_loc > locs_->at(siz - 1) && at_loc < locs_->at(siz))
-		{
-			if (debug_lvl >= 1100 && debug_m)
-			{
-				carr_128 outp;
-				sint op = bot_sprintf(outp.carr, outp.siz, " \"%c\" enclosed between: %u \"%c\" and %u \"%c\"", str_[at_loc], locs_->at(siz - 1), str_[locs_->at(siz - 1)], locs_->at(siz), str_[locs_->at(siz - 1)]);
-				op = SOutput(outp.carr, 2);
-			}
-			ret = 0;
-			siz = locs_->size();
-		}
-	}
-
-	if (debug_lvl >= 1100 && debug_m)
-	{
-		carr_32 outp;
-		sint op = bot_sprintf(outp.carr, outp.siz, "OrdEnc: %i", ret);
-		op = SOutput(outp.carr, 2);
-	}
-	return ret;
-}
-sint machine::LitLocs(std::vector<size_t>* locs_, c_char* str_)
-{
-	if (debug_lvl >= 1100 && debug_m)
-	{
-		carr_128 outp;
-		sint op = bot_sprintf(outp.carr, outp.siz, "::LitLocs(vector<size_t>* locs_(%i), c_char* str_(%i))", (sint)locs_, (sint)str_);
-		op = SOutput(outp.carr, 2);
-
-		if (debug_lvl >= 720 && str_)
-		{
-			op = SOutput(str_, 2);
-		}
-	}
-
-	if (!locs_ || !str_)
-	{
-		return -1;
-	}
-
-	size_t slen = strlen(str_);
-	sint cur_lit = -1;
-
-	for (size_t siz = 0; siz < slen; siz++)
-	{
-		if (cur_lit > -1)
-		{
-			if (!memcmp(&str_[siz], &nrts_lit[cur_lit], 1))
-			{
-				locs_->push_back(siz);
-				cur_lit = -1;
-			}
-		}
-		else
-		{
-			for (size_t nsiz = 0; nsiz < nrts_lit.size(); nsiz++)
-			{
-				if (!memcmp(&str_[siz], &nrts_lit[nsiz], 1))
-				{
-					locs_->push_back(siz);
-					cur_lit = (sint)nsiz;
-					nsiz = nrts_lit.size();
-				}
-			}
-		}
-	}
-	if (!locs_->empty())
-	{
-		if (debug_lvl >= 1100 && debug_m)
-		{
-			carr_1024 nump;
-			sint oc = stool.VToStr(locs_, nump.carr, nump.siz);
-			carr_2048 outp;
-			sint op = bot_sprintf(outp.carr, outp.siz, "LitLocs: %s", nump.carr);
-			oc = SOutput(outp.carr, 2);
-		}
-		return 0;
-	}
-	if (debug_lvl >= 1100 && debug_m)
-	{
-		sint oc = SOutput("no literals.", 2);
-	}
-	return -1;
-}
-sint machine::LitEnc(size_t at_loc, std::vector<size_t>* locs_, c_char* str_)
-{
-	if (debug_lvl >= 1100 && debug_m)
-	{
-		carr_256 outp;
-		sint op = bot_sprintf(outp.carr, outp.siz, "::LitEnc(size_t at_loc(%u), vector<size_t>* locs_(%i), c_char* str_(%i))", at_loc, (sint)locs_, (sint)str_);
-		op = SOutput(outp.carr, 2);
-
-		if (debug_lvl >= 130 && str_)
-		{
-			op = SOutput(str_, 2);
-		}
-	}
-	if (!locs_ || !str_)
-	{
-		return -1;
-	}
-	if (locs_->empty())
-	{
-		LitLocs(locs_, str_);
-	}
-
-	sint ret = -1;
-
-	for (size_t siz = 1; siz < locs_->size(); siz += 2)
-	{
-		if (at_loc > locs_->at(siz - 1) && at_loc < locs_->at(siz))
-		{
-			if (debug_lvl >= 1100 && debug_m)
-			{
-				carr_128 outp;
-				sint op = bot_sprintf(outp.carr, outp.siz, " \"%c\" enclosed between: %u \"%c\" and %u \"%c\"", str_[at_loc], locs_->at(siz - 1), str_[locs_->at(siz - 1)], locs_->at(siz), str_[locs_->at(siz - 1)]);
-				op = SOutput(outp.carr, 2);
-			}
-			ret = 0;
-			siz = locs_->size();
-		}
-	}
-
-	if (debug_lvl >= 700 && debug_m)
-	{
-		carr_32 outp;
-		sint op = bot_sprintf(outp.carr, outp.siz, "LitEnc: %i", ret);
-		op = SOutput(outp.carr, 2);
-	}
-	return ret;
-}
-bool machine::XEnclosedInY(std::vector<size_t>* ll_, std::string* stmts_, sint sc_loc, sint x_loc, std::string* fy_char)
-{
-	if (debug_lvl >= 1100 && debug_m)
-	{
-		carr_256 outp;
-		sint op = bot_sprintf(outp.carr, outp.siz, "::XenclosedInY(vector<size_t>* ll_(%i), string* statements(%i), sint sc_loc(%i), sint x_loc(%i), string* fy_char(%i))", (sint)ll_, (sint)stmts_, sc_loc, x_loc, (sint)fy_char);
-		op = SOutput(outp.carr, 2);
-
-		if (debug_lvl >= 1100 && stmts_)
-		{
-			op = SOutput(stmts_->c_str(), 2);
-		}
-	}
-
-	if (!ll_ || !stmts_ || sc_loc < 0 || x_loc < 0 || !fy_char)
-	{
-		return false;
-	}
-
-	if (ll_->empty())
-	{
-		LitLocs(ll_, stmts_->c_str());
-	}
-
-	sint opens = 0;
-	std::string by_char, lit_char_a, lit_char_b;
-	lit_char_a.append("\"");
-	lit_char_b.append("'");
-
-	if (!strcmp(fy_char->c_str(), "(")) { by_char.append(")"); }
-	else if (!strcmp(fy_char->c_str(), "{")) { by_char.append("}"); }
-	else if (!strcmp(fy_char->c_str(), "<")) { by_char.append(">"); }
-	else if (!strcmp(fy_char->c_str(), "[")) { by_char.append("]"); }
-	else
-	{
-		sint x = LitEnc(x_loc, ll_, stmts_->c_str());
-		if (!x)
-		{
-			return true;
-		}
-		return false;
-	}
-
-
-	bool y = false;
-	sint by_loc = -1;
-	sint old_fy_loc = -1;
-	sint fy_loc = stmts_->find(*fy_char, old_fy_loc + 1);
-
-	while (fy_loc > old_fy_loc && fy_loc < x_loc)
-	{
-		if (LitEnc(fy_loc, ll_, stmts_->c_str()))
-		{
-			opens++;
-
-			if (debug_lvl >= 1100 && debug_m)
-			{
-				carr_256 outp;
-				sint op = bot_sprintf(outp.carr, outp.siz, "opener found at:%i opens:%i", fy_loc, opens);
-				op = SOutput(outp.carr, 2);
-			}
-
-			by_loc = stmts_->find(by_char, fy_loc + 1);
-			bool done = false;
-			sint nloc = by_loc;
-
-			while (!done)
-			{
-				if (nloc > fy_loc && nloc < sc_loc)
-				{
-					if (nloc == x_loc)
-					{
-						opens--;
-
-						if (debug_lvl >= 1100 && debug_m)
-						{
-							carr_256 outp;
-							sint op = bot_sprintf(outp.carr, outp.siz, "closer is our _char at:%i opens:%i", x_loc, opens);
-							op = SOutput(outp.carr, 2);
-						}
-
-						if (opens > 0)
-						{
-							return true;
-						}
-						else
-						{
-							return false;
-						}
-					}
-					else
-					{
-						if (LitEnc(nloc, ll_, stmts_->c_str()))
-						{
-							by_loc = nloc;
-
-							if (nloc < x_loc)
-							{
-								opens--;
-
-								if (debug_lvl >= 1100 && debug_m)
-								{
-									carr_256 outp;
-									sint op = bot_sprintf(outp.carr, outp.siz, "closer is before our _char at:%i opens:%i", x_loc, opens);
-									op = SOutput(outp.carr, 2);
-								}
-								nloc = stmts_->find(by_char, by_loc + 1);
-							}
-							else
-							{
-								if (fy_loc < x_loc && nloc > x_loc)
-								{
-									y = true;
-								}
-
-								if (debug_lvl >= 1100 && debug_m)
-								{
-									carr_256 outp;
-									sint op = bot_sprintf(outp.carr, outp.siz, "closer is after our _char at:%i opens:%i", nloc, opens);
-									op = SOutput(outp.carr, 2);
-								}
-								done = true;
-							}
-						}
-						else
-						{
-							if (debug_lvl >= 1100 && debug_m)
-							{
-								carr_256 outp;
-								sint op = bot_sprintf(outp.carr, outp.siz, "looking for another closer after:%i opens:%i", nloc + 1, opens);
-								op = SOutput(outp.carr, 2);
-							}
-							nloc = stmts_->find(by_char, by_loc + 1);
-						}
-					}
-				}
-				else
-				{
-					if (debug_lvl >= 1100 && debug_m)
-					{
-						carr_256 outp;
-						sint op = bot_sprintf(outp.carr, outp.siz, "no closer was found, opens:%i", opens);
-						op = SOutput(outp.carr, 2);
-					}
-					done = true;
-				}
-			}
-		}
-		old_fy_loc = fy_loc;
-		fy_loc = stmts_->find(*fy_char, fy_loc + 1);
-	}
-
-	if (opens > 0 || y)
-	{
-		if (debug_lvl >= 1100 && debug_m)
-		{
-			carr_64 outp;
-			sint op = bot_sprintf(outp.carr, outp.siz, "a \"%s\" before this \"%c\" was open, opens:%i", fy_char->c_str(), stmts_->at(x_loc), opens);
-			op = SOutput(outp.carr, 2);
-		}
-		y = true;
-	}
-	else
-	{
-		if (debug_lvl >= 1100 && debug_m)
-		{
-			carr_64 outp;
-			sint op = bot_sprintf(outp.carr, outp.siz, "\"%c\" not enclosed by \"%s\" (2)", stmts_->at(x_loc), fy_char->c_str());
-			op = SOutput(outp.carr, 2);
-		}
-	}
-	return y;
-}
-bool machine::XEnclosedInY(std::vector<size_t>* ll_, c_char* stmts_, sint sc_loc, sint x_loc, _char fy_char)
-{
-	sint opens = 0;
-
-	if (debug_lvl >= 1100 && debug_m)
-	{
-		carr_256 outp;
-		sint op = bot_sprintf(outp.carr, outp.siz, "::XenclosedInY(vector<size_t>* ll_(%i), string* statements(%i), sint sc_loc(%i), sint x_loc(%i), string* fy_char \"%c\")", (sint)ll_, (sint)stmts_, sc_loc, x_loc, fy_char);
-		op = SOutput(outp.carr, 2);
-
-		if (debug_lvl >= 1100 && stmts_)
-		{
-			op = SOutput(stmts_, 2);
-		}
-	}
-	if (!ll_ || sc_loc < 0 || x_loc < 0 || fy_char == '\0')
-	{
-		return false;
-	}
-	if (ll_->empty())
-	{
-		LitLocs(ll_, stmts_);
-	}
-
-	_char by_char;
-
-	if (fy_char == '(') { by_char = ')'; }
-	else if (fy_char == '{') { by_char = '}'; }
-	else if (fy_char == '<') { by_char = '>'; }
-	else if (fy_char == '[') { by_char = ']'; }
-	else
-	{
-		sint x = LitEnc(x_loc, ll_, stmts_);
-		if (!x) { return true; }
-		return false;
-	}
-
-	bool y = false;
-	sint by_loc = -1;
-	sint old_fy_loc = -1;
-	sint fy_loc = stool.FindInStr(fy_char, stmts_, old_fy_loc + 1, sc_loc, true);
-
-	while (fy_loc > old_fy_loc && fy_loc < x_loc)
-	{
-		if (LitEnc(fy_loc, ll_, stmts_))
-		{
-			opens++;
-
-			if (debug_lvl >= 1100 && debug_m)
-			{
-				carr_256 outp;
-				sint op = bot_sprintf(outp.carr, outp.siz, "opener found at:%i opens:%i", fy_loc, opens);
-				op = SOutput(outp.carr, 2);
-			}
-
-			by_loc = stool.FindInStr(by_char, stmts_, fy_loc + 1, true);
-			bool done = false;
-			sint nloc = by_loc;
-
-			while (!done)
-			{
-				if (nloc > fy_loc && nloc < sc_loc)
-				{
-					if (nloc == x_loc)
-					{
-						opens--;
-
-						if (debug_lvl >= 1100 && debug_m)
-						{
-							carr_256 outp;
-							sint op = bot_sprintf(outp.carr, outp.siz, "closer is our _char at:%i opens:%i", x_loc, opens);
-							op = SOutput(outp.carr, 2);
-						}
-
-						if (opens > 0)
-						{
-							return true;
-						}
-						else
-						{
-							return false;
-						}
-					}
-					else
-					{
-						if (LitEnc(nloc, ll_, stmts_))
-						{
-							by_loc = nloc;
-
-							if (nloc < x_loc)
-							{
-								opens--;
-
-								if (debug_lvl >= 1100 && debug_m)
-								{
-									carr_256 outp;
-									sint op = bot_sprintf(outp.carr, outp.siz, "closer is before our _char at:%i opens:%i", x_loc, opens);
-									op = SOutput(outp.carr, 2);
-								}
-								nloc = stool.FindInStr(by_char, stmts_, by_loc + 1, true);
-							}
-							else
-							{
-								if (fy_loc < x_loc && nloc > x_loc)
-								{
-									y = true;
-								}
-
-								if (debug_lvl >= 1100 && debug_m)
-								{
-									carr_256 outp;
-									sint op = bot_sprintf(outp.carr, outp.siz, "closer is after our _char at:%i opens:%i", nloc, opens);
-									op = SOutput(outp.carr, 2);
-								}
-								done = true;
-							}
-						}
-						else
-						{
-							if (debug_lvl >= 1100 && debug_m)
-							{
-								carr_256 outp;
-								sint op = bot_sprintf(outp.carr, outp.siz, "looking for another closer after:%i opens:%i", nloc + 1, opens);
-								op = SOutput(outp.carr, 2);
-							}
-							nloc = stool.FindInStr(by_char, stmts_, by_loc + 1, true);
-						}
-					}
-				}
-				else
-				{
-					if (debug_lvl >= 1100 && debug_m)
-					{
-						carr_256 outp;
-						sint op = bot_sprintf(outp.carr, outp.siz, "no closer was found, opens:%i", opens);
-						op = SOutput(outp.carr, 2);
-					}
-					done = true;
-				}
-			}
-		}
-		old_fy_loc = fy_loc;
-		fy_loc = stool.FindInStr(fy_char, stmts_, fy_loc + 1, true);
-	}
-
-	if (opens > 0 || y)
-	{
-		if (debug_lvl >= 1100 && debug_m)
-		{
-			carr_64 outp;
-			sint op = bot_sprintf(outp.carr, outp.siz, "a \"%c\" before this \"%c\" was open", fy_char, stmts_[x_loc]);
-			op = SOutput(outp.carr, 2);
-		}
-
-		y = true;
-	}
-	else
-	{
-		if (debug_lvl >= 1100 && debug_m)
-		{
-			carr_64 outp;
-			sint op = bot_sprintf(outp.carr, outp.siz, "\"%c\" not enclosed by \"%c\" (4)", stmts_[x_loc], fy_char);
-			op = SOutput(outp.carr, 2);
-		}
-	}
-
-	return y;
 }
 
 // SQL statement manip
 
-sint machine::SeparateSQL(std::string* stmts_, std::vector<std::string>* vec_)
-{
-	if (debug_lvl >= 750 && debug_m)
-	{
-		carr_256 outp;
-		sint op = bot_sprintf(outp.carr, outp.siz, "::SeparateSQL(string* stmts_(%i), vec_(%i))", (sint)stmts_, (sint)vec_);
-		op = SOutput(outp.carr, 2);
-
-		if (debug_lvl >= 80 && stmts_)
-		{
-			op = SOutput(stmts_->c_str(), 2);
-		}
-	}
-
-	if (!stmts_ || !vec_)
-	{
-		return -1;
-	}
-	std::vector<size_t> litlocs;
-	LitLocs(&litlocs, stmts_->c_str());
-	bool done = false;
-	sint sel_loc = 0;
-	sint sc_loc = 0;
-	sint sc_loci = 0;
-
-	while (!done)
-	{
-		if (!stmts_->empty())
-		{
-			sc_loc = stmts_->find(";", sc_loc + 1);
-			sint lenforloc = (sint)stmts_->length() - 1;
-
-			if (sc_loc > 0)
-			{
-				sint last_sc_loc = stmts_->find_last_of(";");
-
-				if (last_sc_loc == lenforloc)
-				{
-					sint bpar_loc = 0;
-					sint fpar_loc = stmts_->find("(");
-					sint pos_fpar_loc = fpar_loc;
-					bool closed = true;
-					sint fpars = 0;
-					sint bpars = 0;
-
-					while (pos_fpar_loc > 0 && pos_fpar_loc < sc_loc)
-					{
-						bool par;
-
-						if (!LitEnc(pos_fpar_loc, &litlocs, stmts_->c_str()))
-						{
-							par = true;
-						}
-
-						if (par)
-						{
-							fpars++;
-						}
-
-						bpar_loc = stmts_->find(")", bpar_loc + 1);
-
-						if (bpar_loc > pos_fpar_loc && bpar_loc < sc_loc)
-						{
-							par = true;
-
-							if (!LitEnc(bpar_loc, &litlocs, stmts_->c_str()))
-							{
-								par = true;
-							}
-
-							if (par)
-							{
-								bpars++;
-							}
-						}
-						else
-						{
-							par = false;
-						}
-
-						pos_fpar_loc = stmts_->find("(", pos_fpar_loc + 1);
-					}
-
-					if (bpars < fpars)
-					{
-						closed = false;
-					}
-
-					sint q_loc = stmts_->find("'");
-					bool sq = false;
-
-					if (q_loc > 0 && q_loc < sc_loc)
-					{
-						sint quotes = 0;
-						sint pos_q_loc = q_loc;
-
-						if (!XEnclosedInY(&litlocs, stmts_->c_str(), sc_loc, q_loc, '('))
-						{
-							if (LitEnc(q_loc, &litlocs, stmts_->c_str()))
-							{
-								sq = true;
-							}
-						}
-					}
-
-					q_loc = stmts_->find("\"");
-					bool dq = false;
-
-					if (q_loc > 0 && q_loc < sc_loc)
-					{
-						sint quotes = 0;
-						sint pos_q_loc = q_loc;
-
-						if (!XEnclosedInY(&litlocs, stmts_->c_str(), sc_loc, q_loc, '('))
-						{
-							if (LitEnc(pos_fpar_loc, &litlocs, stmts_->c_str()))
-							{
-								dq = true;
-							}
-						}
-					}
-
-					if ((!sq && !dq && closed))
-					{
-						std::string sep_str = stmts_->substr(0, sc_loc + 1);
-						vec_->push_back(sep_str);
-						stmts_->erase(0, sc_loc + 1);
-						sc_loc = 0;
-					}
-				}
-				else
-				{
-					done = true;
-					vec_->push_back("FAIL2"); // for now, attempt a repair later when we can read statement content
-				}
-			} // i believe we.may not.reach done if there is a ; in quotes but no ; at the end
-			else
-			{
-				done = true;
-				vec_->push_back("FAIL3"); // found no semi colons
-			}
-		}
-		else
-		{
-			done = true;
-		}
-	}
-
-	if (debug_lvl >= 750 && debug_m)
-	{
-		for (uint ct = 0; ct < (sint)vec_->size(); ct++)
-		{
-			sint oc = SOutput(vec_->at(ct).c_str(), 2);
-		}
-		sint oc = SOutput("Separate SQL done.", 2);
-	}
-	return -1;
-}
 sint machine::AnalyzeStmt(BOT_STMT *t_)
 {
 	if (debug_lvl >= 110 && debug_m)
 	{
-		carr_256 outp;
+		carr_48 outp;
 		sint op = bot_sprintf(outp.carr, outp.siz, "::AnalyzeStmt(BOT_STMT *t_(%i))", (sint)t_);
-		op = SOutput(outp.carr, 2);
+		op = Output(outp.carr, 2);
 
 		if (debug_lvl >= 120 && t_)
 		{
 			carr_4096 xutp;
 			op = bot_sprintf(xutp.carr, xutp.siz, "stmt(\"%s\")", t_->stmt.c_str());
-			op = SOutput(xutp.carr, 2);
+			op = Output(xutp.carr, 2);
 		}
 	}
 
@@ -14036,976 +16691,195 @@ sint machine::AnalyzeStmt(BOT_STMT *t_)
 		return -1;
 	}
 
-	sint lim = -1;
-	sint ele = -1;
-
-	if (!t_->stmt.empty())
-	{
-		sint x = 0;
-		sint findx = stool.FindVInStr(&sql_trans_keywords, t_->stmt.c_str(), &x, lim, &ele, lim);
-
-		if (x > -1)
-		{
-			t_->it_type = ele;
-		}
-		else
-		{
-			if (debug_lvl >= 10 && debug_m)
-			{
-				sint oc = SOutput("found no type", 2);
-			}
-			return -1;
-		}
-	}
-	else
+	if (t_->stmt.empty())
 	{
 		return -1;
 	}
+	std::string stmt(t_->stmt.c_str());
+	t_->Clear();
+	std::vector<std::string> rets, args;
+	sint xc = vtool.CombV(&args, VTV_VSTR, VTV_CCAR, " ", VTV_CCAR, "\t", VTV_VSTR, &msy.sql_trans_keywords, VTV_VSTR, &msy.sql_cspec_keywords, VTV_MAX);
+	xc = ArgSep(&rets, true, 0, stmt.length() - 1, stmt.c_str(), BOT_RTV_VSTR, &args);
 
-	std::string snip;
-	std::vector<size_t> litlocs;
-	sint at_loc = LitLocs(&litlocs, t_->stmt.c_str());
-	std::vector<size_t> o_locs;
-	at_loc = OrdLocs(&litlocs, &o_locs, t_->stmt.c_str());
-	sint last_targ_loc = -1;
-	at_loc = 0;
-	sint spec_loc = 0;
-	sint x = (sint)strlen(sql_trans_keywords[t_->it_type]);
-	ele = -1;
-	sint findx = stool.FindVInStr(&sql_cspec_keywords, t_->stmt.c_str(), &spec_loc, lim, &ele, lim);
-	findx = stool.FindVInStr(&sql_obj_qual_keywords, t_->stmt.c_str(), &x, lim, &ele, lim);
+	if (xc > -1)
+	{
+		args.clear();
 
-	if (x > -1)
-	{
-		t_->ospec = ele;
-		x += (sint)strlen(sql_obj_qual_keywords[ele]);
-	}
-	else
-	{
-		x = (sint)strlen(sql_trans_keywords[t_->it_type]);
-	}
-
-	if (!o_locs.empty())
-	{
-		if (strlen(sql_trans_keywords[t_->it_type]) - 1 < o_locs[0])
+		for (size_t x = 0; x < rets.size(); x++)
 		{
-			snip.append(t_->stmt.substr(strlen(sql_trans_keywords[t_->it_type]), o_locs[0] - strlen(sql_trans_keywords[t_->it_type])));
-		}
-	}
-	else
-	{
-		snip.append(t_->stmt);
-	}
-
-	if (snip.empty())
-	{
-		if (debug_lvl >= 1 && debug_m)
-		{
-			sint oc = SOutput("snip was empty(), snip here should be to first ordinal encloser or the whole stmt", 2);
-		}
-		return -1;
-	}
-
-	litlocs.clear();
-	sint xv = LitLocs(&litlocs, snip.c_str());
-	xv = 0;
-	sint yv = 1;
-	bool open = false;
-	bool end_stmt = false;
-
-	while (!snip.empty())
-	{
-		if (debug_lvl >= 110 && debug_m)
-		{
-			std::string output;
-			output.append("snip: \"");
-			output.append(snip);
-			output.append("\"");
-			sint oc = SOutput(output.c_str(), 2);
-		}
-
-		x = 0;
-		sint altx = x;
-
-		if (!open)
-		{
-			if (t_->it_type == 3 || t_->it_type == 5 || t_->it_type == 7 || t_->it_type == 9 || t_->it_type == 10)
+			if (strcmp(" ", rets[x].c_str()) && strcmp("\t", rets[x].c_str()))
 			{
-				findx = stool.FindVInStr(&sql_cond_qual_keywords, snip.c_str(), &altx, lim, &ele, lim);
-
-				if (altx > -1)
-				{
-					t_->ifex = ele;
-					altx += (sint)strlen(sql_cond_qual_keywords[ele]);
-					x = altx;
-				}
-				else
-				{
-					altx = x;
-				}
-
-				findx = stool.FindVInStr(&sql_obj_keywords, snip.c_str(), &altx, lim, &ele, lim);
-
-				if (altx > -1)
-				{
-					altx += (sint)strlen(sql_obj_keywords[ele]);
-					x = altx;
-				}
-				else
-				{
-					altx = x;
-				}
+				args.push_back(rets[x]);
 			}
-			else if ((!t_->it_type || t_->it_type == 4) && altx < spec_loc)
+			rets[x].clear();
+		}
+		rets.clear();
+		t_->it_type = vtool.VIV(&msy.sql_trans_keywords, args[0].c_str());
+
+		if (t_->it_type > -1)
+		{
+			switch (t_->it_type)
 			{
-				findx = stool.FindInStr("FROM", snip.c_str(), altx, lim);
-
-				if (findx > -1)
+			case 0:
+			{
+				if (args.size() > 1)
 				{
-					_char spc = ' ';
-					_char term = '\0';
+					sint rc = ArgSep(&rets, false, 0, args[1].length() - 1, args[1].c_str(), BOT_RTV_VCHAR, &msy.sql_opers_keywords);
+					rc = -1;
+				}
+				break;
+			}
+			case 1:
+			{
+				if (args.size() > 1)
+				{
+					t_->ic_type = 1;
+					sint rc = ArgSep(&rets, false, 0, args[1].length() - 1, args[1].c_str(), BOT_RTV_VCHAR, &msy.sql_opers_keywords);
 
-					while (!memcmp((void*)&snip[x], (void*)&spc, sizeof(spc)) && !memcmp((void*)&snip[x], (void*)&term, sizeof(term)) && x < (sint)snip.length())
+					if (rc > -1)
 					{
-						x++;
-					}
-
-					altx = findx;
-					findx = stool.FindInStr('*', snip.c_str(), x, altx);
-
-					if (findx > -1)
-					{
-						sint xc = vtool.AVTV(&t_->fcols, snip.substr(findx, 1).c_str(), true, true);
-					}
-					else
-					{
-						for (findx = stool.FindInStr(',', snip.c_str(), x, altx); findx > -1 && findx < altx; findx = stool.FindInStr(',', snip.c_str(), x, altx))
+						if (rets.size() > 1)
 						{
-							while (!memcmp((void*)&snip[x], (void*)&spc, sizeof(spc)) && !memcmp((void*)&snip[x], (void*)&term, sizeof(term)) && x < (sint)snip.length())
+							if (!strcmp(rets[1].c_str(), "."))
 							{
-								x++;
+								t_->dbname.append(rets[0].c_str());
 							}
 
-							sint xc = vtool.AVTV(&t_->fcols, CleanPunctuation(snip.substr(x, findx - x).c_str()).c_str(), true, true);
-							x = findx + 1;
-						}
-						x = altx;
-					}
-				}
-				else
-				{
-					altx = x;
-				}
-			}
-			else {}
-
-			findx = stool.FindVInStr(&sql_targ_keywords, snip.c_str(), &altx, lim, &ele, lim);
-
-			if (altx > -1)
-			{
-				t_->targ = ele;
-				altx += (sint)strlen(sql_targ_keywords[ele]);
-				x = altx;
-			}
-			else
-			{
-				altx = x;
-			}
-
-			bool found_db = false;
-
-			for (altx = snip.find('.', altx + 1); altx > -1 && altx < (sint)snip.length(); altx = snip.find('.', altx + 1))
-			{
-				if (LitEnc(altx, &litlocs, snip.c_str()) && !XEnclosedInY(&litlocs, snip.c_str(), (sint)snip.length() - 1, altx, sql_opers_keywords[6]))
-				{
-					found_db = true;
-					std::string cont_name;
-					x = altx;
-					std::vector<std::string> nvec;
-					sint ix = GetElementNames(MTX_DBL, &nvec);
-					ix = (sint)nvec.size() - 1;
-
-					while (ix > -1)
-					{
-						sint loc = altx - (sint)strlen(nvec[ix].c_str());
-
-						if (debug_lvl >= 110 && debug_m)
-						{
-							carr_256 outp;
-							sint op = bot_sprintf(outp.carr, outp.siz, "searching for:\"%s\" from:%i x:%i", nvec[ix].c_str(), loc, x);
-							op = SOutput(outp.carr, 2);
-						}
-
-						if (loc > -1 && loc < x)
-						{
-							sint nloc = snip.find(nvec[ix], loc);
-
-							if (loc == nloc)
+							if (rets.size() > 2)
 							{
-								t_->AddDB(nvec[ix].c_str());
-								nloc = altx + 1;
-								findx = stool.FindVInStr(&sql_opers_keywords, snip.c_str(), &nloc, lim, &ele, lim);
-								BOT_DB ndb(nvec[ix].c_str());
-								ix = GetInVec((void*)&ndb, MTX_DBL, false, false);
-								ix = (sint)ndb.tables.size() - 1;
-
-								while (ix > -1)
+								_char brk = '[';
+								if (!memcmp((void*)&rets[2][0], (void*)&brk, sizeof(_char)))
 								{
-									loc = snip.find(ndb.tables[ix], altx + 1);
-
-									if (loc == altx + 1)
-									{
-										if (nloc > altx && nloc < loc && ele == 4)
-										{
-											cont_name.append(snip.substr(loc, strlen(ndb.tables[ix].c_str())));
-										}
-										ix = -1;
-									}
-									ix--;
+									t_->cont.append(rets[2].substr(1, rets[2].length() - 2).c_str());
 								}
-
-								if (ix == -1 && nloc > -1)
+								else
 								{
-									loc = snip.find(']', nloc + 1);
-
-									if (loc > nloc)
-									{
-										cont_name.append(nloc + 1, (loc - (nloc + 1)));
-									}
+									t_->cont.append(rets[2].c_str());
 								}
-								ix = -1;
-								// get tables for this db
 							}
+							rets.clear();
 						}
-						ix--;
-					}
-
-					if (ix == -1)
-					{
-						std::string str;
-						str.append(snip.substr(0, altx).c_str());
-						t_->AddDB(CleanPunctuation(str.c_str()).c_str());
-					}
-
-					if (altx + 1 < (sint)snip.length())
-					{
-						sint loc = snip.find('[', altx + 1);
-
-						if (loc > -1)
+						else
 						{
-							loc = snip.find(']', altx + 1);
-
-							if (loc > -1)
+							_char brk = '[';
+							if (!memcmp((void*)&rets[0][0], (void*)&brk, sizeof(_char)))
 							{
-								cont_name.append(snip.substr(altx + 1, loc - (altx + 1)).c_str());
+								t_->cont.append(rets[0].substr(1, rets[0].length() - 2).c_str());
 							}
 							else
 							{
-								sint ix = altx + 1;
-								findx = stool.FindVInStr(&sql_opers_keywords, &snip, &ix, lim, &ele, lim);
-
-								if (ix > -1)
-								{
-									std::string str;
-									str.append(snip.substr(altx + 1, ix - (altx + 1)).c_str());
-									cont_name.append(CleanPunctuation(str.c_str()));
-								}
+								t_->cont.append(rets[0].c_str());
 							}
 						}
-						else
-						{
-							sint ix = altx + 1;
-							findx = stool.FindVInStr(&sql_opers_keywords, &snip, &ix, lim, &ele, lim);
+					}
+					rets.clear();
+				}
+				break;
+			}
+			case 2:
+			{
+				if (args.size() > 4)
+				{
+					t_->ic_type = 1;
+					sint rc = ArgSep(&rets, false, 0, args[1].length() - 1, args[1].c_str(), BOT_RTV_VCHAR, &msy.sql_opers_keywords);
 
-							if (ix > -1)
+					if (rc > -1)
+					{
+						if (rets.size() > 1)
+						{
+							t_->dbname.append(rets[0].c_str());
+							_char brk = '[';
+							if (!memcmp((void*)&rets[1][0], (void*)&brk, sizeof(_char)))
 							{
-								std::string str;
-								str.append(snip.substr(altx + 1, ix - (altx + 1)).c_str());
-								cont_name.append(CleanPunctuation(str.c_str()).c_str());
+								t_->cont.append(rets[1].substr(1, rets[1].length() - 2).c_str());
 							}
 							else
 							{
-								std::string str;
-								str.append(snip.substr(altx + 1, (sint)snip.length() - (altx + 1)).c_str());
-								cont_name.append(CleanPunctuation(str.c_str()).c_str());
+								t_->cont.append(rets[1].c_str());
 							}
+							rets.clear();
 						}
-					}
-
-					if (cont_name.empty())
-					{
-						sint dx = VecSize(MTX_DBL) - 1;
-						while (dx > -1)
+						else
 						{
-							BOT_DB ndb;
-							ix = GetVecEle(&ndb, MTX_DBL, dx, false);
-							ix = vtool.VIV(&ndb.tables, snip.substr(1, snip.length() - 2).c_str());
-
-							if (ix > -1)
+							_char brk = '[';
+							if (!memcmp((void*)&rets[0][0], (void*)&brk, sizeof(_char)))
 							{
-								if (!strcmp(t_->dbname.c_str(), ndb.name.c_str()))
-								{
-									t_->AddDB(ndb.name.c_str());
-								}
-								cont_name.append(snip.substr(1, snip.length() - 2).c_str());
-								dx = -1;
-							}
-							dx--;
-						}
-					}
-					ix = t_->AddCont(cont_name.c_str(), 1);
-				}
-			}
-
-			if (!found_db && t_->dbname.empty())
-			{
-				sint cloc = -1;
-				findx = stool.FindVInStr(&sql_cspec_keywords, snip.c_str(), &cloc, lim, &ele, lim);
-				std::string cont_name;
-				altx = snip.find('[', x + 1);
-
-				if (altx > -1 && (altx < spec_loc || spec_loc == -1))
-				{
-					sint ex = snip.find(']', altx + 1);
-
-					if (ex > -1)
-					{
-						cont_name.append(snip.substr(altx + 1, ex - (altx + 1)).c_str());
-					}
-					else
-					{
-						ex = altx + 1;
-						findx = stool.FindVInStr(&sql_opers_keywords, &snip, &ex, lim, &ele, lim);
-
-						if (ex > -1)
-						{
-							cont_name.append(snip.substr(altx + 1, ex - (altx + 1)).c_str());
-						}
-					}
-				}
-				else
-				{
-					altx = x + 1;
-					findx = stool.FindVInStr(&sql_opers_keywords, &snip, &altx, lim, &ele, lim);
-
-					if (altx > -1 && altx != cloc)
-					{
-						cont_name.append(snip.substr(x + 1, altx - (x + 1)).c_str());
-						cont_name = CleanPunctuation(cont_name.c_str());
-					}
-				}
-				if (cont_name.empty() && cloc < 0)
-				{
-					for (sint dx = VecSize(MTX_DBL) - 1; dx > -1; dx--)
-					{
-						BOT_DB ndb;
-						sint ix = GetVecEle(&ndb, MTX_DBL, dx, false);
-						ix = vtool.VIV(&ndb.tables, snip.substr(1, snip.length() - 2).c_str());
-
-						if (ix > -1)
-						{
-							if (!strcmp(t_->dbname.c_str(), ndb.name.c_str()))
-							{
-								t_->AddDB(ndb.name.c_str());
-							}
-							cont_name.append(snip.substr(1, snip.length() - 2).c_str());
-							dx = -1;
-						}
-					}
-
-					sint dx = t_->AddCont(cont_name.c_str(), 1);
-				}
-			}
-
-			findx = stool.FindVInStr(&sql_cspec_keywords, snip.c_str(), &altx, lim, &ele, lim);
-
-			if (altx > -1)
-			{
-				spec_loc = at_loc + altx;
-				t_->cspec = ele;
-				altx += (sint)strlen(sql_cspec_keywords[ele]);
-				x = altx;
-
-				if (ele == 0)
-				{
-					std::string cond;
-
-					while (altx > -1)
-					{
-						findx = stool.FindVInStr(&sql_comp_keywords, snip.c_str(), &altx, lim, &ele, lim);
-
-						if (altx > -1)
-						{
-							cond.append(snip.substr(x + 1, altx - (x + 1)).c_str());
-							cond.append(sql_comp_keywords[ele]);
-							altx += (sint)strlen(sql_comp_keywords[ele]);
-							x = altx;
-
-							if (ele == 0)
-							{
-								altx = snip.find("AND", altx + 1);
-
-								if (altx > -1)
-								{
-									cond.append(snip.substr(x, altx - x).c_str());
-									cond.append("AND");
-									altx += 3;
-									x = altx;
-									findx = stool.FindVInStr(&sql_comp_keywords, snip.c_str(), &altx, lim, &ele, lim);
-
-									if (altx > -1)
-									{
-										cond.append(snip.substr(x, altx - x).c_str());
-										cond.append(sql_comp_keywords[ele]);
-									}
-									else
-									{
-										altx = x;
-									}
-								}
-								else
-								{
-									altx = x;
-								}
-							}
-
-							findx = stool.FindVInStr(&sql_conj_keywords, snip.c_str(), &altx, lim, &ele, lim);
-
-							if (altx > -1)
-							{
-								cond.append(snip.substr(x, altx - x).c_str());
-								cond.append(sql_conj_keywords[ele]);
-								altx += (sint)strlen(sql_conj_keywords[ele]);
-								x = altx;
+								t_->cont.append(rets[0].substr(1, rets[0].length() - 2).c_str());
 							}
 							else
 							{
-								cond.append(snip.substr(x, (sint)snip.length() - (x + 1)).c_str());
+								t_->cont.append(rets[0].c_str());
 							}
 						}
-						else
-						{
-							altx = x;
-						}
+						rets.clear();
+						rc = ArgSep(&t_->cols, false, 0, args[2].length() - 2, args[2].substr(1,args[2].length() - 2).c_str(), BOT_RTV_VCHAR, &msy.sql_opers_keywords);
+						rets.clear();
+						rc = ArgSep(&t_->vals, false, 0, args[4].length() - 2, args[4].substr(1, args[4].length() - 2).c_str(), BOT_RTV_VCHAR, &msy.sql_opers_keywords);
+						rets.clear();
 					}
-					if (!cond.empty())
-					{
-						t_->conds.push_back(cond);
-					}
+					rets.clear();
 				}
-				else if (ele == 1)
-				{
-					if (t_->it_type == 3)
-					{
-
-					}
-					else if (t_->it_type == 9)
-					{
-						findx = stool.FindVInStr(&sql_opers_keywords, &snip, &altx, lim, &ele, lim);
-
-						if (altx > -1)
-						{
-							t_->dbalias.append(snip.substr(x + 1, altx - (x + 1)).c_str());
-						}
-						else
-						{
-							altx = x;
-						}
-					}
-					else {}
-				}
-				else if (ele == 2)
-				{
-					t_->cspec = ele;
-					/* we only use VALUES for INSERT INTO afaik, for BTS() we should only need to know t_->it_type == 2 and that we have listed all our columns,
-					or we are missing a ( or ) for our values*/
-				}
-				else {}
+				break;
 			}
-			else
+			case 3:
 			{
-				altx = x;
+				if (args.size() > 1)
+				{
+					std::vector<std::string> nargs;
+					vtool.CombV(&nargs, VTV_VSTR, VTV_VSTR, &msy.sql_cond_qual_keywords, VTV_VSTR, &msy.sql_obj_qual_keywords, VTV_VSTR, &msy.sql_obj_keywords, VTV_MAX);
+					sint rc = ArgSep(&rets, false, 0, args[1].length() - 1, args[1].c_str(), BOT_RTV_VSTR, &msy.sql_obj_qual_keywords);
+
+					if (rc > -1)
+					{
+						rc = vtool.VIV(&msy.sql_cond_qual_keywords, rets[0].c_str());
+
+						if (rc > -1)
+						{
+
+						}
+					}
+					rets.clear();
+				}
+				break;
+			}
+			case 4:
+			{
+
+				break;
+			}
+			case 5:
+			{
+
+				break;
+			}
+			case 6:
+			{
+
+				break;
+			}
+			case 7:
+			{
+
+				break;
+			}
+			default:
+			{
+				break;
+			}
 			}
 		}
-		else
-		{
-			if (snip[x] == '[')
-			{
-				if (at_loc > last_targ_loc && spec_loc > at_loc)
-				{
-					x++;
-					findx = stool.FindVInStr(&sql_cspec_keywords, snip.c_str(), &x, lim, &ele, lim); // needs sint pointers for which vector member and location in str
-
-					if (x > -1)
-					{
-						if (LitEnc(x, &litlocs, snip.c_str()) && !XEnclosedInY(&litlocs, snip.c_str(), (sint)snip.length() - 1, x, sql_opers_keywords[6]))
-						{
-							spec_loc = at_loc + x;
-							x += (sint)strlen(sql_cspec_keywords[ele]);
-							t_->cspec = ele;
-
-							if (ele == 0)
-							{
-								findx = stool.FindVInStr(&sql_opers_keywords, &snip, &x, lim, &ele, lim);
-
-								while (x > -1)
-								{
-									if (LitEnc(x, &litlocs, snip.c_str()))
-									{
-										if (ele == 1)
-										{
-
-										}
-										else if (ele == 2 || ele == 3)
-										{
-											sint nloc = snip.find(sql_opers_keywords[ele], x + 1);
-
-											if (nloc > -1)
-											{
-												std::string str;
-												str.append(snip.substr(x, nloc - x).c_str());
-												x = nloc + 1;
-												findx = stool.FindVInStr(&sql_comp_keywords, snip.c_str(), &x, lim, &ele, lim, true, false);
-
-												if (x > -1)
-												{
-
-												}
-											}
-										}
-										else if (ele == 4 || ele == 5)
-										{
-											// unless in another statement or in a value we should not run across one of these
-										}
-										else if (ele == 6 || ele == 7)
-										{
-											sint nloc = x;
-
-											if (ele == 7)
-											{
-												nloc--;
-												for (nloc = stool.FindInStr(sql_opers_keywords[6], snip.c_str(), nloc, lim); nloc > -1; )
-												{
-													if (LitEnc(x, &litlocs, snip.c_str()) && !XEnclosedInY(&litlocs, snip.c_str(), (sint)snip.length() - 1, x, sql_opers_keywords[6]))
-													{
-														vtool.AVTV(&t_->conds, snip.substr(nloc, x - nloc).c_str(), false, false);
-														nloc = -1;
-													}
-													else
-													{
-														nloc--;
-														nloc = stool.FindInStr(sql_opers_keywords[6], snip.c_str(), nloc, lim);
-													}
-												}
-											}
-											else
-											{
-												for (nloc = snip.find(sql_opers_keywords[7], nloc + 1); nloc > -1; )
-												{
-													if (LitEnc(x, &litlocs, snip.c_str()) && !XEnclosedInY(&litlocs, snip.c_str(), (sint)snip.length() - 1, x, sql_opers_keywords[6]))
-													{
-														sint addv = vtool.AVTV(&t_->conds, snip.substr(nloc, x - nloc).c_str(), true, true);
-														nloc = -1;
-													}
-													else
-													{
-														nloc = snip.find(sql_opers_keywords[7], (size_t)nloc - 1);
-													}
-												}
-											}
-										}
-										else if (ele == 8 || ele == 9)
-										{
-											std::string ncar;
-											ncar.push_back(sql_opers_keywords[ele]);
-											sint addv = vtool.AVTV(&t_->conds, ncar.c_str(), true, true);
-
-										}
-										else if (ele == 10)
-										{
-											// commas if not in an enclosed stmt or literal value after a WHERE are out of place
-										}
-										else if (ele == 11)
-										{
-											// if not enclosed this ends our statement or is out of place
-										}
-										else {}
-									}
-
-									x++;
-									findx = stool.FindVInStr(&sql_opers_keywords, &snip, &x, lim, &ele, lim);
-
-									if (x < (sint)snip.length())
-									{
-										sint clox = x + 1;
-										findx = stool.FindVInStr(&sql_conj_keywords, snip.c_str(), &clox, lim, &ele, lim);
-
-										if (clox > -1 && clox < x)
-										{
-											if (LitEnc(clox, &litlocs, snip.c_str()) && !XEnclosedInY(&litlocs, snip.c_str(), (sint)snip.length() - 1, clox, sql_opers_keywords[6]))
-											{
-												if (ele == 1)
-												{
-
-												}
-												else if (ele == 2)
-												{
-
-												}
-												else if (ele == 3)
-												{
-
-												}
-												else {}
-
-												x = clox + 1;
-											}
-										}
-									}
-
-									findx = stool.FindVInStr(&sql_opers_keywords, &snip, &x, lim, &ele, lim);
-								}
-
-							}
-							else if (ele == 1)
-							{
-
-							}
-							else if (ele == 2)
-							{
-
-							}
-							else {}
-						}
-					}
-				}
-				else
-				{
-					if (snip[snip.length() - 1] == ']' && snip.length() > 2)
-					{
-						std::string cont_name;
-
-						if (t_->dbname.empty())
-						{
-							for (sint dx = VecSize(MTX_DBL) - 1; dx > -1; dx--)
-							{
-								BOT_DB ndb;
-								sint ix = GetVecEle(&ndb, MTX_DBL, dx, false);
-
-								if (ix > -1)
-								{
-									ix = vtool.VIV(&ndb.tables, snip.substr(1, snip.length() - 2).c_str());
-
-									if (ix > -1)
-									{
-										if (!strcmp(t_->dbname.c_str(), ndb.name.c_str()))
-										{
-											ix = t_->AddDB(ndb.name.c_str());
-										}
-										cont_name.append(snip.substr(1, snip.length() - 2).c_str());
-										dx = -1;
-									}
-								}
-							}
-						}
-
-						if (!cont_name.empty())
-						{
-							sint dx = t_->AddCont(cont_name.c_str(), 1);
-						}
-						last_targ_loc = at_loc + x;
-					}
-					else
-					{
-						//empty bracket '[]'
-					}
-				}
-			}
-			else if (snip[x] == '(')
-			{
-				// if t_->cspec > -1 and we are past last_targ_loc and spec_loc we can assume these () contain a condition
-				if (snip[snip.length() - 1] == ')')
-				{
-					if (t_->cspec > -1)
-					{
-						if (at_loc < spec_loc)
-						{
-							for (findx = stool.FindInStr(',', snip.c_str(), x, (sint)snip.length() - 1); findx > -1; findx = stool.FindInStr(',', snip.c_str(), x, (sint)snip.length() - 1))
-							{
-								sint xc = vtool.AVTV(&t_->fcols, CleanPunctuation(snip.substr(x, findx - x).c_str()).c_str(), true, true);
-								x = findx + 1;
-							}
-						}
-						else
-						{
-							if (!t_->cspec)
-							{
-								if (strlen(snip.c_str()) < 1024)
-								{
-									sint xp = vtool.AVTV(&t_->conds, snip.c_str(), true, true);
-								}
-
-							}
-							else
-							{
-								std::string str;
-								str.append(snip.substr(1, snip.length() - 2).c_str());
-								snip.clear();
-								snip.append(str);
-							}
-						}
-						x = (sint)snip.length() - 1;
-					}
-					else
-					{
-						std::string str;
-						str.append(snip.substr(1, snip.length() - 2).c_str());
-						snip.clear();
-						snip.append(str);
-					}
-
-					if (debug_lvl >= 110 && debug_m)
-					{
-						std::string output;
-						if (t_->cspec > -1)
-						{
-							if (t_->cspec > 0)
-							{
-								output.append("snipped () at ends ");
-							}
-
-							output.append("t_->cspec > -1");
-						}
-						else
-						{
-							output.append("snipped () at ends");
-						}
-						sint oc = SOutput(output.c_str(), 2);
-					}
-				}
-				else
-				{
-					if (debug_lvl >= 110 && debug_m)
-					{
-						carr_64 outp;
-						sint op = bot_sprintf(outp.carr, outp.siz, "%c at 0, %c at end", snip[0], snip[snip.length() - 1]);
-						op = SOutput(outp.carr, 2);
-					}
-				}
-
-				findx = stool.FindVInStr(&sql_opers_keywords, &snip, &altx, lim, &ele, lim);
-
-				while (altx > -1)
-				{
-					if (ele == 1)
-					{
-						if (LitEnc(altx, &litlocs, snip.c_str()) && !XEnclosedInY(&litlocs, snip.c_str(), (sint)snip.length() - 1, altx, sql_opers_keywords[6]))
-						{
-
-							if (t_->cols.empty())
-							{
-								std::string str;
-								str.push_back(sql_opers_keywords[ele]);
-								t_->cols.push_back(str);
-							}
-						}
-					}
-					else if (ele == 2 || ele == 3)
-					{
-
-					}
-					else if (ele == 4 || ele == 5)
-					{
-
-					}
-					else if (ele == 6 || ele == 7)
-					{
-						if (ele == 7)
-						{
-							if (LitEnc(altx, &litlocs, snip.c_str()) && !XEnclosedInY(&litlocs, snip.c_str(), (sint)snip.length() - 1, altx, sql_opers_keywords[6]))
-							{
-								sint locx = stool.FindInStr(sql_opers_keywords[6], snip.c_str(), altx - 1, lim);
-
-								if (locx > -1)
-								{
-									if (LitEnc(altx, &litlocs, snip.c_str()) && !XEnclosedInY(&litlocs, snip.c_str(), (sint)snip.length() - 1, locx, sql_opers_keywords[6]))
-									{
-										// we have likely found the closer containing variables for a function between x and locx.
-										// we need to make sure there are no openers or closers in between
-									}
-								}
-								else
-								{
-									// there is a stray ')' in this enclosed snip
-								}
-							}
-						}
-						else
-						{
-							if (LitEnc(altx, &litlocs, snip.c_str()) && !XEnclosedInY(&litlocs, snip.c_str(), (sint)snip.length() - 1, altx, sql_opers_keywords[6]))
-							{
-								sint locx = snip.find(sql_opers_keywords[7], altx + 1);
-
-								if (locx > -1)
-								{
-									if (LitEnc(altx, &litlocs, snip.c_str()) && !XEnclosedInY(&litlocs, snip.c_str(), (sint)snip.length() - 1, locx, sql_opers_keywords[6]))
-									{
-										// we have likely found the closer containing variables for a function between x and locx.
-									}
-								}
-								else
-								{
-									// there is a stray '(' in this enclose snip
-								}
-							}
-						}
-					}
-					else if (ele == 8 || ele == 9)
-					{
-
-					}
-					else if (ele == 10)
-					{
-						while (altx > -1)
-						{
-							if (LitEnc(altx, &litlocs, snip.c_str()) && !XEnclosedInY(&litlocs, snip.c_str(), (sint)snip.length() - 1, altx, sql_opers_keywords[6]))
-							{
-								if (at_loc < spec_loc || spec_loc == -1)
-								{
-									while (snip[x] == ' ') { x++; }
-									if (debug_lvl >= 110 && debug_m)
-									{
-										carr_256 outp;
-										sint op = bot_sprintf(outp.carr, outp.siz, "pushing to cols:\"%s\" strlen()=%u sizeof()=%u", snip.substr(x, altx - x).c_str(), strlen(snip.substr(x, altx - x).c_str()), sizeof(snip.substr(x, altx - x).c_str()));
-										op = SOutput(outp.carr, 2);
-									}
-									t_->cols.push_back(snip.substr(x, altx - x));
-								}
-								else
-								{
-									while (snip[x] == ' ') { x++; }
-									if (debug_lvl >= 110 && debug_m)
-									{
-										carr_256 outp;
-										sint op = bot_sprintf(outp.carr, outp.siz, "pushing to vals:\"%s\" strlen()=%u sizeof()=%u", snip.substr(x, altx - x).c_str(), strlen(snip.substr(x, altx - x).c_str()), sizeof(snip.substr(x, altx - x).c_str()));
-										op = SOutput(outp.carr, 2);
-									}
-									t_->vals.push_back(snip.substr(x, altx - x));
-								}
-								x = altx + 1;
-							}
-
-							altx = snip.find(sql_opers_keywords[ele], x);
-
-							if (altx == -1)
-							{
-								if (at_loc < spec_loc || spec_loc == -1)
-								{
-									t_->cols.push_back(snip.substr(x + 1, (sint)snip.length() - (x + 1)));
-								}
-								else
-								{
-									t_->vals.push_back(snip.substr(x + 1, (sint)snip.length() - (x + 1)));
-								}
-							}
-						}
-					}
-					else if (ele == 11)
-					{
-
-					}
-					else {}
-
-					if (altx > -1)
-					{
-						altx++;
-						findx = stool.FindVInStr(&sql_opers_keywords, &snip, &altx, lim, &ele, lim);
-					}
-				}
-			}
-			else if (snip[x] == '\'')
-			{
-				altx = snip.find(snip[x], x + 1);
-
-				if (altx > -1)
-				{
-					t_->vals.push_back(snip.substr(x, (altx + 1) - x));
-					x = altx + 1;
-				}
-			}
-			else if (snip[x] == '"')
-			{
-				altx = snip.find(snip[x], x + 1);
-
-				if (altx > -1)
-				{
-					t_->vals.push_back(snip.substr(x, (altx + 1) - x));
-					x = altx + 1;
-				}
-			}
-			else {}
-		}
-
-		if (yv < (sint)o_locs.size())
-		{
-			snip.clear();
-
-			if (!open)
-			{
-				snip.append(t_->stmt.substr(o_locs[xv], (o_locs[yv] + 1) - o_locs[xv]));
-				at_loc = o_locs[xv];
-				open = true;
-			}
-			else
-			{
-				snip.append(t_->stmt.substr(o_locs[xv] + 1, o_locs[yv] - (o_locs[xv] + 1)).c_str());
-				at_loc = o_locs[xv] + 1;
-				open = false;
-			}
-
-			if (debug_lvl >= 110 && debug_m)
-			{
-				carr_256 outp;
-				sint op = bot_sprintf(outp.carr, outp.siz, "snipping from:%u to:%u len=%u at_loc=%i spec_loc=%i open(%u)", o_locs[xv], o_locs[yv], o_locs[yv] - o_locs[xv], at_loc, spec_loc, (uint)open);
-				op = SOutput(outp.carr, 2);
-			}
-
-			if (!snip.empty())
-			{
-				if (snip[snip.length() - 1] == ';')
-				{
-					snip.pop_back();
-				}
-				litlocs.clear();
-				LitLocs(&litlocs, snip.c_str());
-			}
-			yv++;
-			xv++;
-		}
-		else
-		{
-			snip.clear();
-		}
-	}
-	if (!t_->stmt.empty())
-	{
-		t_->stmt.clear();
 	}
 	t_->an = true;
-
-	if (debug_lvl >= 110 && debug_m)
-	{
-		sint oc = OutpuTINFO(t_);
-	}
-	return 0;
+	return xc;
 }
+
 sint machine::BQS(BOT_STMT *t_)
 {
 	if (debug_lvl >= 500 && debug_m)
 	{
 		carr_64 outp;
 		sint oc = bot_sprintf(outp.carr, outp.siz, "::BQS(BOT_STMT *t_(%i))", (sint)t_);
-		oc = SOutput(outp.carr, 2);
+		oc = Output(outp.carr, 2);
 	}
 
 	if (!t_)
@@ -15100,7 +16974,7 @@ sint machine::BQS(BOT_STMT *t_)
 
 	if (t_->cspec > -1 && (!t_->vals.empty() || !t_->cols.empty() || !t_->conds.empty()))
 	{
-		statement.append(sql_cspec_keywords[t_->cspec]);
+		statement.append(msy.sql_cspec_keywords[t_->cspec].c_str());
 		statement.append(" ");
 
 		if (!t_->conds.empty())
@@ -15115,10 +16989,10 @@ sint machine::BQS(BOT_STMT *t_)
 
 	if (t_->opts[0] > -1 && x < t_->cols.size())
 	{
-		statement.append(sql_decl_keywords[t_->opts[0]]);
+		statement.append(msy.sql_decl_keywords[t_->opts[0]].c_str());
 		statement.append(t_->cols[x].c_str());
 		x++;
-		statement.append(sql_order_keywords[t_->opts[1]]);
+		statement.append(msy.sql_order_keywords[t_->opts[1]].c_str());
 	}
 
 	if (t_->rlim > 0)
@@ -15145,7 +17019,7 @@ sint machine::BQS(BOT_STMT *t_)
 				std::string outp;
 				outp.append("Query Statement:");
 				outp.append(statement.c_str());
-				sint oc = SOutput(outp.c_str(), 2);
+				sint oc = Output(outp.c_str(), 2);
 			}
 			return 0;
 		}
@@ -15155,7 +17029,7 @@ sint machine::BQS(BOT_STMT *t_)
 		std::string outp;
 		outp.append("Failed to build query statement:");
 		outp.append(statement.c_str());
-		sint oc = SOutput(outp.c_str(), 2);
+		sint oc = Output(outp.c_str(), 2);
 	}
 	return -1;
 }
@@ -15165,7 +17039,7 @@ sint machine::BTS(BOT_STMT *t_)
 	{
 		carr_64 outp;
 		sint oc = bot_sprintf(outp.carr, outp.siz, "::BTS(BOT_STMT *t_(%i))", (sint)t_);
-		oc = SOutput(outp.carr, 2);
+		oc = Output(outp.carr, 2);
 	}
 
 	if (!t_)
@@ -15173,37 +17047,37 @@ sint machine::BTS(BOT_STMT *t_)
 		return -1;
 	}
 
-	if (!t_->it_type || !strcmp(sql_trans_keywords[t_->it_type], "SELECT"))
+	if (!t_->it_type || !strcmp(msy.sql_trans_keywords[t_->it_type].c_str(), "SELECT"))
 	{
 		sint xc = BQS(t_);
 		return xc;
 	}
 
 	std::string statement;
-	statement.append(sql_trans_keywords[t_->it_type]);
+	statement.append(msy.sql_trans_keywords[t_->it_type].c_str());
 
 	if (t_->it_type == 3 || t_->it_type == 5 || t_->it_type == 7)
 	{
 		if (t_->ospec > -1)
 		{
 			statement.append(" ");
-			statement.append(sql_obj_qual_keywords[t_->ospec]);
+			statement.append(msy.sql_obj_qual_keywords[t_->ospec].c_str());
 		}
 
 		statement.append(" ");
-		statement.append(sql_obj_keywords[t_->ic_type]);
+		statement.append(msy.sql_obj_keywords[t_->ic_type].c_str());
 	}
 
 	if (t_->ifex > -1)
 	{
 		statement.append(" ");
-		statement.append(sql_cond_qual_keywords[t_->ifex]);
+		statement.append(msy.sql_cond_qual_keywords[t_->ifex].c_str());
 	}
 
-	if (t_->it_type == 4 && t_->ic_type > 1)
+	if (t_->it_type == 4 && t_->ic_type)
 	{
 		statement.append(" ");
-		statement.append(sql_targ_keywords[1]);
+		statement.append(msy.sql_targ_keywords[1].c_str());
 	}
 
 	if (t_->cont.empty())
@@ -15212,7 +17086,7 @@ sint machine::BTS(BOT_STMT *t_)
 		{
 			statement.clear();
 			carr_512 outp;
-			sint op = bot_sprintf(outp.carr, outp.siz, "%s %s AS %s;", sql_trans_keywords[t_->it_type], t_->dbname.c_str(), t_->dbname.c_str());
+			sint op = bot_sprintf(outp.carr, outp.siz, "%s %s AS %s;", msy.sql_trans_keywords[t_->it_type].c_str(), t_->dbname.c_str(), t_->dbname.c_str());
 			statement.append(outp.carr);
 		}
 	}
@@ -15281,7 +17155,7 @@ sint machine::BTS(BOT_STMT *t_)
 		if (t_->it_type == 3 && t_->ic_type == 2)
 		{
 			statement.append(" ");
-			statement.append(sql_targ_keywords[2]);
+			statement.append(msy.sql_targ_keywords[2].c_str());
 			statement.append(" [");
 			statement.append(t_->cont);
 			statement.append("]");
@@ -15375,7 +17249,7 @@ sint machine::BTS(BOT_STMT *t_)
 		if (t_->act > -1)
 		{
 			statement.append(" ");
-			statement.append(sql_act_keywords[t_->act]);
+			statement.append(msy.sql_act_keywords[t_->act].c_str());
 
 			if (t_->it_type == 7)
 			{
@@ -15453,7 +17327,7 @@ sint machine::BTS(BOT_STMT *t_)
 			if (t_->cspec == 0)
 			{
 				statement.append(" ");
-				statement.append(sql_cspec_keywords[t_->cspec]);
+				statement.append(msy.sql_cspec_keywords[t_->cspec].c_str());
 
 				for (uint x = 0; x < t_->conds.size(); x++)
 				{
@@ -15491,7 +17365,7 @@ sint machine::BTS(BOT_STMT *t_)
 				{
 					carr_64 outp;
 					sint op = bot_sprintf(outp.carr, outp.siz, "columns(%u) vals(%u) mismatch.", t_->cols.size(), t_->vals.size());
-					op = SOutput(outp.carr, 2);
+					op = Output(outp.carr, 2);
 					return 1;
 				}
 			}
@@ -15526,7 +17400,7 @@ sint machine::BTS(BOT_STMT *t_)
 			{
 				carr_128 outp;
 				sint op = bot_sprintf(outp.carr, outp.siz, "columns(%u) vals(%u) mismatch.", t_->cols.size(), t_->vals.size());
-				op = SOutput(outp.carr, 2);
+				op = Output(outp.carr, 2);
 				return 1;
 			}
 		}
@@ -15577,7 +17451,7 @@ sint machine::BTS(BOT_STMT *t_)
 		outp.append("t_->stmt(");
 		outp.append(statement.c_str());
 		outp.append(")");
-		sint oc = SOutput(outp.c_str(), 2);
+		sint oc = Output(outp.c_str(), 2);
 	}
 
 	if (!t_->stmt.empty())
@@ -15598,7 +17472,7 @@ sint machine::BuildStatements(std::vector<BOT_STMT>* stmts_, BOT_COMMIT *com_, s
 	{
 		carr_256 outp;
 		sint op = bot_sprintf(outp.carr, outp.siz, "::BuildStatements((std::vector<BOT_STMT>* stmts_(%i), BOT_COMMIT *com_)(%i), std::vector<BOT_STMT>* pend_(%i))", (sint)stmts_, (sint)com_, (sint)pend_);
-		op = SOutput(outp.carr, 2);
+		op = Output(outp.carr, 2);
 	}
 
 	if (!com_ || !stmts_)
@@ -15614,7 +17488,7 @@ sint machine::BuildStatements(std::vector<BOT_STMT>* stmts_, BOT_COMMIT *com_, s
 
 	if (pend_)
 	{
-		for (uint i = 0; i < pend_->size(); i++)
+		for (size_t i = 0; i < pend_->size(); i++)
 		{
 			sint xc = -1;
 
@@ -15697,7 +17571,7 @@ sint machine::BuildStatements(std::vector<BOT_STMT>* stmts_, BOT_COMMIT *com_, s
 		sint xc = vtool.CLNV(pend_);
 	}
 
-	for (uint i = 0; i < stmts_->size(); i++)
+	for (size_t i = 0; i < stmts_->size(); i++)
 	{
 		sint xc = -1;
 		if (!stmts_->at(i).an && !stmts_->at(i).stmt.empty())
@@ -15792,8 +17666,8 @@ sint machine::BuildStatements(std::vector<BOT_STMT>* stmts_, BOT_COMMIT *com_, s
 		if (debug_lvl >= 550 && debug_m)
 		{
 			carr_256 ncar;
-			xc = bot_sprintf(ncar.carr, ncar.siz, "building necessary statements for %s", com_->dbs[i].name.c_str());
-			xc = SOutput(ncar.carr, 2);
+			xc = bot_sprintf(ncar.carr, ncar.siz, "building maint/modi statements for %s", com_->dbs[i].name.c_str());
+			xc = Output(ncar.carr, 2);
 		}
 
 		BOT_STMT trans((bool)db_maint[i], 1, com_->dbs[i].name.c_str(), "LAST_ACCESS", 1);
@@ -15812,80 +17686,6 @@ sint machine::BuildStatements(std::vector<BOT_STMT>* stmts_, BOT_COMMIT *com_, s
 	}
 	return 0;
 }
-sint machine::OutpuTINFO(BOT_STMT *t_)
-{
-	std::string output;
-
-	if (t_)
-	{
-		carr_256 ncar;
-		sint xp = bot_sprintf(ncar.carr, ncar.siz, " it_type:%i dbname:\"%s\"\ntables:", t_->it_type, t_->dbname.c_str());
-		output.append(ncar.carr);
-	}
-	else
-	{
-		return -1;
-	}
-
-	if (!t_->cont.empty())
-	{
-		carr_256 ncar;
-		sint xp = bot_sprintf(ncar.carr, ncar.siz, "%i %s", t_->ic_type, t_->cont.c_str());
-		output.append(ncar.carr);
-	}
-
-	if (!output.empty())
-	{
-		carr_64 ncar;
-		sint xp = bot_sprintf(ncar.carr, ncar.siz, "\nt_ has %u vals eles: ", t_->vals.size());
-		output.append(ncar.carr);
-	}
-
-	for (uint o = 0; o < t_->vals.size(); o++)
-	{
-		carr_256 ncar;
-		sint xp = bot_sprintf(ncar.carr, ncar.siz, "| %s ", t_->vals[o].c_str());
-		output.append(ncar.carr);
-	}
-
-	if (!output.empty())
-	{
-		carr_64 ncar;
-		sint xp = bot_sprintf(ncar.carr, ncar.siz, "\nt_ has %u cols eles: ", t_->cols.size());
-		output.append(ncar.carr);
-	}
-
-	for (uint o = 0; o < t_->cols.size(); o++)
-	{
-		carr_256 ncar;
-		sint xp = bot_sprintf(ncar.carr, ncar.siz, "| %s ", t_->cols[o].c_str());
-		output.append(ncar.carr);
-	}
-
-	if (!output.empty())
-	{
-		carr_64 ncar;
-		sint xp = bot_sprintf(ncar.carr, ncar.siz, "\nt_ has %u conds eles: ", t_->conds.size());
-		output.append(ncar.carr);
-	}
-
-	for (uint o = 0; o < t_->conds.size(); o++)
-	{
-		carr_256 ncar;
-		sint xp = bot_sprintf(ncar.carr, ncar.siz, "| %s ", t_->conds[o].c_str());
-		output.append(ncar.carr);
-	}
-
-	for (uint o = 0; o < 2; o++)
-	{
-		carr_64 ncar;
-		sint xp = bot_sprintf(ncar.carr, ncar.siz, "\nopts[%u]:%i has %u eles: ", o, t_->opts[o]);
-		output.append(ncar.carr);
-	}
-	sint xc = SOutput(output.c_str(), 2);
-	return 0;
-}
-
 
 // Database Functions
 
@@ -15927,7 +17727,7 @@ sint machine::GetODBConn(BOT_DB_M *db_)
 	{
 		carr_48 ncar;
 		sint oc = bot_sprintf(ncar.carr, ncar.siz, "::GetODBConn(BOT_DB_M *db_(5i))", (sint)db_);
-		oc = SOutput(ncar.carr, 2);
+		oc = Output(ncar.carr, 2);
 	}
 	if (!db_ || !d_con_)
 	{
@@ -15959,7 +17759,7 @@ sint machine::GetDBConn(BOT_DB_M* db_, slint mt)
 	{
 		carr_72 ncar;
 		sint oc = bot_sprintf(ncar.carr, ncar.siz, "::GetDBConn(BOT_DB_M *db_(5i), slint mt(%li))", (sint)db_, mt);
-		oc = SOutput(ncar.carr, 2);
+		oc = Output(ncar.carr, 2);
 	}
 	if (!db_)
 	{
@@ -16018,7 +17818,7 @@ sint machine::CloseDBConn(BOT_DB_M* db_)
 	{
 		carr_48 ncar;
 		sint oc = bot_sprintf(ncar.carr, ncar.siz, "::CloseDBConn(BOT_DB_M *db_(5i))", (sint)db_);
-		oc = SOutput(ncar.carr, 2);
+		oc = Output(ncar.carr, 2);
 	}
 
 	sint xc = -1;
@@ -16050,7 +17850,7 @@ sint machine::OpenDB(sint db_lid, sint x, sint* was_open, sint* fwas_locked, boo
 	{
 		carr_512 outp;
 		sint oc = bot_sprintf(outp.carr, outp.siz, "::OpenDB(sint db_lid(%i), sint x(%i), sint* was_open(%i), sint* fwas_locked(%i), bool r_to_st(%u))", db_lid, x, (sint)was_open, (sint)fwas_locked, (uint)r_to_st);
-		oc = SOutput(outp.carr, 2);
+		oc = Output(outp.carr, 2);
 	}
 
 	if (db_lid < 0 || x < 0 || !was_open || !fwas_locked || !d_con_)
@@ -16073,7 +17873,7 @@ sint machine::OpenDB(BOT_DB_M *db_, sint x, sint* was_open, sint* fwas_locked, b
 	{
 		carr_512 outp;
 		sint oc = bot_sprintf(outp.carr, outp.siz, "::OpenDB(BOT_DB_M* db_(%i), sint x(%i), sint* was_open(%i), sint* fwas_locked(%i), bool r_to_st(%u), bool is_verify(%u))", (sint)db_, x, (sint)was_open, (sint)fwas_locked, (uint)r_to_st, (uint)is_verify);
-		oc = SOutput(outp.carr, 2);
+		oc = Output(outp.carr, 2);
 	}
 
 	if (!was_open || !db_ || !fwas_locked)
@@ -16083,7 +17883,7 @@ sint machine::OpenDB(BOT_DB_M *db_, sint x, sint* was_open, sint* fwas_locked, b
 
 	if (db_->name.empty() && db_->lid < 0)
 	{
-		sint oc = SOutput("Empty DB name.", 2);
+		sint oc = Output("Empty DB name.", 2);
 		return -3;
 	}
 
@@ -16116,7 +17916,7 @@ sint machine::OpenDB(BOT_DB_M *db_, sint x, sint* was_open, sint* fwas_locked, b
 				{
 					carr_256 outp;
 					xc = bot_sprintf(outp.carr, outp.siz, "DB \"%s\" not found in list, OpenOpt(%i)", db_->name.c_str(), x);
-					xc = SOutput(outp.carr, 2);
+					xc = Output(outp.carr, 2);
 				}
 				return -1;
 			}
@@ -16133,7 +17933,7 @@ sint machine::OpenDB(BOT_DB_M *db_, sint x, sint* was_open, sint* fwas_locked, b
 		{
 			carr_256 outp;
 			sint xc = bot_sprintf(outp.carr, outp.siz, "DB \"%s\" does not exist, OpenOpt(%i)", db_->name.c_str(), x);
-			xc = SOutput(outp.carr, 2);
+			xc = Output(outp.carr, 2);
 		}
 		return -1;
 	}
@@ -16144,7 +17944,7 @@ sint machine::OpenDB(BOT_DB_M *db_, sint x, sint* was_open, sint* fwas_locked, b
 		{
 			carr_256 outp;
 			sint xc = bot_sprintf(outp.carr, outp.siz, "DB \"%s\" not created, OpenOpt(%i)", db_->name.c_str(), x);
-			xc = SOutput(outp.carr, 2);
+			xc = Output(outp.carr, 2);
 		}
 		return -1;
 	}
@@ -16168,7 +17968,7 @@ sint machine::OpenDB(BOT_DB_M *db_, sint x, sint* was_open, sint* fwas_locked, b
 				{
 					carr_256 outp;
 					sint oc = bot_sprintf(outp.carr, outp.siz, "DB connection in use for this thread, OpenOpt(%i)", db_->name.c_str(), x);
-					oc = SOutput(outp.carr, 2);
+					oc = Output(outp.carr, 2);
 				}
 				return -1;
 			}
@@ -16188,7 +17988,7 @@ sint machine::OpenDB(BOT_DB_M *db_, sint x, sint* was_open, sint* fwas_locked, b
 					{
 						carr_256 outp;
 						sint oc = bot_sprintf(outp.carr, outp.siz, "DB \"%s\" in use with lower priv for this thread, OpenOpt(%i)", db_->name.c_str(), x);
-						oc = SOutput(outp.carr, 2);
+						oc = Output(outp.carr, 2);
 					}
 					return -1;
 				}
@@ -16286,7 +18086,7 @@ sint machine::OpenDB(BOT_DB_M *db_, sint x, sint* was_open, sint* fwas_locked, b
 		{
 			carr_256 outp;
 			xc = bot_sprintf(outp.carr, outp.siz, "Failed to acquire mtx for DB \"%s\"(%i)", db_->name.c_str(), db_->lid);
-			xc = SOutput(outp.carr, 2);
+			xc = Output(outp.carr, 2);
 		}
 		return -2;
 	}
@@ -16349,7 +18149,7 @@ sint machine::OpenDB(BOT_DB_M *db_, sint x, sint* was_open, sint* fwas_locked, b
 					{
 						carr_256 outp;
 						xc = bot_sprintf(outp.carr, outp.siz, "invalid open opt:%i for %s", x, dbt.c_str());
-						xc = SOutput(outp.carr, 2);
+						xc = Output(outp.carr, 2);
 					}
 					if (dbc > -1)
 					{
@@ -16371,7 +18171,7 @@ sint machine::OpenDB(BOT_DB_M *db_, sint x, sint* was_open, sint* fwas_locked, b
 				}
 				if (xc)
 				{
-					xc = Output(GetError().c_str(), 1, 2, -1);
+					xc = Output(true, GetError().c_str(), 1, 2, -1);
 
 					if (dbc > -1)
 					{
@@ -16424,11 +18224,11 @@ sint machine::OpenDB(BOT_DB_M *db_, sint x, sint* was_open, sint* fwas_locked, b
 
 				if (debug_lvl >= 550 && debug_m)
 				{
-					xc = SOutput("preparing statement:", 2);
+					xc = Output("preparing statement:", 2);
 
 					if (debug_lvl >= 9 && debug_m)
 					{
-						xc = SOutput(bstmt.carr, 2);
+						xc = Output(bstmt.carr, 2);
 					}
 				}
 
@@ -16440,7 +18240,7 @@ sint machine::OpenDB(BOT_DB_M *db_, sint x, sint* was_open, sint* fwas_locked, b
 				{
 					if (debug_lvl >= 550 && debug_m)
 					{
-						xc = SOutput("statement prepared.", 2);
+						xc = Output("statement prepared.", 2);
 					}
 					bool done = false;
 
@@ -16454,7 +18254,7 @@ sint machine::OpenDB(BOT_DB_M *db_, sint x, sint* was_open, sint* fwas_locked, b
 						{
 							if (debug_lvl >= 550 && debug_m)
 							{
-								xc = SOutput("SQLITE_OK", 2);
+								xc = Output("SQLITE_OK", 2);
 							}
 							dbc = vtool.AVTV(&d_con_->att, db_->name.c_str(), true, true);
 							olim++;
@@ -16466,7 +18266,7 @@ sint machine::OpenDB(BOT_DB_M *db_, sint x, sint* was_open, sint* fwas_locked, b
 						{
 							if (debug_lvl >= 550 && debug_m)
 							{
-								xc = SOutput("SQLITE_DONE", 2);
+								xc = Output("SQLITE_DONE", 2);
 							}
 							dbc = vtool.AVTV(&d_con_->att, db_->name.c_str(), true, true);
 							olim++;
@@ -16478,7 +18278,7 @@ sint machine::OpenDB(BOT_DB_M *db_, sint x, sint* was_open, sint* fwas_locked, b
 						{
 							if (debug_lvl >= 550 && debug_m)
 							{
-								xc = SOutput("SQLITE_ROW", 2);
+								xc = Output("SQLITE_ROW", 2);
 							}
 							break;
 						}
@@ -16486,14 +18286,14 @@ sint machine::OpenDB(BOT_DB_M *db_, sint x, sint* was_open, sint* fwas_locked, b
 						{
 							if (debug_lvl >= 550 && debug_m)
 							{
-								xc = SOutput("SQLITE_BUSY", 2);
+								xc = Output("SQLITE_BUSY", 2);
 							}
 							sllint rst = Rest((sllint)BOT_MILLI_REST, true);
 							break;
 						}
 						default:
 						{
-							xc = Output(GetError().c_str(), 1, 2, -1);
+							xc = Output(true, GetError().c_str(), 1, 2, -1);
 							done = true;
 							break;
 						}
@@ -16504,14 +18304,14 @@ sint machine::OpenDB(BOT_DB_M *db_, sint x, sint* was_open, sint* fwas_locked, b
 
 					if (rc)
 					{
-						xc = Output(GetError().c_str(), 1, 2, -1);
+						xc = Output(true, GetError().c_str(), 1, 2, -1);
 					}
 				}
 				else
 				{
 					d_con_->o_com = false;
 					rc = UpdMTXPrio();
-					xc = Output(GetError().c_str(), 1, 2, -1);
+					xc = Output(true, GetError().c_str(), 1, 2, -1);
 
 					if (!hlim)
 					{
@@ -16567,7 +18367,7 @@ sint machine::OpenDB(BOT_DB_M *db_, sint x, sint* was_open, sint* fwas_locked, b
 	{
 		carr_256 outp;
 		xc = bot_sprintf(outp.carr, outp.siz, "DB \"%s\"(%i) opened, olim is:%u", db_->name.c_str(), db_->lid, nulim);
-		xc = SOutput(outp.carr, 2);
+		xc = Output(outp.carr, 2);
 	}
 	return db_->lid;
 }
@@ -16577,7 +18377,7 @@ sint machine::CloseDB(sint db_lid, sint* fwas_locked, bool clear_conn)
 	{
 		carr_256 outp;
 		sint oc = bot_sprintf(outp.carr, outp.siz, "::CloseDB(sint db_lid(%i), sint* fwas_locked(%i), bool clear_conn(%u))", db_lid, (sint)fwas_locked, (uint)clear_conn);
-		oc = SOutput(outp.carr, 2);
+		oc = Output(outp.carr, 2);
 	}
 
 	if (db_lid < 0 || !fwas_locked || !d_con_)
@@ -16605,7 +18405,7 @@ sint machine::CloseDB(BOT_DB_M* db_, sint* fwas_locked, bool clear_conn)
 	{
 		carr_256 outp;
 		sint oc = bot_sprintf(outp.carr, outp.siz, "::CloseDB(BOT_DB_M* db_lid(%i), sint* fwas_locked(%i), bool clear_conn(%u))", db_, (sint)fwas_locked, (uint)clear_conn);
-		oc = SOutput(outp.carr, 2);
+		oc = Output(outp.carr, 2);
 	}
 
 	if (!db_ || !d_con_)
@@ -16636,11 +18436,11 @@ sint machine::CloseDB(BOT_DB_M* db_, sint* fwas_locked, bool clear_conn)
 
 		if (debug_lvl >= 550 && debug_m)
 		{
-			xc = SOutput("preparing statement:", 2);
+			xc = Output("preparing statement:", 2);
 
 			if (debug_lvl >= 9 && debug_m)
 			{
-				xc = SOutput(bstmt.carr, 2);
+				xc = Output(bstmt.carr, 2);
 			}
 		}
 		d_con_->o_com = true;
@@ -16649,17 +18449,17 @@ sint machine::CloseDB(BOT_DB_M* db_, sint* fwas_locked, bool clear_conn)
 
 		if (xc)
 		{
-			xc = Output(GetError().c_str(), 1, 2, -1);
+			xc = Output(true, GetError().c_str(), 1, 2, -1);
 		}
 		else
 		{
 			if (debug_lvl >= 550 && debug_m)
 			{
-				xc = SOutput("statement prepared.", 2);
+				xc = Output("statement prepared.", 2);
 
 				if (debug_lvl >= 19 && debug_m)
 				{
-					xc = SOutput(bstmt.carr, 2);
+					xc = Output(bstmt.carr, 2);
 				}
 			}
 			bool done = false;
@@ -16674,7 +18474,7 @@ sint machine::CloseDB(BOT_DB_M* db_, sint* fwas_locked, bool clear_conn)
 				{
 					if (debug_lvl >= 550 && debug_m)
 					{
-						xc = SOutput("SQLITE_OK", 2);
+						xc = Output("SQLITE_OK", 2);
 					}
 
 					if (clear_conn)
@@ -16700,7 +18500,7 @@ sint machine::CloseDB(BOT_DB_M* db_, sint* fwas_locked, bool clear_conn)
 				{
 					if (debug_lvl >= 550 && debug_m)
 					{
-						xc = SOutput("SQLITE_DONE", 2);
+						xc = Output("SQLITE_DONE", 2);
 					}
 
 					if (clear_conn)
@@ -16724,7 +18524,7 @@ sint machine::CloseDB(BOT_DB_M* db_, sint* fwas_locked, bool clear_conn)
 				{
 					if (debug_lvl >= 550 && debug_m)
 					{
-						xc = SOutput("SQLITE_ROW", 2);
+						xc = Output("SQLITE_ROW", 2);
 					}
 					break;
 				}
@@ -16732,14 +18532,14 @@ sint machine::CloseDB(BOT_DB_M* db_, sint* fwas_locked, bool clear_conn)
 				{
 					if (debug_lvl >= 550 && debug_m)
 					{
-						xc = SOutput("SQLITE_BUSY", 2);
+						xc = Output("SQLITE_BUSY", 2);
 					}
 					sllint rst = Rest((sllint)BOT_MILLI_REST, true);
 					break;
 				}
 				default:
 				{
-					xc = Output(GetError().c_str(), 1, 2, -1);
+					xc = Output(true, GetError().c_str(), 1, 2, -1);
 					done = true;
 					break;
 				}
@@ -16749,7 +18549,7 @@ sint machine::CloseDB(BOT_DB_M* db_, sint* fwas_locked, bool clear_conn)
 
 			if (xc)
 			{
-				xc = Output(GetError().c_str(), 1, 2, -1);
+				xc = Output(true, GetError().c_str(), 1, 2, -1);
 			}
 		}
 		d_con_->o_com = false;
@@ -16771,7 +18571,7 @@ sint machine::CloseDB(BOT_DB_M* db_, sint* fwas_locked, bool clear_conn)
 
 				if (xc)
 				{
-					xc = Output(GetError().c_str(), 1, 2, -1);
+					xc = Output(true, GetError().c_str(), 1, 2, -1);
 					return -1;
 				}
 				else
@@ -16787,7 +18587,7 @@ sint machine::CloseDB(BOT_DB_M* db_, sint* fwas_locked, bool clear_conn)
 
 						if (xc < 0)
 						{
-							xc = Output("Error CloseDBConn()", 1, 2, -1);
+							xc = Output(true, "Error CloseDBConn()", 1, 2, -1);
 						}
 					}
 
@@ -16818,7 +18618,7 @@ sint machine::CloseDB(BOT_DB_M* db_, sint* fwas_locked, bool clear_conn)
 			{
 				carr_256 outp;
 				sint xc = bot_sprintf(outp.carr, outp.siz, "unlocked DB \"%s\" olim:%i.", db_->name.c_str(), nulim);
-				xc = SOutput(outp.carr, 2);
+				xc = Output(outp.carr, 2);
 			}
 		}
 	}
@@ -16842,7 +18642,7 @@ sint machine::OpenDBs(std::vector<BOT_DB_M> *dbs_, sint opt, std::vector <sint> 
 		{
 			carr_256 outp;
 			sint oc = bot_sprintf(outp.carr, outp.siz, "::OpenDBs(std::vector <BOT_DB_M> *dbs_(%i), sint opt(%i), std::vector <sint> *wos_(%i), std::vector<sint>* fwas_(%i), std::vector<sint> lids_(%i))", (sint)dbs_, opt, (sint)wos_, (sint)fwas_, (sint)lids_);
-			oc = SOutput(outp.carr, 2);
+			oc = Output(outp.carr, 2);
 		}
 	}
 	if (!dbs_ || opt < 0 || !wos_ || !fwas_ || !lids_)
@@ -16860,7 +18660,7 @@ sint machine::OpenDBs(std::vector<BOT_DB_M> *dbs_, sint opt, std::vector <sint> 
 	{
 		if (dbs_->at(opens).name.empty())
 		{
-			sint oc = SOutput("Empty DB name.", 2);
+			sint oc = Output("Empty DB name.", 2);
 		}
 		else
 		{
@@ -16880,7 +18680,7 @@ sint machine::CloseDBs(std::vector<BOT_DB_M> *dbs_, std::vector<sint>* fwas_)
 	{
 		carr_256 outp;
 		sint oc = bot_sprintf(outp.carr, outp.siz, "::CloseDBs(std::vector<BOT_DB_M>* dbs_(%i), std::vector<sint>* fwas_(%i))", (sint)dbs_, (sint)fwas_);
-		oc = SOutput(outp.carr, 2);
+		oc = Output(outp.carr, 2);
 	}
 
 	sint xc = -1;
@@ -16908,7 +18708,7 @@ sint machine::Query(BOT_STMT* qval_, sint as_opt)
 	{
 		carr_128 outp;
 		sint op = bot_sprintf(outp.carr, outp.siz, "::Query(BOT_COMMIT* qval_(%i), sint as_opt(%i))", (sint)qval_, as_opt);
-		op = SOutput(outp.carr, 2);
+		op = Output(outp.carr, 2);
 	}
 
 	if (!qval_ || as_opt < 0)
@@ -16967,7 +18767,7 @@ sint machine::Query(BOT_STMT* qval_, sint as_opt)
 
 		if (ret)
 		{
-			ret = Output(GetError().c_str(), 1, 2, -1);
+			ret = Output(true, GetError().c_str(), 1, 2, -1);
 		}
 		else
 		{
@@ -16983,7 +18783,7 @@ sint machine::Query(BOT_STMT* qval_, sint as_opt)
 				{
 					if (debug_lvl >= 1 && debug_m)
 					{
-						ret = SOutput("SQLITE_OK", 2);
+						ret = Output("SQLITE_OK", 2);
 					}
 					done = true;
 					break;
@@ -16992,7 +18792,7 @@ sint machine::Query(BOT_STMT* qval_, sint as_opt)
 				{
 					if (debug_lvl >= 1 && debug_m)
 					{
-						ret = SOutput("SQLITE_DONE", 2);
+						ret = Output("SQLITE_DONE", 2);
 					}
 					done = true;
 					break;
@@ -17001,7 +18801,7 @@ sint machine::Query(BOT_STMT* qval_, sint as_opt)
 				{
 					if (debug_lvl >= 1 && debug_m)
 					{
-						ret = SOutput("SQLITE_ROW", 2);
+						ret = Output("SQLITE_ROW", 2);
 					}
 
 					if (qval_->fcols.empty())
@@ -17843,14 +19643,14 @@ sint machine::Query(BOT_STMT* qval_, sint as_opt)
 				{
 					if (debug_lvl >= 1 && debug_m)
 					{
-						sint xp = SOutput("SQLITE_BUSY", 2);
+						sint xp = Output("SQLITE_BUSY", 2);
 					}
 					done = true;
 					break;
 				}
 				default:
 				{
-					sint xp = Output(GetError().c_str(), 1, 2, -1);
+					sint xp = Output(true, GetError().c_str(), 1, 2, -1);
 					done = true;
 					break;
 				}
@@ -17861,7 +19661,7 @@ sint machine::Query(BOT_STMT* qval_, sint as_opt)
 
 			if (ret)
 			{
-				sint xp = Output(GetError().c_str(), 1, 2, -1);
+				sint xp = Output(true, GetError().c_str(), 1, 2, -1);
 			}
 		}
 		d_con_->o_com = false;
@@ -17879,7 +19679,7 @@ sint machine::Commit(std::vector<BOT_STMT>* stmts_)
 	{
 		carr_64 outp;
 		sint op = bot_sprintf(outp.carr, outp.siz, "::Commit(BOT_COMMIT* com_(%i))", (sint)stmts_);
-		op = SOutput(outp.carr, 2);
+		op = Output(outp.carr, 2);
 	}
 
 	if (!stmts_)
@@ -17889,7 +19689,7 @@ sint machine::Commit(std::vector<BOT_STMT>* stmts_)
 
 	if (stmts_->empty())
 	{
-		sint xc = SOutput("aborting commit, no statements", 2);
+		sint xc = Output("aborting commit, no statements", 2);
 		return -1;
 	}
 
@@ -17913,7 +19713,7 @@ sint machine::Commit(std::vector<BOT_STMT>* stmts_)
 					{
 						hx = UnlockGMutex(MTX_PEND);
 					}
-					sint xc = SOutput("aborting commit, no statements have a database name declared", 2);
+					sint xc = Output("aborting commit, no statements have a database name declared", 2);
 					return xc;
 				}
 			}
@@ -17924,7 +19724,7 @@ sint machine::Commit(std::vector<BOT_STMT>* stmts_)
 				{
 					hx = UnlockGMutex(MTX_PEND);
 				}
-				sint xc = SOutput("aborting commit, no statements have a database name declared", 2);
+				sint xc = Output("aborting commit, no statements have a database name declared", 2);
 				return -1;
 			}
 
@@ -17966,7 +19766,7 @@ sint machine::Commit(std::vector<BOT_STMT>* stmts_)
 								{
 									if (debug_lvl >= 500 && debug_m)
 									{
-										sint xp = SOutput("preparing commit statement: BEGIN;", 2);
+										sint xp = Output("preparing commit statement: BEGIN;", 2);
 									}
 									rc = sqlite3_prepare_v2(d_con_->db_, "BEGIN;", strlen("BEGIN;"), &ppstmt, &tail);
 									began = true;
@@ -17978,7 +19778,7 @@ sint machine::Commit(std::vector<BOT_STMT>* stmts_)
 								{
 									if (debug_lvl >= 500 && debug_m)
 									{
-										sint xp = SOutput("preparing commit statement: COMMIT;", 2);
+										sint xp = Output("preparing commit statement: COMMIT;", 2);
 									}
 									rc = sqlite3_prepare_v2(d_con_->db_, "COMMIT;", strlen("COMMIT;"), &ppstmt, &tail);
 									began = false;
@@ -17987,13 +19787,13 @@ sint machine::Commit(std::vector<BOT_STMT>* stmts_)
 
 							if (rc)
 							{
-								sint xp = Output(GetError().c_str(), 1, 2, -1);
+								sint xp = Output(true, GetError().c_str(), 1, 2, -1);
 							}
 							else
 							{
 								if (debug_lvl >= 500 && debug_m)
 								{
-									sint xp = SOutput("statement prepared", 2);
+									sint xp = Output("statement prepared", 2);
 								}
 
 								rc = sqlite3_step(ppstmt);
@@ -18004,7 +19804,7 @@ sint machine::Commit(std::vector<BOT_STMT>* stmts_)
 								{
 									if (debug_lvl >= 500 && debug_m)
 									{
-										sint xp = SOutput("SQLITE_OK", 2);
+										sint xp = Output("SQLITE_OK", 2);
 									}
 									break;
 								}
@@ -18012,7 +19812,7 @@ sint machine::Commit(std::vector<BOT_STMT>* stmts_)
 								{
 									if (debug_lvl >= 500 && debug_m)
 									{
-										sint xp = SOutput("SQLITE_DONE", 2);
+										sint xp = Output("SQLITE_DONE", 2);
 									}
 									break;
 								}
@@ -18020,7 +19820,7 @@ sint machine::Commit(std::vector<BOT_STMT>* stmts_)
 								{
 									if (debug_lvl >= 500 && debug_m)
 									{
-										sint xp = SOutput("SQLITE_ROW", 2);
+										sint xp = Output("SQLITE_ROW", 2);
 									}
 									break;
 								}
@@ -18028,13 +19828,13 @@ sint machine::Commit(std::vector<BOT_STMT>* stmts_)
 								{
 									if (debug_lvl >= 500 && debug_m)
 									{
-										sint xp = SOutput("SQLITE_BUSY", 2);
+										sint xp = Output("SQLITE_BUSY", 2);
 									}
 									break;
 								}
 								default:
 								{
-									sint xp = Output(GetError().c_str(), 1, 2, -1);
+									sint xp = Output(true, GetError().c_str(), 1, 2, -1);
 									break;
 								}
 								}
@@ -18042,7 +19842,7 @@ sint machine::Commit(std::vector<BOT_STMT>* stmts_)
 
 								if (rc)
 								{
-									sint xp = Output(GetError().c_str(), 1, 2, -1);
+									sint xp = Output(true, GetError().c_str(), 1, 2, -1);
 								}
 							}
 						}
@@ -18063,20 +19863,20 @@ sint machine::Commit(std::vector<BOT_STMT>* stmts_)
 									std::string outp;
 									outp.append("preparing commit statement: ");
 									outp.append(Comm.t[nsiz].stmt.c_str());
-									sint xp = SOutput(outp.c_str(), 2);
+									sint xp = Output(outp.c_str(), 2);
 								}
 
 								rc = sqlite3_prepare_v2(d_con_->db_, Comm.t[nsiz].stmt.c_str(), (sint)Comm.t[nsiz].stmt.length(), &ppstmt, &tail);
 
 								if (rc)
 								{
-									sint xp = Output(GetError().c_str(), 1, 2, -1);
+									sint xp = Output(true, GetError().c_str(), 1, 2, -1);
 								}
 								else
 								{
 									if (debug_lvl >= 500 && debug_m)
 									{
-										sint xp = SOutput("statement prepared", 2);
+										sint xp = Output("statement prepared", 2);
 									}
 
 									bool sdone = false;
@@ -18091,7 +19891,7 @@ sint machine::Commit(std::vector<BOT_STMT>* stmts_)
 										{
 											if (debug_lvl >= 500 && debug_m)
 											{
-												sint xp = SOutput("SQLITE_OK", 2);
+												sint xp = Output("SQLITE_OK", 2);
 											}
 											sdone = true;
 											break;
@@ -18100,7 +19900,7 @@ sint machine::Commit(std::vector<BOT_STMT>* stmts_)
 										{
 											if (debug_lvl >= 500 && debug_m)
 											{
-												sint xp = SOutput("SQLITE_DONE", 2);
+												sint xp = Output("SQLITE_DONE", 2);
 											}
 											sdone = true;
 											break;
@@ -18109,7 +19909,7 @@ sint machine::Commit(std::vector<BOT_STMT>* stmts_)
 										{
 											if (debug_lvl >= 500 && debug_m)
 											{
-												sint xp = SOutput("SQLITE_ROW", 2);
+												sint xp = Output("SQLITE_ROW", 2);
 											}
 											break;
 										}
@@ -18117,14 +19917,14 @@ sint machine::Commit(std::vector<BOT_STMT>* stmts_)
 										{
 											if (debug_lvl >= 500 && debug_m)
 											{
-												sint xp = SOutput("SQLITE_BUSY", 2);
+												sint xp = Output("SQLITE_BUSY", 2);
 											}
 											sdone = true;
 											break;
 										}
 										default:
 										{
-											sint xp = Output(GetError().c_str(), 1, 2, -1);
+											sint xp = Output(true, GetError().c_str(), 1, 2, -1);
 											sdone = true;
 											break;
 										}
@@ -18134,7 +19934,7 @@ sint machine::Commit(std::vector<BOT_STMT>* stmts_)
 
 									if (rc)
 									{
-										sint xp = Output(GetError().c_str(), 1, 2, -1);
+										sint xp = Output(true, GetError().c_str(), 1, 2, -1);
 									}
 								}
 								Comm.t[nsiz].Clear();
@@ -18149,19 +19949,19 @@ sint machine::Commit(std::vector<BOT_STMT>* stmts_)
 
 					if (debug_lvl >= 500 && debug_m)
 					{
-						sint xp = SOutput("preparing commit statement: COMMIT;", 2);
+						sint xp = Output("preparing commit statement: COMMIT;", 2);
 					}
 					sint rc = sqlite3_prepare_v2(d_con_->db_, "COMMIT;", strlen("COMMIT;"), &ppstmt, &tail);
 
 					if (rc)
 					{
-						sint xp = Output(GetError().c_str(), 1, 2, -1);
+						sint xp = Output(true, GetError().c_str(), 1, 2, -1);
 					}
 					else
 					{
 						if (debug_lvl >= 500 && debug_m)
 						{
-							sint xp = SOutput("statement prepared", 2);
+							sint xp = Output("statement prepared", 2);
 						}
 
 						rc = sqlite3_step(ppstmt);
@@ -18172,7 +19972,7 @@ sint machine::Commit(std::vector<BOT_STMT>* stmts_)
 						{
 							if (debug_lvl >= 500 && debug_m)
 							{
-								sint xp = SOutput("SQLITE_OK", 2);
+								sint xp = Output("SQLITE_OK", 2);
 							}
 							break;
 						}
@@ -18180,7 +19980,7 @@ sint machine::Commit(std::vector<BOT_STMT>* stmts_)
 						{
 							if (debug_lvl >= 500 && debug_m)
 							{
-								sint xp = SOutput("SQLITE_DONE", 2);
+								sint xp = Output("SQLITE_DONE", 2);
 							}
 							break;
 						}
@@ -18188,7 +19988,7 @@ sint machine::Commit(std::vector<BOT_STMT>* stmts_)
 						{
 							if (debug_lvl >= 500 && debug_m)
 							{
-								sint xp = SOutput("SQLITE_ROW", 2);
+								sint xp = Output("SQLITE_ROW", 2);
 							}
 							break;
 						}
@@ -18196,13 +19996,13 @@ sint machine::Commit(std::vector<BOT_STMT>* stmts_)
 						{
 							if (debug_lvl >= 500 && debug_m)
 							{
-								sint xp = SOutput("SQLITE_BUSY", 2);
+								sint xp = Output("SQLITE_BUSY", 2);
 							}
 							break;
 						}
 						default:
 						{
-							sint xp = Output(GetError().c_str(), 1, 2, -1);
+							sint xp = Output(true, GetError().c_str(), 1, 2, -1);
 							break;
 						}
 						}
@@ -18210,7 +20010,7 @@ sint machine::Commit(std::vector<BOT_STMT>* stmts_)
 
 						if (rc)
 						{
-							sint xp = Output(GetError().c_str(), 1, 2, -1);
+							sint xp = Output(true, GetError().c_str(), 1, 2, -1);
 						}
 					}
 				}
@@ -18236,19 +20036,19 @@ sint machine::Commit(std::vector<BOT_STMT>* stmts_)
 								std::string output;
 								output.append("preparing commit statement: ");
 								output.append(Comm.an[i].stmt);
-								sint xp = SOutput(output.c_str(), 2);
+								sint xp = Output(output.c_str(), 2);
 							}
 							rc = sqlite3_prepare_v2(d_con_->db_, Comm.an[i].stmt.c_str(), (sint)Comm.an[i].stmt.length(), &ppstmt, &tail);
 
 							if (rc)
 							{
-								sint xp = Output(GetError().c_str(), 1, 2, -1);
+								sint xp = Output(true, GetError().c_str(), 1, 2, -1);
 							}
 							else
 							{
 								if (debug_lvl >= 500 && debug_m)
 								{
-									sint xp = SOutput("statement prepared", 2);
+									sint xp = Output("statement prepared", 2);
 								}
 
 								rc = sqlite3_step(ppstmt);
@@ -18259,7 +20059,7 @@ sint machine::Commit(std::vector<BOT_STMT>* stmts_)
 								{
 									if (debug_lvl >= 500 && debug_m)
 									{
-										sint xp = SOutput("SQLITE_OK", 2);
+										sint xp = Output("SQLITE_OK", 2);
 									}
 									break;
 								}
@@ -18267,7 +20067,7 @@ sint machine::Commit(std::vector<BOT_STMT>* stmts_)
 								{
 									if (debug_lvl >= 500 && debug_m)
 									{
-										sint xp = SOutput("SQLITE_DONE", 2);
+										sint xp = Output("SQLITE_DONE", 2);
 									}
 									break;
 								}
@@ -18275,7 +20075,7 @@ sint machine::Commit(std::vector<BOT_STMT>* stmts_)
 								{
 									if (debug_lvl >= 500 && debug_m)
 									{
-										sint xp = SOutput("SQLITE_ROW", 2);
+										sint xp = Output("SQLITE_ROW", 2);
 									}
 									break;
 								}
@@ -18283,13 +20083,13 @@ sint machine::Commit(std::vector<BOT_STMT>* stmts_)
 								{
 									if (debug_lvl >= 500 && debug_m)
 									{
-										sint xp = SOutput("SQLITE_BUSY", 2);
+										sint xp = Output("SQLITE_BUSY", 2);
 									}
 									break;
 								}
 								default:
 								{
-									sint xp = Output(GetError().c_str(), 1, 2, -1);
+									sint xp = Output(true, GetError().c_str(), 1, 2, -1);
 									break;
 								}
 								}
@@ -18297,7 +20097,7 @@ sint machine::Commit(std::vector<BOT_STMT>* stmts_)
 
 								if (rc)
 								{
-									sint xp = Output(GetError().c_str(), 1, 2, -1);
+									sint xp = Output(true, GetError().c_str(), 1, 2, -1);
 								}
 							}
 						}
@@ -18376,7 +20176,7 @@ sint machine::Commit(std::vector<BOT_STMT>* stmts_)
 	}
 	if (debug_lvl >= 500 && debug_m)
 	{
-		sint oc = SOutput("Commit() End", 2);
+		sint oc = Output("Commit() End", 2);
 	}
 	return 0;
 }
@@ -18386,7 +20186,7 @@ sint machine::VerifyDatabases()
 {
 	if (debug_lvl >= 450 && debug_m)
 	{
-		sint op = SOutput("::VerifyDatabases()", 2);
+		sint op = Output("::VerifyDatabases()", 2);
 	}
 
 	uint db_failed = 0;
@@ -18469,7 +20269,7 @@ sint machine::VerifyDatabase(BOT_DB_M *dbs_)
 	{
 		carr_256 outp;
 		sint op = bot_sprintf(outp.carr, outp.siz, "::VerifyDatabase(BOT_DB_M *dbs_(%i))", (sint)dbs_);
-		op = SOutput(outp.carr, 2);
+		op = Output(outp.carr, 2);
 	}
 
 	if (!dbs_)
@@ -18523,7 +20323,7 @@ sint machine::VerifyTable(BOT_DB *dbs_, std::vector<BOT_STMT> *tvec_, sint x, si
 	{
 		carr_512 outp;
 		sint op = bot_sprintf(outp.carr, outp.siz, "::VerifyTable(BOT_DB *dbs_(%i), std::vector<BOT_STMT> *tvec_(%i), sint x(%i), sint odb(%i))", (sint)dbs_, (sint)tvec_, x, odb);
-		op = SOutput(outp.carr, 2);
+		op = Output(outp.carr, 2);
 	}
 
 	if (!dbs_ || !tvec_ || odb < 0 || x < 0)
@@ -18555,7 +20355,7 @@ sint machine::VerifyTable(BOT_DB *dbs_, std::vector<BOT_STMT> *tvec_, sint x, si
 
 			if (debug_lvl >= 1 && debug_m)
 			{
-				rc = Output(output.c_str(), 1, 2, -1);
+				rc = Output(true, output.c_str(), 1, 2, -1);
 			}
 
 			rc = output.find("no such");
@@ -18632,7 +20432,7 @@ sint machine::VerifyTable(BOT_DB *dbs_, std::vector<BOT_STMT> *tvec_, sint x, si
 				{
 					if (debug_lvl >= 500 && debug_m)
 					{
-						rc = SOutput("SQLITE_OK", 2);
+						rc = Output("SQLITE_OK", 2);
 					}
 
 					xxc++;
@@ -18643,7 +20443,7 @@ sint machine::VerifyTable(BOT_DB *dbs_, std::vector<BOT_STMT> *tvec_, sint x, si
 				{
 					if (debug_lvl >= 500 && debug_m)
 					{
-						rc = SOutput("SQLITE_DONE", 2);
+						rc = Output("SQLITE_DONE", 2);
 					}
 
 					rc = sqlite3_column_count(ppstmt);
@@ -18652,21 +20452,21 @@ sint machine::VerifyTable(BOT_DB *dbs_, std::vector<BOT_STMT> *tvec_, sint x, si
 					{
 						if (debug_lvl >= 500 && debug_m)
 						{
-							rc = SOutput("structure count == db count", 2);
+							rc = Output("structure count == db count", 2);
 						}
 					}
 					else if ((sint)dbs_->columns[x][0].size() > rc)
 					{
 						if (debug_lvl >= 500 && debug_m)
 						{
-							rc = SOutput("structure count > db count", 2);
+							rc = Output("structure count > db count", 2);
 						}
 					}
 					else
 					{
 						if (debug_lvl >= 500 && debug_m)
 						{
-							rc = SOutput("structure count < db count", 2);
+							rc = Output("structure count < db count", 2);
 						}
 					}
 
@@ -18812,7 +20612,7 @@ sint machine::VerifyTable(BOT_DB *dbs_, std::vector<BOT_STMT> *tvec_, sint x, si
 								{
 									carr_512 outp;
 									sint op = bot_sprintf(outp.carr, outp.siz, "%s found but of type %s not found in table %s.%s", dbs_->columns[x][0][stcount].c_str(), dbs_->columns[x][1][stcount].c_str(), dbs_->name.c_str(), dbs_->tables[x].c_str());
-									op = SOutput(outp.carr, 2);
+									op = Output(outp.carr, 2);
 								}
 							}
 							else {}
@@ -18889,7 +20689,7 @@ sint machine::VerifyTable(BOT_DB *dbs_, std::vector<BOT_STMT> *tvec_, sint x, si
 								{
 									carr_512 outp;
 									sint op = bot_sprintf(outp.carr, outp.siz, "%s %s not found in table %s.%s", m_cols[m].c_str(), m_cols[m + 1].c_str(), dbs_->name.c_str(), dbs_->tables[x].c_str());
-									op = Output(outp.carr, 1, 2, -1);
+									op = Output(true, outp.carr, 1, 2, -1);
 								}
 
 								BOT_STMT t(false, 7, dbs_->name.c_str(), dbs_->tables[x].c_str(), 1);
@@ -18927,7 +20727,7 @@ sint machine::VerifyTable(BOT_DB *dbs_, std::vector<BOT_STMT> *tvec_, sint x, si
 				{
 					if (debug_lvl >= 500 && debug_m)
 					{
-						rc = SOutput("SQLITE_ROW", 2);
+						rc = Output("SQLITE_ROW", 2);
 					}
 
 					e = false;
@@ -18937,21 +20737,21 @@ sint machine::VerifyTable(BOT_DB *dbs_, std::vector<BOT_STMT> *tvec_, sint x, si
 					{
 						if (debug_lvl >= 500 && debug_m)
 						{
-							rc = SOutput("structure count == db count", 2);
+							rc = Output("structure count == db count", 2);
 						}
 					}
 					else if ((sint)dbs_->columns[x][0].size() > rc)
 					{
 						if (debug_lvl >= 500 && debug_m)
 						{
-							rc = SOutput("structure count > db count", 2);
+							rc = Output("structure count > db count", 2);
 						}
 					}
 					else
 					{
 						if (debug_lvl >= 500 && debug_m)
 						{
-							rc = SOutput("structure count < db count", 2);
+							rc = Output("structure count < db count", 2);
 						}
 					}
 
@@ -19097,7 +20897,7 @@ sint machine::VerifyTable(BOT_DB *dbs_, std::vector<BOT_STMT> *tvec_, sint x, si
 								{
 									carr_512 outp;
 									sint op = bot_sprintf(outp.carr, outp.siz, "%s %s not found in table %s.%s", dbs_->columns[x][0][stcount].c_str(), dbs_->columns[x][1][stcount].c_str(), dbs_->name.c_str(), dbs_->tables[x].c_str());
-									op = Output(outp.carr, 1, 2, -1);
+									op = Output(true, outp.carr, 1, 2, -1);
 								}
 							}
 							else {}
@@ -19189,7 +20989,7 @@ sint machine::VerifyTable(BOT_DB *dbs_, std::vector<BOT_STMT> *tvec_, sint x, si
 								{
 									carr_512 outp;
 									sint op = bot_sprintf(outp.carr, outp.siz, "%s %s not found in table %s.%s", m_cols[m].c_str(), m_cols[m + 1].c_str(), dbs_->name.c_str(), dbs_->tables[x].c_str());
-									op = SOutput(outp.carr, 2);
+									op = Output(outp.carr, 2);
 								}
 
 								BOT_STMT t(false, 7, dbs_->name.c_str(), dbs_->tables[x].c_str(), 1);
@@ -19218,14 +21018,14 @@ sint machine::VerifyTable(BOT_DB *dbs_, std::vector<BOT_STMT> *tvec_, sint x, si
 				}
 				case SQLITE_BUSY:
 				{
-					sint xp = SOutput("SQLITE_BUSY", 1);
+					sint xp = Output("SQLITE_BUSY", 1);
 					done = true;
 					tries++;
 					break;
 				}
 				default:
 				{
-					rc = Output(GetError().c_str(), 1, 2, -1);
+					rc = Output(true, GetError().c_str(), 1, 2, -1);
 					xxc++;
 					done = true;
 					break;
@@ -19245,7 +21045,7 @@ sint machine::VerifyTable(BOT_DB *dbs_, std::vector<BOT_STMT> *tvec_, sint x, si
 
 		if (rc)
 		{
-			rc = Output(GetError().c_str(), 1, 2, -1);
+			rc = Output(true, GetError().c_str(), 1, 2, -1);
 		}
 	}
 	return fail;
@@ -19256,7 +21056,7 @@ sint machine::CreateDatabase(BOT_DB_M *dbs_)
 	{
 		carr_128 outp;
 		sint op = bot_sprintf(outp.carr, outp.siz, "::CreateDatabase(BOT_DB *dbs_(%i))", (sint)dbs_);
-		op = SOutput(outp.carr, 2);
+		op = Output(outp.carr, 2);
 	}
 
 	if (!dbs_)
@@ -19367,7 +21167,7 @@ sint machine::GetSymbols(std::vector <MICSYM> *syms_, c_char x_cond_[], bool mai
 	{
 		carr_256 outp;
 		sint op = bot_sprintf(outp.carr, outp.siz, "::GetSymbols(std::vector <MICSYM> *syms_(%i), c_char* x_cond_(%i), bool maint(%u))", (sint)syms_, (sint)x_cond_, (uint)maint);
-		op = SOutput(outp.carr, 2);
+		op = Output(outp.carr, 2);
 	}
 
 	if (!syms_)
@@ -19389,7 +21189,7 @@ sint machine::GetSymbols(std::vector <MICSYM> *syms_, c_char x_cond_[], bool mai
 				t.cspec = 0;
 				_char dval[(sizeof(syms_->at(nsiz).sym) * 2) + 4]{ 0 };
 				rc = bot_sprintf(dval, sizeof(dval), "X'%02X'", syms_->at(nsiz).sym);
-				rc = t.AddCond(0, "SYMBOL", sql_comp_keywords[5], dval);
+				rc = t.AddCond(0, "SYMBOL", msy.sql_comp_keywords[5].c_str(), dval);
 			}
 
 			if (x_cond_)
@@ -19404,7 +21204,7 @@ sint machine::GetSymbols(std::vector <MICSYM> *syms_, c_char x_cond_[], bool mai
 			{
 				_char outc[21]{ 0 };
 				rc = bot_sprintf(outc, 21, "%i", syms_->at(nsiz).id);
-				rc = t.AddCond(0, "ID", sql_comp_keywords[5], outc);
+				rc = t.AddCond(0, "ID", msy.sql_comp_keywords[5].c_str(), outc);
 			}
 
 			rc = vtool.AVTV(&stmts, &t, true, true);
@@ -19442,7 +21242,7 @@ sint machine::GetSymbols(std::vector <MICSYM> *syms_, c_char x_cond_[], bool mai
 
 				if (rc)
 				{
-					rc = Output(GetError().c_str(), 1, 2, -1);
+					rc = Output(true, GetError().c_str(), 1, 2, -1);
 				}
 				else
 				{
@@ -19458,7 +21258,7 @@ sint machine::GetSymbols(std::vector <MICSYM> *syms_, c_char x_cond_[], bool mai
 						{
 							if (debug_lvl >= 500 && debug_m)
 							{
-								rc = SOutput("SQLITE_OK", 2);
+								rc = Output("SQLITE_OK", 2);
 							}
 							done = true;
 							break;
@@ -19467,7 +21267,7 @@ sint machine::GetSymbols(std::vector <MICSYM> *syms_, c_char x_cond_[], bool mai
 						{
 							if (debug_lvl >= 500 && debug_m)
 							{
-								rc = SOutput("SQLITE_DONE", 2);
+								rc = Output("SQLITE_DONE", 2);
 							}
 							done = true;
 							break;
@@ -19476,7 +21276,7 @@ sint machine::GetSymbols(std::vector <MICSYM> *syms_, c_char x_cond_[], bool mai
 						{
 							if (debug_lvl >= 500 && debug_m)
 							{
-								rc = SOutput("SQLITE_ROW", 2);
+								rc = Output("SQLITE_ROW", 2);
 							}
 
 							rc = FindColumn("SYMBOL", ppstmt);
@@ -19807,14 +21607,14 @@ sint machine::GetSymbols(std::vector <MICSYM> *syms_, c_char x_cond_[], bool mai
 						{
 							if (debug_lvl >= 500 && debug_m)
 							{
-								rc = SOutput("SQLITE_BUSY", 2);
+								rc = Output("SQLITE_BUSY", 2);
 							}
 							done = true;
 							break;
 						}
 						default:
 						{
-							rc = Output(GetError().c_str(), 1, 2, -1);
+							rc = Output(true, GetError().c_str(), 1, 2, -1);
 							done = true;
 							break;
 						}
@@ -19825,7 +21625,7 @@ sint machine::GetSymbols(std::vector <MICSYM> *syms_, c_char x_cond_[], bool mai
 
 					if (rc)
 					{
-						sint xp = Output(GetError().c_str(), 1, 2, -1);
+						sint xp = Output(true, GetError().c_str(), 1, 2, -1);
 					}
 				}
 				d_con_->o_com = false;
@@ -19849,7 +21649,7 @@ sint machine::GetSymbols(std::vector <MICSYM> *syms_, c_char x_cond_[], bool mai
 		}
 		if (debug_lvl >= 500 && debug_m)
 		{
-			sint xp = SOutput("GetSymbols() done", 2);
+			sint xp = Output("GetSymbols() done", 2);
 		}
 		return 0;
 	}
@@ -19862,7 +21662,7 @@ sint machine::AddSymbols(std::vector <MICSYM> *syms_)
 	{
 		carr_128 outp;
 		sint op = bot_sprintf(outp.carr, outp.siz, "::AddSymbols(std::vector <MICSYM> *syms_(%i))", (sint)syms_);
-		op = SOutput(outp.carr, 2);
+		op = Output(outp.carr, 2);
 	}
 
 	if (!syms_)
@@ -20314,11 +22114,11 @@ sint machine::AddSymbols(std::vector <MICSYM> *syms_)
 
 			if (syms_->at(eles[x]).id > 0)
 			{
-				sint xp = t.AddCond(0, "ID", sql_comp_keywords[5], stool.ITOA(syms_->at(eles[x]).id).c_str());
+				sint xp = t.AddCond(0, "ID", msy.sql_comp_keywords[5].c_str(), stool.ITOA(syms_->at(eles[x]).id).c_str());
 			}
 			_char str_[(sizeof(syms_->at(eles[x]).sym) * 2) + 4]{ 0 };
 			sint xc = bot_sprintf(str_, sizeof(str_), "X'%02X'", syms_->at(eles[x]).sym);
-			xc = t.AddCond(0, "SYMBOL", sql_comp_keywords[5], str_);
+			xc = t.AddCond(0, "SYMBOL", msy.sql_comp_keywords[5].c_str(), str_);
 			xc = vtool.AVTV(&tvec, &t, true, true);
 		}
 	}
@@ -20355,7 +22155,7 @@ sint machine::GetCode(std::vector<MACSYM>* codes_, c_char x_cond_[], bool maint)
 	{
 		carr_256 outp;
 		sint op = bot_sprintf(outp.carr, outp.siz, "::GetCode(std::vector <MACSYM> *codes_(%i), c_char* x_cond_(%i), bool maint(%u))", (sint)codes_, (sint)x_cond_, (uint)maint);
-		op = SOutput(outp.carr, 2);
+		op = Output(outp.carr, 2);
 	}
 
 	if (!codes_)
@@ -20402,7 +22202,7 @@ sint machine::GetCode(std::vector<MACSYM>* codes_, c_char x_cond_[], bool maint)
 
 					if (str.length() > 3)
 					{
-						rc = t.AddCond(0, "DATA", sql_comp_keywords[5], str.c_str());
+						rc = t.AddCond(0, "DATA", msy.sql_comp_keywords[5].c_str(), str.c_str());
 					}
 				}
 
@@ -20418,7 +22218,7 @@ sint machine::GetCode(std::vector<MACSYM>* codes_, c_char x_cond_[], bool maint)
 				{
 					_char outc[21]{ 0 };
 					rc = bot_sprintf(outc, 21, "%i", codes_->at(xsiz).id);
-					rc = t.AddCond(0, "ID", sql_comp_keywords[5], outc);
+					rc = t.AddCond(0, "ID", msy.sql_comp_keywords[5].c_str(), outc);
 				}
 
 				stmts.push_back(t);
@@ -20458,7 +22258,7 @@ sint machine::GetCode(std::vector<MACSYM>* codes_, c_char x_cond_[], bool maint)
 
 				if (rc)
 				{
-					rc = Output(GetError().c_str(), 1, 2, -1);
+					rc = Output(true, GetError().c_str(), 1, 2, -1);
 				}
 				else
 				{
@@ -20474,7 +22274,7 @@ sint machine::GetCode(std::vector<MACSYM>* codes_, c_char x_cond_[], bool maint)
 						{
 							if (debug_lvl >= 500 && debug_m)
 							{
-								rc = SOutput("SQLITE_OK", 2);
+								rc = Output("SQLITE_OK", 2);
 							}
 							done = true;
 							break;
@@ -20483,7 +22283,7 @@ sint machine::GetCode(std::vector<MACSYM>* codes_, c_char x_cond_[], bool maint)
 						{
 							if (debug_lvl >= 500 && debug_m)
 							{
-								rc = SOutput("SQLITE_DONE", 2);
+								rc = Output("SQLITE_DONE", 2);
 							}
 							done = true;
 							break;
@@ -20492,7 +22292,7 @@ sint machine::GetCode(std::vector<MACSYM>* codes_, c_char x_cond_[], bool maint)
 						{
 							if (debug_lvl >= 500 && debug_m)
 							{
-								rc = SOutput("SQLITE_ROW", 2);
+								rc = Output("SQLITE_ROW", 2);
 							}
 
 							rc = FindColumn("DATA", ppstmt);
@@ -21032,14 +22832,14 @@ sint machine::GetCode(std::vector<MACSYM>* codes_, c_char x_cond_[], bool maint)
 						{
 							if (debug_lvl >= 500 && debug_m)
 							{
-								sint xp = SOutput("SQLITE_BUSY", 2);
+								sint xp = Output("SQLITE_BUSY", 2);
 							}
 							done = true;
 							break;
 						}
 						default:
 						{
-							sint xp = Output(GetError().c_str(), 1, 2, -1);
+							sint xp = Output(true, GetError().c_str(), 1, 2, -1);
 							done = true;
 							break;
 						}
@@ -21050,7 +22850,7 @@ sint machine::GetCode(std::vector<MACSYM>* codes_, c_char x_cond_[], bool maint)
 
 					if (rc)
 					{
-						sint xp = Output(GetError().c_str(), 1, 2, -1);
+						sint xp = Output(true, GetError().c_str(), 1, 2, -1);
 					}
 				}
 				d_con_->o_com = false;
@@ -21075,7 +22875,7 @@ sint machine::GetCode(std::vector<MACSYM>* codes_, c_char x_cond_[], bool maint)
 
 		if (debug_lvl >= 500 && debug_m)
 		{
-			rc = SOutput("GetCode() done", 2);
+			rc = Output("GetCode() done", 2);
 		}
 		return 0;
 	}
@@ -21088,7 +22888,7 @@ sint machine::AddCode(std::vector<MACSYM > *codes_)
 	{
 		carr_128 outp;
 		sint op = bot_sprintf(outp.carr, outp.siz, "::AddCode(std::vector <MACSYM> *codes_(%i))", (sint)codes_->size());
-		op = SOutput(outp.carr, 2);
+		op = Output(outp.carr, 2);
 	}
 
 	if (!codes_)
@@ -21751,14 +23551,14 @@ sint machine::AddCode(std::vector<MACSYM > *codes_)
 
 				if (codes_->at(eles[x]).id > 0)
 				{
-					sint xp = t.AddCond(0, "ID", sql_comp_keywords[5], stool.ITOA(codes_->at(eles[x]).id).c_str());
+					sint xp = t.AddCond(0, "ID", msy.sql_comp_keywords[5].c_str(), stool.ITOA(codes_->at(eles[x]).id).c_str());
 				}
 
 				std::string xstr;
 				xstr.append("X'");
 				xstr.append(con_str.c_str());
 				xstr.append("'");
-				sint xc = t.AddCond(0, "DATA", sql_comp_keywords[5], xstr.c_str());
+				sint xc = t.AddCond(0, "DATA", msy.sql_comp_keywords[5].c_str(), xstr.c_str());
 				xc = vtool.AVTV(&tvec, &t, true, true);
 			}
 		}
@@ -21795,7 +23595,7 @@ sint machine::GetCommand(BOTCOMMAND *Command_, std::vector<std::string> *conds_)
 	{
 		carr_256 outp;
 		sint op = bot_sprintf(outp.carr, outp.siz, "::GetCommand(BOTCOMMAND *Command_(%i), std::vector<std::string> *conds_(%i))", (sint)Command_, (sint)conds_);
-		op = SOutput(outp.carr, 2);
+		op = Output(outp.carr, 2);
 	}
 	if (!Command_)
 	{
@@ -21817,7 +23617,7 @@ sint machine::GetCommands(std::vector<BOTCOMMAND> *Commands_, std::vector<std::s
 	{
 		carr_256 outp;
 		sint op = bot_sprintf(outp.carr, outp.siz, "::GetCommands(std::vector<BOTCOMMAND> *Command_(%i), std::vector<std::string>* conds_(%i))", (sint)Commands_, (sint)conds_);
-		op = SOutput(outp.carr, 2);
+		op = Output(outp.carr, 2);
 	}
 
 	if (!Commands_)
@@ -21838,15 +23638,15 @@ sint machine::GetCommands(std::vector<BOTCOMMAND> *Commands_, std::vector<std::s
 
 			if (!Commands_->at(x).cmd.empty())
 			{
-				xc = t.AddCond(0, "COMMAND", sql_comp_keywords[5], LEncStrI(Uppercase(CleanPunctuation(Commands_->at(x).cmd.c_str()).c_str()).c_str(), -1).c_str());
+				xc = t.AddCond(0, "CMD", msy.sql_comp_keywords[5].c_str(), LEncStrI(UCASE(CPunc(Commands_->at(x).cmd.c_str()).c_str()).c_str(), -1).c_str());
 			}
 			if (Commands_->at(x).cmd_id > 0)
 			{
-				xc = t.AddCond(0, "CMD_ID", sql_comp_keywords[5], stool.ITOA(Commands_->at(x).cmd_id).c_str());
+				xc = t.AddCond(0, "CMD_ID", msy.sql_comp_keywords[5].c_str(), stool.ITOA(Commands_->at(x).cmd_id).c_str());
 			}
 			if (Commands_->at(x).id > 0)
 			{
-				xc = t.AddCond(0, "ID", sql_comp_keywords[5], stool.ITOA(Commands_->at(x).id).c_str());
+				xc = t.AddCond(0, "ID", msy.sql_comp_keywords[5].c_str(), stool.ITOA(Commands_->at(x).id).c_str());
 			}
 			if (xc > -1)
 			{
@@ -21942,7 +23742,7 @@ sint machine::GetCommands(std::vector<BOTCOMMAND> *Commands_, std::vector<std::s
 						{
 							if (debug_lvl >= 700 && debug_m)
 							{
-								rc = SOutput("SQLITE_OK", 2);
+								rc = Output("SQLITE_OK", 2);
 							}
 							break;
 						}
@@ -21950,7 +23750,7 @@ sint machine::GetCommands(std::vector<BOTCOMMAND> *Commands_, std::vector<std::s
 						{
 							if (debug_lvl >= 700 && debug_m)
 							{
-								rc = SOutput("SQLITE_DONE", 2);
+								rc = Output("SQLITE_DONE", 2);
 							}
 							done = true;
 							break;
@@ -21959,7 +23759,7 @@ sint machine::GetCommands(std::vector<BOTCOMMAND> *Commands_, std::vector<std::s
 						{
 							if (debug_lvl >= 700 && debug_m)
 							{
-								rc = SOutput("SQLITE_ROW", 2);
+								rc = Output("SQLITE_ROW", 2);
 							}
 
 							rc = FindColumn("PRIV", ppstmt);
@@ -21974,7 +23774,7 @@ sint machine::GetCommands(std::vector<BOTCOMMAND> *Commands_, std::vector<std::s
 									if (debug_lvl >= 500 && debug_m)
 									{
 										c_char* output("not enough priv");
-										xc = SOutput(output, 2);
+										xc = Output(output, 2);
 									}
 								}
 								else
@@ -21984,6 +23784,8 @@ sint machine::GetCommands(std::vector<BOTCOMMAND> *Commands_, std::vector<std::s
 										BOTCOMMAND n;
 										Commands_->push_back(n);
 									}
+									Commands_->at(ret).priv = rc;
+
 									rc = FindColumn("ID", ppstmt);
 
 									if (rc > -1)
@@ -21998,7 +23800,7 @@ sint machine::GetCommands(std::vector<BOTCOMMAND> *Commands_, std::vector<std::s
 										Commands_->at(ret).cmd_id = sqlite3_column_int(ppstmt, rc);
 									}
 
-									rc = FindColumn("COMMAND", ppstmt);
+									rc = FindColumn("CMD", ppstmt);
 
 									if (rc > -1)
 									{
@@ -22015,7 +23817,7 @@ sint machine::GetCommands(std::vector<BOTCOMMAND> *Commands_, std::vector<std::s
 						default:
 						{
 							done = true;
-							rc = Output(GetError().c_str(), 1, 2, -1);
+							rc = Output(true, GetError().c_str(), 1, 2, -1);
 							break;
 						}
 						}
@@ -22025,13 +23827,13 @@ sint machine::GetCommands(std::vector<BOTCOMMAND> *Commands_, std::vector<std::s
 
 					if (rc)
 					{
-						rc = Output(GetError().c_str(), 1, 2, -1);
+						rc = Output(true, GetError().c_str(), 1, 2, -1);
 					}
 
 				}
 				else
 				{
-					rc = Output(GetError().c_str(), 1, 2, -1);
+					rc = Output(true, GetError().c_str(), 1, 2, -1);
 				}
 			}
 			d_con_->o_com = false;
@@ -22041,7 +23843,7 @@ sint machine::GetCommands(std::vector<BOTCOMMAND> *Commands_, std::vector<std::s
 			{
 				hdb = CloseDB(&dbs, &fdb);
 			}
-			ret = vtool.SortV(Commands_, BOT_VAL_CMD, BOT_CMD_CID);
+			ret = vtool.SortV(Commands_, VTV_VCMD, BOT_CMD_CID);
 			return ret;
 		}
 	}
@@ -22053,7 +23855,7 @@ sint machine::GetLogin(c_char* str_)
 	{
 		carr_256 ncar;
 		sint xc = bot_sprintf(ncar.carr, ncar.siz, "::GetLogin(c_char* str_(%i))", (sint)str_);
-		xc = SOutput(ncar.carr, 2);
+		xc = Output(ncar.carr, 2);
 	}
 
 	if (!str_)
@@ -22064,7 +23866,7 @@ sint machine::GetLogin(c_char* str_)
 	BOT_STMT t(false, 0, "litebot", "ACCOUNTS", 1);
 	std::string clstr;
 	sint xc = GetPCliMem(BOT_C_LOGIN_NAME, &clstr);
-	t.AddCond(0, "LOGIN_NAME", sql_comp_keywords[5], LEncStrI(Uppercase(clstr.c_str()).c_str(), -1).c_str());
+	t.AddCond(0, "LOGIN_NAME", msy.sql_comp_keywords[5].c_str(), LEncStrI(UCASE(clstr.c_str()).c_str(), -1).c_str());
 	t.cspec = 0;
 	t.rlim = 1;
 	xc = BQS(&t);
@@ -22098,7 +23900,7 @@ sint machine::GetLogin(c_char* str_)
 					{
 						if (debug_lvl >= 700 && debug_m)
 						{
-							sint op = SOutput("SQLITE_OK", 2);
+							sint op = Output("SQLITE_OK", 2);
 						}
 						break;
 					}
@@ -22106,7 +23908,7 @@ sint machine::GetLogin(c_char* str_)
 					{
 						if (debug_lvl >= 700 && debug_m)
 						{
-							sint op = SOutput("SQLITE_DONE", 2);
+							sint op = Output("SQLITE_DONE", 2);
 						}
 						done = true;
 						break;
@@ -22115,7 +23917,7 @@ sint machine::GetLogin(c_char* str_)
 					{
 						if (debug_lvl >= 700 && debug_m)
 						{
-							sint op = SOutput("SQLITE_ROW", 2);
+							sint op = Output("SQLITE_ROW", 2);
 						}
 
 						if (sqlite3_column_text(ppstmt, 2) != NULL)
@@ -22217,13 +24019,13 @@ sint machine::GetLogin(c_char* str_)
 					{
 						if (debug_lvl >= 700 && debug_m)
 						{
-							sint op = SOutput("SQLITE_BUSY", 2);
+							sint op = Output("SQLITE_BUSY", 2);
 						}
 						break;
 					}
 					default:
 					{
-						sint op = Output(GetError().c_str(), 1, 2, -1);
+						sint op = Output(true, GetError().c_str(), 1, 2, -1);
 						break;
 					}
 					}
@@ -22233,12 +24035,12 @@ sint machine::GetLogin(c_char* str_)
 
 				if (xc)
 				{
-					sint op = Output(GetError().c_str(), 1, 2, -1);
+					sint op = Output(true, GetError().c_str(), 1, 2, -1);
 				}
 			}
 			else
 			{
-				sint op = Output(GetError().c_str(), 1, 2, -1);
+				sint op = Output(true, GetError().c_str(), 1, 2, -1);
 			}
 
 			d_con_->o_com = false;
@@ -22259,7 +24061,7 @@ sint machine::UpdateAccount(BOT_CLIENT *Client_)
 	{
 		carr_128 ncar;
 		sint xc = bot_sprintf(ncar.carr, ncar.siz, "::UpdateAccount(BOT_CLIENT* Client_(%i))", (sint)Client_);
-		xc = SOutput(ncar.carr, 2);
+		xc = Output(ncar.carr, 2);
 	}
 	if (!Client_)
 	{
@@ -22269,15 +24071,15 @@ sint machine::UpdateAccount(BOT_CLIENT *Client_)
 	BOT_STMT t(false, 1, "litebot", "ACCOUNTS", 1);
 	t.cspec = 0;
 	t.act = 0;
-	sint xc = t.AddCond(0, "LOGIN_NAME", sql_comp_keywords[5], LEncStrI(Client_->login_name.c_str(), -1).c_str());
-	xc = t.AddCond(0, "ID", sql_comp_keywords[5], stool.ITOA(Client_->lid).c_str());
+	sint xc = t.AddCond(0, "LOGIN_NAME", msy.sql_comp_keywords[5].c_str(), LEncStrI(Client_->login_name.c_str(), -1).c_str());
+	xc = t.AddCond(0, "ID", msy.sql_comp_keywords[5].c_str(), stool.ITOA(Client_->lid).c_str());
 
 	if (Client_->loggedin)
 	{
 		if (Client_->changename)
 		{
 			std::string str;
-			str.append(Uppercase(Client_->login_name.c_str()));
+			str.append(UCASE(Client_->login_name.c_str()));
 			xc = t.AddCol("LOGIN_NAME", LEncStrI(str.c_str(), -1).c_str());
 		}
 
@@ -22311,7 +24113,7 @@ sint machine::GetLastAccess(BOT_DB_M *dbs_, sint *lmo_, sint *lmo_ns_, sint *lma
 	{
 		carr_512 outp;
 		sint op = bot_sprintf(outp.carr, outp.siz, "::GetLastAccess(BOT_DB_M* dbs_(%i), sint *lmo_(%i), sint *lmo_ns_(%i), sint *lma_(%i), sint *lma_ns_(%i))(", (sint)dbs_, (sint)lmo_, (sint)lmo_ns_, (sint)lma_, (sint)lma_ns_);
-		op = SOutput(outp.carr, 2);
+		op = Output(outp.carr, 2);
 	}
 
 	if (!dbs_ || !lmo_ || !lmo_ns_ || !lma_ || !lma_ns_)
@@ -22352,7 +24154,7 @@ sint machine::GetLastAccess(BOT_DB_M *dbs_, sint *lmo_, sint *lmo_ns_, sint *lma
 						{
 							if (debug_lvl >= 750 && debug_m)
 							{
-								sint xp = SOutput("SQLITE_OK", 2);
+								sint xp = Output("SQLITE_OK", 2);
 							}
 							break;
 						}
@@ -22360,7 +24162,7 @@ sint machine::GetLastAccess(BOT_DB_M *dbs_, sint *lmo_, sint *lmo_ns_, sint *lma
 						{
 							if (debug_lvl >= 750 && debug_m)
 							{
-								sint xp = SOutput("SQLITE_DONE", 2);
+								sint xp = Output("SQLITE_DONE", 2);
 							}
 							done = true;
 							break;
@@ -22369,7 +24171,7 @@ sint machine::GetLastAccess(BOT_DB_M *dbs_, sint *lmo_, sint *lmo_ns_, sint *lma
 						{
 							if (debug_lvl >= 750 && debug_m)
 							{
-								sint xp = SOutput("SQLITE_ROW", 2);
+								sint xp = Output("SQLITE_ROW", 2);
 							}
 
 							if (lma_)
@@ -22434,14 +24236,14 @@ sint machine::GetLastAccess(BOT_DB_M *dbs_, sint *lmo_, sint *lmo_ns_, sint *lma
 						{
 							if (debug_lvl >= 750 && debug_m)
 							{
-								sint xp = SOutput("SQLITE_BUSY", 2);
+								sint xp = Output("SQLITE_BUSY", 2);
 							}
 							done = true;
 							break;
 						}
 						default:
 						{
-							sint xp = Output(GetError().c_str(), 1, 2, -1);
+							sint xp = Output(true, GetError().c_str(), 1, 2, -1);
 							done = true;
 							break;
 						}
@@ -22452,12 +24254,12 @@ sint machine::GetLastAccess(BOT_DB_M *dbs_, sint *lmo_, sint *lmo_ns_, sint *lma
 
 					if (xc)
 					{
-						sint xp = Output(GetError().c_str(), 1, 2, -1);
+						sint xp = Output(true, GetError().c_str(), 1, 2, -1);
 					}
 				}
 				else
 				{
-					sint xp = Output(GetError().c_str(), 1, 2, -1);
+					sint xp = Output(true, GetError().c_str(), 1, 2, -1);
 				}
 
 				d_con_->o_com = false;
@@ -22479,7 +24281,7 @@ sint machine::LastAccessMaintenance(BOT_DB_M *dbs_)
 	{
 		carr_256 outp;
 		sint xc = bot_sprintf(outp.carr, outp.siz, "::LastAccessMaintenance(BOT_DB_M *dbs_(%i)", (sint)dbs_);
-		xc = SOutput(outp.carr, 2);
+		xc = Output(outp.carr, 2);
 	}
 
 	if (!dbs_)
@@ -22522,7 +24324,7 @@ sint machine::LastAccessMaintenance(BOT_DB_M *dbs_)
 						{
 							if (debug_lvl >= 750 && debug_m)
 							{
-								sint xp = SOutput("SQLITE_OK", 2);
+								sint xp = Output("SQLITE_OK", 2);
 							}
 							break;
 						}
@@ -22530,7 +24332,7 @@ sint machine::LastAccessMaintenance(BOT_DB_M *dbs_)
 						{
 							if (debug_lvl >= 750 && debug_m)
 							{
-								sint xp = SOutput("SQLITE_DONE", 2);
+								sint xp = Output("SQLITE_DONE", 2);
 							}
 
 							xc = FindColumn("ID", ppstmt);
@@ -22557,7 +24359,7 @@ sint machine::LastAccessMaintenance(BOT_DB_M *dbs_)
 						{
 							if (debug_lvl >= 750 && debug_m)
 							{
-								sint xp = SOutput("SQLITE_ROW", 2);
+								sint xp = Output("SQLITE_ROW", 2);
 							}
 
 							xc = FindColumn("ID", ppstmt);
@@ -22583,14 +24385,14 @@ sint machine::LastAccessMaintenance(BOT_DB_M *dbs_)
 						{
 							if (debug_lvl >= 750 && debug_m)
 							{
-								sint xp = SOutput("SQLITE_BUSY", 2);
+								sint xp = Output("SQLITE_BUSY", 2);
 							}
 							done = true;
 							break;
 						}
 						default:
 						{
-							sint xp = Output(GetError().c_str(), 1, 2, -1);
+							sint xp = Output(true, GetError().c_str(), 1, 2, -1);
 							done = true;
 							break;
 						}
@@ -22606,12 +24408,12 @@ sint machine::LastAccessMaintenance(BOT_DB_M *dbs_)
 
 					if (xc)
 					{
-						sint xp = Output(GetError().c_str(), 1, 2, -1);
+						sint xp = Output(true, GetError().c_str(), 1, 2, -1);
 					}
 				}
 				else
 				{
-					xc = Output(GetError().c_str(), 1, 2, -1);
+					xc = Output(true, GetError().c_str(), 1, 2, -1);
 				}
 
 				d_con_->o_com = false;
@@ -22633,7 +24435,7 @@ sint machine::PushToDBList(BOT_DB *dbs_)
 	{
 		carr_64 outp;
 		bot_sprintf(outp.carr, outp.siz, "PushToDBList(BOT_DB *dbs_(%i))", (sint)dbs_);
-		sint op = SOutput(outp.carr, 2);
+		sint op = Output(outp.carr, 2);
 	}
 
 	if (!dbs_)
@@ -23007,7 +24809,7 @@ sint machine::ThreadRest(sllint dur, sint qt_lvl)
 	{
 		if (debug_lvl >= 100 && debug_m)
 		{
-			sint rc = SOutput("finish signal", 2);
+			sint rc = Output("finish signal", 2);
 		}
 	}
 	else
@@ -23174,7 +24976,7 @@ sint machine::StopAllThreads()
 {
 	if (debug_lvl >= 100 && debug_m)
 	{
-		sint xc = SOutput("::StopAllThreads()", 2);
+		sint xc = Output("::StopAllThreads()", 2);
 	}
 
 	sint log_at = -1;
@@ -23342,7 +25144,7 @@ sint machine::InitThread(TINFO_M *tts_, sint* ret_)
 	{
 		carr_256 outp;
 		sint op = bot_sprintf(outp.carr, outp.siz, "::InitThread(TINFO_M* tts_(%i), sint* ret_(%i))", (sint)tts_, (sint)ret_);
-		op = SOutput(outp.carr, 2);
+		op = Output(outp.carr, 2);
 	}
 
 	if (!tts_)
@@ -23367,7 +25169,7 @@ sint machine::InitThreads(std::vector<TINFO_M> *tts_, std::vector<sint>* rets_)
 	{
 		carr_256 outp;
 		sint op = bot_sprintf(outp.carr, outp.siz, "::InitThreads(std::vector<TINFO_M> *tts_(%i), std::vector<sint> *rets_(%i))", (sint)tts_, (sint)rets_);
-		op = SOutput(outp.carr, 2);
+		op = Output(outp.carr, 2);
 	}
 
 	if (!tts_ || !rets_)
@@ -23426,7 +25228,7 @@ sint machine::CreateThread(TINFO_M* tts_, sint* ret_)
 	{
 		carr_128 outp;
 		sint op = bot_sprintf(outp.carr, outp.siz, "::CreateThread(TINFO_M* tts_(%i), sint* ret(%i))", (sint)tts_, (sint)ret_);
-		op = SOutput(outp.carr, 2);
+		op = Output(outp.carr, 2);
 	}
 
 	if (!tts_)
@@ -23464,7 +25266,7 @@ sint machine::CreateThread(TINFO_M* tts_, sint* ret_)
 
 			if (xc < 0)
 			{
-				sint xp = Output("error: decrementing open thread count.", 1, 2, -1);
+				sint xp = Output(true, "error: decrementing open thread count.", 1, 2, -1);
 				return xc;
 			}
 
@@ -23500,14 +25302,14 @@ sint machine::CreateThread(TINFO_M* tts_, sint* ret_)
 					if (xc)
 					{
 						na = bot_sprintf(ncar.carr, ncar.siz, "Error(%i) initializing thread:%s", xc, tts.thread_name.c_str());
-						na = SOutput(ncar.carr, 2);
+						na = Output(ncar.carr, 2);
 					}
 					else
 					{
 						if (debug_lvl >= 200)
 						{
 							na = bot_sprintf(ncar.carr, ncar.siz, "thread created %i %s", tts.lid, tts.thread_name.c_str());
-							na = SOutput(ncar.carr, 2);
+							na = Output(ncar.carr, 2);
 						}
 					}
 				}
@@ -23543,7 +25345,7 @@ sint machine::CreateThread(TINFO_M* tts_, sint* ret_)
 				{
 					carr_512 ncar;
 					na = bot_sprintf(ncar.carr, ncar.siz, "thread cleared, tts_->lid=%i thread:%s - failed execution speed check", tts.lid, tts.thread_name.c_str());
-					na = SOutput(ncar.carr, 2);
+					na = Output(ncar.carr, 2);
 				}
 			}
 		}
@@ -23556,7 +25358,7 @@ sint machine::FinishThread(TINFO_M* tts_, sint* ret_)
 	{
 		carr_256 outp;
 		sint op = bot_sprintf(outp.carr, outp.siz, "::FinishThread(TINFO_M* tts_(%i), sint* ret_(%i))", (sint)tts_, (sint)ret_);
-		op = SOutput(outp.carr, 2);
+		op = Output(outp.carr, 2);
 	}
 
 	if (!tts_)
@@ -23576,7 +25378,7 @@ sint machine::FinishThread(TINFO_M* tts_, sint* ret_)
 		{
 			carr_512 outp;
 			sint lx = bot_sprintf(outp.carr, outp.siz, "thread:%i (%s) - removed from list before create completed", tts_->lid, tts_->thread_name.c_str());
-			lx = Output(outp.carr, 1, 2, -1);
+			lx = Output(true, outp.carr, 1, 2, -1);
 
 			if (tts_->lid > -1)
 			{
@@ -23595,7 +25397,7 @@ sint machine::FinishThread(TINFO_M* tts_, sint* ret_)
 			{
 				if (debug_lvl >= 200 && debug_m)
 				{
-					sint lx = SOutput("attempting to join thread", 2);
+					sint lx = Output("attempting to join thread", 2);
 				}
 
 				if (tts_->fin == (sint)BOT_THR_RJC || tts_->fin > (sint)BOT_THR_RUN)
@@ -23616,7 +25418,7 @@ sint machine::FinishThread(TINFO_M* tts_, sint* ret_)
 							{
 								carr_128 outp;
 								lx = bot_sprintf(outp.carr, outp.siz, "Error(%i) joining thread:%i", xc, tts_->lid);
-								lx = Output(outp.carr, 1, 2, -1);
+								lx = Output(true, outp.carr, 1, 2, -1);
 							}
 							xc = -1;
 						}
@@ -23630,7 +25432,7 @@ sint machine::FinishThread(TINFO_M* tts_, sint* ret_)
 								{
 									carr_128 outp;
 									lx = bot_sprintf(outp.carr, outp.siz, "thread joined, tts_->lid:%i *ret_:(%i)", tts_->lid, *ret_);
-									lx = SOutput(outp.carr, 2);
+									lx = Output(outp.carr, 2);
 								}
 							}
 							else
@@ -23641,7 +25443,7 @@ sint machine::FinishThread(TINFO_M* tts_, sint* ret_)
 								{
 									carr_128 outp;
 									lx = bot_sprintf(outp.carr, outp.siz, "error: thread joined, tts_->lid=%i xc==%i, return value will be lost as it was not assigned.", tts_->lid, valx);
-									lx = Output(outp.carr, 1, 2, -1);
+									lx = Output(true, outp.carr, 1, 2, -1);
 								}
 							}
 
@@ -23650,7 +25452,7 @@ sint machine::FinishThread(TINFO_M* tts_, sint* ret_)
 
 							if (lx < 0)
 							{
-								lx = Output("error: incrementing open thread count.", 1, 2, -1);
+								lx = Output(true, "error: incrementing open thread count.", 1, 2, -1);
 								xc = -1;
 							}
 						}
@@ -23681,7 +25483,7 @@ sint machine::FinishThread(TINFO_M* tts_, sint* ret_)
 				{
 					carr_128 outp;
 					sint op = bot_sprintf(outp.carr, outp.siz, "Error Invalid join/detach opt(%i) for thread(%i)", tts_->opt, tts_->lid);
-					op = SOutput(outp.carr, 2);
+					op = Output(outp.carr, 2);
 				}
 				if (tts_->lid > -1)
 				{
@@ -23707,7 +25509,7 @@ sint machine::MT()
 	{
 		carr_8 outp;
 		sint op = bot_sprintf(outp.carr, outp.siz, "::MT()");
-		op = SOutput(outp.carr, 2);
+		op = Output(outp.carr, 2);
 	}
 
 	uint bot_started = 0;
@@ -23737,7 +25539,7 @@ sint machine::TM(uint* is_s)
 	{
 		carr_48 outp;
 		sint op = bot_sprintf(outp.carr, outp.siz, "::TM(uint* is_s(%i))", (sint)is_s);
-		op = SOutput(outp.carr, 2);
+		op = Output(outp.carr, 2);
 	}
 
 	if (!is_s)
@@ -23783,7 +25585,7 @@ sint machine::TM(uint* is_s)
 					{
 						carr_64 outp;
 						sint op = bot_sprintf(outp.carr, outp.siz, "clearing ele(%i)", p);
-						op = SOutput(outp.carr, 2);
+						op = Output(outp.carr, 2);
 					}
 					ClearVecEle(MTX_TTS, ntts.lid, false);
 				}
@@ -23795,7 +25597,7 @@ sint machine::TM(uint* is_s)
 						{
 							carr_64 outp;
 							sint op = bot_sprintf(outp.carr, outp.siz, "found unstarted thread (%i)", p);
-							op = SOutput(outp.carr, 2);
+							op = Output(outp.carr, 2);
 						}
 					}
 				}
@@ -23807,7 +25609,7 @@ sint machine::TM(uint* is_s)
 		{
 			if (debug_lvl >= 200 && debug_m)
 			{
-				sint xc = SOutput("adding machine to thread list", 2);
+				sint xc = Output("adding machine to thread list", 2);
 			}
 
 			TINFO tts((sint)PTHREAD_CREATE_DETACHED, ptn.c_str(), NULL);
@@ -23825,7 +25627,7 @@ sint machine::TM(uint* is_s)
 			{
 				if (debug_lvl >= 200 && debug_m)
 				{
-					sint xc = SOutput("creating test threads", 2);
+					sint xc = Output("creating test threads", 2);
 				}
 				std::vector<sint> rets;
 				sint p = InitThreads(&create_vec, &rets);
@@ -23835,7 +25637,7 @@ sint machine::TM(uint* is_s)
 		{
 			if (debug_lvl >= 200 && debug_m)
 			{
-				sint xc = SOutput("adding LogMaintenance to thread list", 2);
+				sint xc = Output("adding LogMaintenance to thread list", 2);
 			}
 			TINFO_M tts((sint)PTHREAD_CREATE_DETACHED, "LogMaintenance", LogMaintenance, lid, 1.0f);
 			sint xc = InitThread(&tts);
@@ -23844,7 +25646,7 @@ sint machine::TM(uint* is_s)
 		{
 			if (debug_lvl >= 200 && debug_m)
 			{
-				sint xc = SOutput("adding DBMaintenance to thread list", 2);
+				sint xc = Output("adding DBMaintenance to thread list", 2);
 			}
 			TINFO_M tts((sint)PTHREAD_CREATE_DETACHED, "DBMaintenance", DBMaintenance, lid, 1.0f);
 			sint xc = InitThread(&tts);
@@ -23855,7 +25657,7 @@ sint machine::TM(uint* is_s)
 			{
 				if (debug_lvl >= 200 && debug_m)
 				{
-					sint xc = SOutput("adding ConsoleThread to thread list", 2);
+					sint xc = Output("adding ConsoleThread to thread list", 2);
 				}
 				TINFO_M tts((sint)PTHREAD_CREATE_DETACHED, "ConsoleThread", ConsoleThread, lid, 1.0f);
 				sint xc = InitThread(&tts);
@@ -23890,7 +25692,7 @@ sllint machine::TestThreadIter(sint to_)
 	{
 		carr_512 outp;
 		sint op = bot_sprintf(outp.carr, outp.siz, "%s: iter_to:%i span.count()=%lli", ptn.c_str(), to_, lc);
-		op = SOutput(outp.carr, 2);
+		op = Output(outp.carr, 2);
 	}
 	return lc;
 }
@@ -23940,979 +25742,9 @@ sllint machine::TestThreadTRat(sint to_)
 	{
 		carr_256 outp;
 		sint op = bot_sprintf(outp.carr, outp.siz, "this thread's time was:%lli compared to fastest time:%lli setting this ratio:%.9f", rc, xc, thr_exe_mod);
-		op = SOutput(outp.carr, 2);
+		op = Output(outp.carr, 2);
 	}
 	return rc;
-}
-
-sint machine::CheckPrintFs()
-{
-	std::string pth;
-	BOTPath(&pth, BOT_MOD_NM);
-	BOT_FILE_M xfile("litebot", ".h", pth.c_str(), BOT_FILE_READ, BOT_F_CON, -1, -1, lid);
-	sint of = -1;
-	sint lx = BOTOpenFile(&xfile, &of);
-
-	if (lx > -1)
-	{
-		uint lct = 1;
-		bool done = false;
-
-		while (!done)
-		{
-			carr_2048 ncar;
-
-			if (f_con[xfile.fcon]->fstrm.getline(ncar.carr, 2048))
-			{
-				std::string str;
-				str.append(ncar.carr);
-				sint f = str.find("bot_sprintf", 0);
-
-				if (f > -1)
-				{
-					std::cout << "bot_sprintf found at litebot.h line:" << lct << std::endl;
-					std::vector<uint> litv, ordv;
-					sint xc = LitLocs(&litv, ncar.carr);
-					uint fct = 0;
-
-					if (litv.size() > 1)
-					{
-						std::string scar;
-
-						for (uint x = litv[0] + 1; x < litv[litv.size() - 1]; x++)
-						{
-							scar.push_back(ncar.carr[x]);
-						}
-						for (sint xf = scar.find("%", 0); xf > -1; xf = scar.find("%", xf + 1))
-						{
-							fct++;
-						}
-
-						scar.clear();
-
-						if (fct)
-						{
-							for (uint x = litv[litv.size() - 1] + 1; x < str.length() - 2; x++)
-							{
-								scar.push_back(str[x]);
-							}
-							litv.clear();
-							xc = LitLocs(&litv, scar.c_str());
-							xc = OrdLocs(&litv, &ordv, scar.c_str());
-							uint sct = 0;
-
-							for (sint xf = scar.find(",", 0); xf > -1; xf = scar.find(",", xf + 1))
-							{
-								xc = OrdEnc((uint)xf, &litv, &ordv, scar.c_str());
-
-								if (xc < 0)
-								{
-									sct++;
-								}
-							}
-
-							if (fct != sct)
-							{
-								std::cout << "var args mismatch at line:" << lct << "; " << fct << " format specifiers, " << sct << " var args" << std::endl;
-							}
-							else
-							{
-								std::cout << "var args match at line:" << lct << std::endl;
-							}
-						}
-					}
-				}
-				lct++;
-			}
-			else
-			{
-				done = true;
-			}
-		}
-
-		std::cout << "litebot.h ends at line:" << lct << std::endl;
-
-		if (!of)
-		{
-			of = BOTCloseFile(&xfile);
-		}
-	}
-
-	if (lx > -1)
-	{
-		std::string pth;
-		BOTPath(&pth, BOT_MOD_NM);
-		xfile.Renew("litebot", ".cpp", pth.c_str(), BOT_FILE_READ, BOT_F_CON, -1, -1, lid);
-		sint of = -1;
-		lx = BOTOpenFile(&xfile, &of);
-
-		if (lx > -1)
-		{
-			uint lct = 1;
-			bool done = false;
-
-			while (!done)
-			{
-				carr_2048 ncar;
-
-				if (f_con[xfile.fcon]->fstrm.getline(ncar.carr, 2048))
-				{
-					std::string str;
-					str.append(ncar.carr);
-					sint f = str.find("bot_sprintf", 0);
-
-					if (f > -1)
-					{
-						std::cout << "bot_sprintf found at litebot.cpp line:" << lct << std::endl;
-						std::vector<uint> litv, ordv;
-						sint xc = LitLocs(&litv, ncar.carr);
-						uint fct = 0;
-
-						if (litv.size() > 1)
-						{
-							std::string scar;
-
-							for (uint x = litv[0] + 1; x < litv[litv.size() - 1]; x++)
-							{
-								scar.push_back(ncar.carr[x]);
-							}
-							for (sint xf = scar.find("%", 0); xf > -1; xf = scar.find("%", xf + 1))
-							{
-								fct++;
-							}
-
-							scar.clear();
-
-							if (fct)
-							{
-								for (uint x = litv[litv.size() - 1] + 1; x < str.length() - 2; x++)
-								{
-									scar.push_back(str[x]);
-								}
-								litv.clear();
-								xc = LitLocs(&litv, scar.c_str());
-								xc = OrdLocs(&litv, &ordv, scar.c_str());
-								uint sct = 0;
-
-								for (sint xf = scar.find(",", 0); xf > -1; xf = scar.find(",", xf + 1))
-								{
-									xc = OrdEnc((uint)xf, &litv, &ordv, scar.c_str());
-
-									if (xc < 0)
-									{
-										sct++;
-									}
-								}
-
-								if (fct != sct)
-								{
-									std::cout << "var args mismatch at line:" << lct << "; " << fct << " format specifiers, " << sct << " var args" << std::endl;
-								}
-								else
-								{
-									std::cout << "var args match at line:" << lct << std::endl;
-								}
-							}
-						}
-					}
-					lct++;
-				}
-				else
-				{
-					done = true;
-				}
-			}
-			std::cout << "litebot.cpp ends at line:" << lct << std::endl;
-			if (!of)
-			{
-				of = BOTCloseFile(&xfile);
-			}
-			return lx;
-		}
-	}
-	return -1;
-}
-
-// work
-
-sint machine::ProcErrLog(sint opt, c_char* in_file_p, c_char* in_file_n, c_char* in_file_t, c_char* rampid, c_char* insp_type, c_char* date_, c_char* eid_, c_char* toval_)
-{
-	if (!in_file_n || !in_file_t || !in_file_p || !rampid)
-	{
-		return -1;
-	}
-	/*
-	opt:
-
-	1 = change ramp to toval_
-	2 = change insptype to toval_
-	3 = change date to toval_
-	4 = change employee id to toval_
-
-	*/
-	carr_32 dcar;
-	sint of = GetDate(&dcar, false);
-	std::string vdate;
-	for (uint x = 4; x < strlen(dcar.carr); x++)
-	{
-		vdate.push_back(dcar.carr[x]);
-	}
-	for (uint x = 0; x < 4; x++)
-	{
-		vdate.push_back(dcar.carr[x]);
-	}
-	of = BotOut(1, "searching for inspections ");
-
-	bool use_ramp = false;
-
-	if (strlen(rampid))
-	{
-		of = BotOut(2, "ramp: ", rampid);
-		use_ramp = true;
-	}
-
-	bool use_itype = false;
-
-	if (strlen(insp_type))
-	{
-		of = BotOut(2, "type: ", insp_type);
-		use_itype = true;
-	}
-
-	bool use_date = false;
-
-	if (strlen(date_))
-	{
-		of = BotOut(2, "date: ", date_);
-		use_date = true;
-	}
-
-	bool use_eid = false;
-
-	if (strlen(eid_))
-	{
-		of = BotOut(2, "inspector id: ", eid_);
-		use_eid = true;
-	}
-
-	of = BotOut(4, "in file: ", in_file_p, in_file_n, in_file_t);
-	std::vector<carr_512> vvec;
-	BOT_FILE_M xfile(in_file_n, in_file_t, in_file_p, BOT_FILE_READ, BOT_F_CON, -1, -1, lid);
-	of = -1;
-	sint lx = BOTOpenFile(&xfile, &of);
-
-	if (lx > -1)
-	{
-		_char spc = ' ';
-		std::string nm_str;
-		bool done = false;
-
-		while (!done)
-		{
-			carr_512 ncar;
-
-			if (f_con[xfile.fcon]->fstrm.getline(ncar.carr, 511))
-			{
-				if (strlen(ncar.carr) > 22)
-				{
-					bool pass = false;
-
-					if (use_ramp)
-					{
-						std::string nvin;
-
-						for (size_t siz = 0; siz < 5 && ncar.carr[siz] != ' '; siz++)
-						{
-							nvin.push_back(ncar.carr[siz]);
-						}
-						if (!strcmp(rampid, nvin.c_str()))
-						{
-							pass = true;
-						}
-					}
-					if (use_itype)
-					{
-						std::string nvin;
-
-						for (size_t siz = 45; siz < 47 && ncar.carr[siz] != ' '; siz++)
-						{
-							nvin.push_back(ncar.carr[siz]);
-						}
-						if (!strcmp(insp_type, nvin.c_str()))
-						{
-							pass = true;
-						}
-					}
-					if (use_date)
-					{
-						std::string nvin;
-
-						for (size_t siz = 29; siz < 37 && ncar.carr[siz] != ' '; siz++)
-						{
-							nvin.push_back(ncar.carr[siz]);
-						}
-						if (!strcmp(vdate.c_str(), nvin.c_str()))
-						{
-							pass = true;
-						}
-					}
-					if (use_eid)
-					{
-						std::string nvin;
-
-						for (size_t siz = 37; siz < 40 && ncar.carr[siz] != ' '; siz++)
-						{
-							nvin.push_back(ncar.carr[siz]);
-						}
-						if (!strcmp(eid_, nvin.c_str()))
-						{
-							pass = true;
-						}
-					}
-
-					if (pass)
-					{
-						switch (opt)
-						{
-						case 1:
-						{
-							for (uint x = 0; x < ncar.siz; x++)
-							{
-								for (uint y = 0; y < 5; y++)
-								{
-									if (y < strlen(toval_))
-									{
-										memcpy((void*)&ncar.carr[y], (void*)&toval_[y], 1);
-									}
-									else
-									{
-										memcpy((void*)&ncar.carr[y], (void*)&spc, 1);
-									}
-								}
-							}
-							break;
-						}
-						case 2:
-						{
-							for (uint x = 0; x < ncar.siz; x++)
-							{
-								for (uint y = 45; y < 47; y++)
-								{
-									if (y - 45 < strlen(toval_))
-									{
-										memcpy((void*)&ncar.carr[y], (void*)&toval_[y - 45], 1);
-									}
-								}
-							}
-							break;
-						}
-						case 3:
-						{
-							for (uint x = 0; x < ncar.siz; x++)
-							{
-								std::string pdate;
-
-								if (strlen(toval_) > 8)
-								{
-									for (uint x = 0; x < strlen(toval_); x++)
-									{
-										if (toval_[x] != '/')
-										{
-											pdate.push_back(toval_[x]);
-										}
-									}
-								}
-								else
-								{
-									pdate.append(toval_);
-								}
-								std::string ndate;
-
-								if (pdate[0] == '0' || pdate[0] == '1')
-								{
-									for (uint x = 4; x < pdate.length(); x++)
-									{
-										ndate.push_back(pdate[x]);
-									}
-									for (uint x = 0; x < 4; x++)
-									{
-										ndate.push_back(pdate[x]);
-									}
-								}
-								else
-								{
-									ndate.append(pdate.c_str());
-								}
-								for (uint y = 29; y < 37; y++)
-								{
-									if (y - 29 < ndate.length())
-									{
-										memcpy((void*)&ncar.carr[y], (void*)&ndate[y - 29], 1);
-									}
-								}
-							}
-							break;
-						}
-						case 4:
-						{
-							for (uint x = 0; x < ncar.siz; x++)
-							{
-								for (uint y = 37; y < 40; y++)
-								{
-									if (y - 37 < strlen(toval_))
-									{
-										memcpy((void*)&ncar.carr[y], (void*)&toval_[y - 37], 1);
-									}
-								}
-							}
-							break;
-						}
-						default:
-						{
-							break;
-						}
-						}
-					}
-					vvec.push_back(ncar);
-				}
-			}
-			else
-			{
-				done = true;
-			}
-		}
-		if (!of)
-		{
-			of = BOTCloseFile(&xfile);
-		}
-
-		if (use_ramp)
-		{
-			nm_str.append(rampid);
-			nm_str.push_back('_');
-		}
-		if (use_itype)
-		{
-			nm_str.append(insp_type);
-			nm_str.push_back('_');
-		}
-		if (use_date)
-		{
-			nm_str.append(vdate.c_str());
-			nm_str.push_back('_');
-		}
-		if (use_eid)
-		{
-			nm_str.append(eid_);
-			nm_str.push_back('_');
-		}
-
-		nm_str.append("redo");
-		nm_str.append(vdate.c_str());
-		std::string pth;
-		BOTPath(&pth, BOT_MOD_NM);
-		xfile.Renew(nm_str.c_str(), ".txt", pth.c_str(), BOT_FILE_APND, BOT_F_CON, -1, -1, lid);
-		of = -1;
-		lx = BOTOpenFile(&xfile, &of, true);
-
-		for (uint siz = 0; siz < vvec.size(); siz++)
-		{
-			f_con[xfile.fcon]->fstrm << vvec[siz].carr << std::endl;
-		}
-
-		if (!of)
-		{
-			of = BOTCloseFile(&xfile);
-		}
-		return 0;
-	}
-	return -1;
-}
-
-sint machine::ProcVINs(sint opt, c_char* in_file_p, c_char* in_file_n, c_char* in_file_t, c_char* rampid, c_char* insp_type, c_char* date_, c_char* eid_, c_char* toval_)
-{
-	if (!in_file_n || !in_file_t || !in_file_p || !rampid)
-	{
-		return -1;
-	}
-	/*
-	opt:
-	-1/default = vin list
-	1 = rename photos script
-	2 = SQL - UPDATE insptype
-	3 = correct inspdate
-
-	*/
-	carr_32 dcar;
-	sint of = GetDate(&dcar, false);
-	std::string vdate;
-	for (uint x = 4; x < strlen(dcar.carr); x++)
-	{
-		vdate.push_back(dcar.carr[x]);
-	}
-	for (uint x = 0; x < 4; x++)
-	{
-		vdate.push_back(dcar.carr[x]);
-	}
-	of = BotOut(1, "searching for VINs ");
-
-	bool use_ramp = false;
-
-	if (strlen(rampid))
-	{
-		of = BotOut(2, "ramp: ", rampid);
-		use_ramp = true;
-	}
-
-	bool use_itype = false;
-
-	if (strlen(insp_type))
-	{
-		of = BotOut(2, "type: ", insp_type);
-		use_itype = true;
-	}
-
-	bool use_date = false;
-
-	if (strlen(date_))
-	{
-		of = BotOut(2, "date: ", date_);
-		use_date = true;
-	}
-
-	bool use_eid = false;
-
-	if (strlen(eid_))
-	{
-		of = BotOut(2, "inspector id: ", eid_);
-		use_eid = true;
-	}
-
-	of = BotOut(4, "in file: ", in_file_p, in_file_n, in_file_t);
-	std::vector<std::string> vvec;
-	BOT_FILE_M xfile(in_file_n, in_file_t, in_file_p, BOT_FILE_READ, BOT_F_CON, -1, -1, lid);
-	of = -1;
-	sint lx = BOTOpenFile(&xfile, &of);
-
-	if (lx > -1)
-	{
-		std::string nm_str;
-		bool done = false;
-
-		while (!done)
-		{
-			carr_512 ncar;
-
-			if (f_con[xfile.fcon]->fstrm.getline(ncar.carr, 511))
-			{
-				if (strlen(ncar.carr) > 22)
-				{
-					bool pass = false;
-
-					if (!use_ramp && !use_itype && !use_date && !use_eid)
-					{
-						pass = true;
-					}
-
-					if (use_ramp)
-					{
-						std::string nvin;
-
-						for (size_t siz = 0; siz < 5 && ncar.carr[siz] != ' '; siz++)
-						{
-							nvin.push_back(ncar.carr[siz]);
-						}
-						if (!strcmp(rampid, nvin.c_str()))
-						{
-							pass = true;
-						}
-						else
-						{
-							pass = false;
-						}
-
-					}
-					if (use_itype)
-					{
-						std::string nvin;
-
-						for (size_t siz = 45; siz < 47 && ncar.carr[siz] != ' '; siz++)
-						{
-							nvin.push_back(ncar.carr[siz]);
-						}
-						if (!strcmp(insp_type, nvin.c_str()))
-						{
-							pass = true;
-						}
-						else
-						{
-							pass = false;
-						}
-
-					}
-					if (use_date)
-					{
-						std::string nvin;
-
-						for (size_t siz = 29; siz < 37 && ncar.carr[siz] != ' '; siz++)
-						{
-							nvin.push_back(ncar.carr[siz]);
-						}
-						if (!strcmp(vdate.c_str(), nvin.c_str()))
-						{
-							pass = true;
-						}
-						else
-						{
-							pass = false;
-						}
-
-					}
-					if (use_eid)
-					{
-						std::string nvin;
-
-						for (size_t siz = 37; siz < 40 && ncar.carr[siz] != ' '; siz++)
-						{
-							nvin.push_back(ncar.carr[siz]);
-						}
-						if (!strcmp(eid_, nvin.c_str()))
-						{
-							pass = true;
-						}
-						else
-						{
-							pass = false;
-						}
-
-					}
-
-					if (pass)
-					{
-						std::string nvin;
-
-						for (size_t siz = 5; siz < 23; siz++)
-						{
-							nvin.push_back(ncar.carr[siz]);
-						}
-
-						switch (opt)
-						{
-						case 1:
-						{
-							carr_128 xcar;
-							sint x = bot_sprintf(xcar.carr, xcar.siz, "ren ?27????%s20180325%s*.* ?27????%s20180324%s*.*", nvin.c_str(), insp_type, nvin.c_str(), insp_type);
-							nvin.clear();
-							nvin.append(xcar.carr);
-							vvec.push_back(nvin);
-							break;
-						}
-						case 2:
-						case 3:
-						{
-							if (use_ramp && use_date && use_itype && use_eid)
-							{
-								carr_2048 xcar;
-								sint x = bot_sprintf(xcar.carr, xcar.siz, "'%s',\n", nvin.c_str());
-								nvin.clear();
-								nvin.append(xcar.carr);
-								vvec.push_back(nvin);
-							}
-							break;
-						}
-						default:
-						{
-							carr_32 xcar;
-							sint x = bot_sprintf(xcar.carr, xcar.siz, "%s", nvin.c_str());
-							nvin.clear();
-							nvin.append(xcar.carr);
-							vvec.push_back(nvin);
-							break;
-						}
-						}
-					}
-				}
-			}
-			else
-			{
-				done = true;
-			}
-		}
-		if (!of)
-		{
-			of = BOTCloseFile(&xfile);
-		}
-
-		if (use_ramp)
-		{
-			nm_str.append(rampid);
-			nm_str.push_back('_');
-		}
-		if (use_itype)
-		{
-			nm_str.append(insp_type);
-			nm_str.push_back('_');
-		}
-		if (use_date)
-		{
-			nm_str.append(vdate.c_str());
-			nm_str.push_back('_');
-		}
-		if (use_eid)
-		{
-			nm_str.append(eid_);
-			nm_str.push_back('_');
-		}
-		switch (opt)
-		{
-		case 1:
-		{
-			nm_str.append("photo_correct_scripts_");
-			break;
-		}
-		case 2:
-		{
-			vvec[vvec.size() - 1].pop_back();
-			vvec[vvec.size() - 1].pop_back();
-
-			if (use_ramp && use_date && use_itype && use_eid)
-			{
-				std::vector<std::string>nvec;
-				nm_str.append("SQL_scripts_");
-				carr_2048 xcar;
-				sint x = bot_sprintf(xcar.carr, xcar.siz, "update vehicleadmin.inspect\n set insptype='%s'\n where insptype='%s'\n and inspdate=to_date('%s','mm/dd/yyyy'\n and ramp='%s'\n and empno='%s'\n and vin in (\n%v.s\n.\n);", toval_, insp_type, date_, rampid, eid_, &vvec);
-				std::string str;
-				str.append(xcar.carr);
-				nvec.push_back(str);
-				str.clear();
-				bot_strclr(xcar.carr);
-				x = bot_sprintf(xcar.carr, xcar.siz, "update vehicleadmin.damage\n set insptype='%s'\n where insptype='%s'\n and inspdate=to_date('%s','mm/dd/yyyy'\n and ramp='%s'\n and vin in (\n%v.s\n.\n);", toval_, insp_type, date_, rampid, &vvec);
-				str.append(xcar.carr);
-				nvec.push_back(str);
-				vvec.clear();
-
-				for (uint y = 0; y < nvec.size(); y++)
-				{
-					vvec.push_back(nvec[y]);
-				}
-			}
-			break;
-		}
-		case 3:
-		{
-			vvec[vvec.size() - 1].pop_back();
-			vvec[vvec.size() - 1].pop_back();
-
-			if (use_ramp && use_date && use_itype && use_eid)
-			{
-				std::vector<std::string>nvec;
-				nm_str.append("SQL_scripts_");
-				carr_2048 xcar;
-				sint x = bot_sprintf(xcar.carr, xcar.siz, "update vehicleadmin.inspect\n set inspdate=to_date('%s','mm/dd/yy')\n where insptype='%s'\n and inspdate=to_date('%s','mm/dd/yyyy'\n and ramp='%s'\n and empno='%s'\n and vin in (\n%v.s\n.\n);", toval_, insp_type, date_, rampid, eid_, &vvec);
-				std::string str;
-				str.append(xcar.carr);
-				nvec.push_back(str);
-				str.clear();
-				bot_strclr(xcar.carr);
-				x = bot_sprintf(xcar.carr, xcar.siz, "update vehicleadmin.damage\n set inspdate=to_date('%s','mm/dd/yyyy')\n where insptype='%s'\n and inspdate=to_date('%s','mm/dd/yyyy'\n and ramp='%s'\n and vin in (\n%v.s\n.\n);", toval_, insp_type, date_, rampid, &vvec);
-				str.append(xcar.carr);
-				nvec.push_back(str);
-				vvec.clear();
-
-				for (uint y = 0; y < nvec.size(); y++)
-				{
-					vvec.push_back(nvec[y]);
-				}
-			}
-			break;
-		}
-		default:
-		{
-			nm_str.append("vin_");
-			break;
-		}
-		}
-		std::string pth;
-		BOTPath(&pth, BOT_MOD_NM);
-		xfile.Renew(nm_str.c_str(), ".txt", pth.c_str(), BOT_FILE_APND, BOT_F_CON, -1, -1, lid);
-		of = -1;
-		lx = BOTOpenFile(&xfile, &of, true);
-
-		for (uint siz = 0; siz < vvec.size(); siz++)
-		{
-			f_con[xfile.fcon]->fstrm << vvec[siz].c_str() << std::endl;
-		}
-
-		if (!of)
-		{
-			of = BOTCloseFile(&xfile);
-		}
-		return 0;
-	}
-	return -1;
-}
-
-sint machine::GetVINs(c_char* in_file_p, c_char* in_file_n, c_char* in_file_t, c_char* rampid)
-{
-	if (!in_file_n || !in_file_t || !in_file_p || !rampid)
-	{
-		return -1;
-	}
-
-	if (!strlen(rampid))
-	{
-		return -1;
-	}
-
-	std::string vrid;
-	vrid.append(rampid);
-
-	while (vrid.length() < 5)
-	{
-		vrid.push_back(' ');
-	}
-	std::vector<std::string> vvec;
-	sint xc = BotOut(6, "searching for VINs from ramp: ", rampid, " in file: ", in_file_p, in_file_n, in_file_t);
-	BOT_FILE_M xfile(in_file_n, in_file_t, in_file_p, BOT_FILE_READ, BOT_F_CON, -1, -1, lid);
-	sint of = -1;
-	sint lx = BOTOpenFile(&xfile, &of);
-
-	if (lx > -1)
-	{
-		bool done = false;
-
-		while (!done)
-		{
-			carr_1024 ncar;
-
-			if (f_con[xfile.fcon]->fstrm.getline(ncar.carr, 1023))
-			{
-				if (strlen(ncar.carr) > 22)
-				{
-					std::string nvin;
-
-					for (size_t siz = 0; siz < 5; siz++)
-					{
-						nvin.push_back(ncar.carr[siz]);
-					}
-
-					if (!strcmp(vrid.c_str(), nvin.c_str()))
-					{
-						nvin.clear();
-
-
-						for (size_t siz = 5; siz < 23; siz++)
-						{
-							nvin.push_back(ncar.carr[siz]);
-						}
-						carr_128 xcar;
-						sint x = bot_sprintf(xcar.carr, xcar.siz, "ren ?27????0420180325%s*.* ?27????0420180324%s*.*", nvin.c_str(), nvin.c_str());
-						nvin.clear();
-						nvin.append(xcar.carr);
-						vvec.push_back(nvin);
-					}
-				}
-			}
-			else
-			{
-				done = true;
-			}
-		}
-		if (!of)
-		{
-			of = BOTCloseFile(&xfile);
-		}
-
-		std::string nm_str;
-		carr_32 dcar;
-		of = GetDate(&dcar, false);
-		nm_str.append(rampid);
-		nm_str.append("vins");
-		nm_str.append(dcar.carr);
-		std::string pth;
-		BOTPath(&pth, BOT_MOD_NM);
-		xfile.Renew(nm_str.c_str(), ".txt", pth.c_str(), BOT_FILE_APND, BOT_F_CON, -1, -1, lid);
-		of = -1;
-		lx = BOTOpenFile(&xfile, &of, true);
-
-		for (uint siz = 0; siz < vvec.size(); siz++)
-		{
-			f_con[xfile.fcon]->fstrm << vvec[siz].c_str() << std::endl;
-		}
-
-		if (!of)
-		{
-			of = BOTCloseFile(&xfile);
-		}
-	}
-	return -1;
-}
-
-sint machine::AddDlrCode(c_char* to_vin, c_char* in_file)
-{
-	if (strlen(to_vin) != 17)
-	{
-		return -1;
-	}
-
-	std::cout << "searching for VIN: " << to_vin << " to correct dealer code in file: " << in_file << std::endl;
-	std::string pth;
-	BOTPath(&pth, BOT_MOD_NM);
-	BOT_FILE_M xfile(in_file, ".txt", pth.c_str(), BOT_FILE_OVRL, BOT_F_CON, -1, -1, lid);
-	sint of = -1;
-	sint lx = BOTOpenFile(&xfile, &of);
-
-	if (lx > -1)
-	{
-		//lx = 1;
-		bool done = false;
-
-		while (!done)
-		{
-			size_t lin_strt = (size_t)f_con[xfile.fcon]->fstrm.tellp();
-			carr_512 ncar;
-
-			if (f_con[xfile.fcon]->fstrm.getline(ncar.carr, 511))
-			{
-				if (strlen(ncar.carr) > 23)
-				{
-					_char cvin[18] = { 0 };
-
-					for (size_t siz = 0; siz < 17; siz++)
-					{
-						memcpy(&cvin[siz], &ncar.carr[siz + 5], 1);
-					}
-
-					std::cout << "VIN: " << cvin << " : " << lx << std::endl;
-
-					if (!strcmp(to_vin, cvin))
-					{
-						f_con[xfile.fcon]->fstrm.seekp(lin_strt + 81);
-						std::cout << "writing dealer code at: " << f_con[xfile.fcon]->fstrm.tellp() << " for VIN: " << cvin << std::endl;
-						f_con[xfile.fcon]->fstrm.write("ZZZZZZ", strlen("ZZZZZZ"));
-						done = true;
-
-						if (!of)
-						{
-							of = BOTCloseFile(&xfile);
-						}
-						return 0;
-					}
-				}
-			}
-			else
-			{
-				done = true;
-			}
-			lx++;
-		}
-
-		if (!of)
-		{
-			of = BOTCloseFile(&xfile);
-		}
-	}
-	return -1;
 }
 
 sint machine::GetPCli(BOT_CLIENT* val)
@@ -25273,24 +26105,6 @@ bool machine::GetClientLoggedIn()
 	return x;
 }
 
-sint machine::DoOutput()
-{
-	if (!GetClientLoggedIn())
-	{
-		return 0;
-	}
-
-	std::string output = DetermineOutput();
-	sint oc = SOutput(output.c_str(), 0);
-	return oc;
-}
-
-std::string machine::DetermineOutput()
-{
-	std::string suboutput;
-	return suboutput;
-}
-
 void* machine::ScanFileThread(void* vp_)
 {
 	sint xc = (sint)vp_;
@@ -25527,12 +26341,12 @@ void* machine::ConsoleThread(void* vp_)
 		rc = LITEBot.Output(outc.carr, 2);
 	}
 
-	rc = LITEBot.Output("win_LITEBot_I 2018", 2, 0);
+	rc = LITEBot.Output("win_LITEBot_I 2018", 0);
 	bool done = false;
 
 	while (!done)
 	{
-		rc = LITEBot.BOTConsole();
+		rc = LITEBot.BOTConsole(": ");
 		rc = LITEBot.ThreadRest((sllint)BOT_CNSREST, (sint)BOT_THRQ_CONS);
 
 		if (rc)
@@ -25605,7 +26419,7 @@ void* machine::GIPS(void* vp_)
 			ret = bot_sprintf(outp.carr, outp.siz, "Host IPv: IPvU | Host Name:%s", hoe->h_name);
 		}
 
-		ret = LITEBot.Output(outp.carr, 2, 0);
+		ret = LITEBot.Output(true, outp.carr, 2, 0);
 		bot_strclr(outp.carr);
 
 #ifdef _WIN32
@@ -25613,7 +26427,7 @@ void* machine::GIPS(void* vp_)
 		{
 			addr.s_addr = *(uint*)hoe->h_addr_list[x];
 			ret = bot_sprintf(outp.carr, outp.siz, "Host IP: %s", inet_ntoa(addr));
-			ret = LITEBot.Output(outp.carr, 2, 0);
+			ret = LITEBot.Output(true, outp.carr, 2, 0);
 		}
 #else
 		for (uint x = 0; hoe->h_addr_list[x] != NULL; x++)
@@ -25722,7 +26536,7 @@ void* machine::ServThread(void* vp_)
 	if (ret)
 	{
 		rc = bot_sprintf(outp.carr, outp.siz, "Error:%s", servp.emsg.carr);
-		rc = LITEBot.Output(outp.carr, 1, 0);
+		rc = LITEBot.Output(true, outp.carr, 1, 0);
 	}
 
 	if (LITEBot.debug_lvl >= 1 && LITEBot.debug_m)
@@ -25731,7 +26545,7 @@ void* machine::ServThread(void* vp_)
 		{
 			bot_strclr(outp.carr);
 			rc = bot_sprintf(outp.carr, outp.siz, "Host IP(2):(%s) %s", servp.ifam.carr, servp.ipstr.carr);
-			rc = LITEBot.Output(outp.carr, 2, 0);
+			rc = LITEBot.Output(true, outp.carr, 2, 0);
 			ret = servp.Next();
 		}
 	}
@@ -25745,7 +26559,7 @@ void* machine::ServThread(void* vp_)
 		xret = bot_prts.Rem(servp.prt.portn, servp.prt.proto);
 		bot_strclr(outp.carr);
 		rc = bot_sprintf(outp.carr, outp.siz, "Error:%s", servp.emsg.carr);
-		rc = LITEBot.Output(outp.carr, 1, 0);
+		rc = LITEBot.Output(true, outp.carr, 1, 0);
 	}
 
 	ret = servp.Listen(10);
@@ -25756,7 +26570,7 @@ void* machine::ServThread(void* vp_)
 		xret = bot_prts.Rem(servp.prt.portn, servp.prt.proto);
 		bot_strclr(outp.carr);
 		rc = bot_sprintf(outp.carr, outp.siz, "Error:%s", servp.emsg.carr);
-		rc = LITEBot.Output(outp.carr, 1, 0);
+		rc = LITEBot.Output(true, outp.carr, 1, 0);
 	}
 	else
 	{
@@ -25764,7 +26578,7 @@ void* machine::ServThread(void* vp_)
 		{
 			bot_strclr(outp.carr);
 			rc = bot_sprintf(outp.carr, outp.siz, "Listening on Port:%s", servp.servc.carr);
-			rc = LITEBot.Output(outp.carr, 2, 0);
+			rc = LITEBot.Output(true, outp.carr, 2, 0);
 		}
 	}
 
@@ -25784,7 +26598,7 @@ void* machine::ServThread(void* vp_)
 	{
 		bot_strclr(outp.carr);
 		rc = bot_sprintf(outp.carr, outp.siz, "Closing - Port(%s) Socket(%i)", servp.servc.carr, (slint)servp.sck);
-		rc = LITEBot.Output(outp.carr, 2, 0);
+		rc = LITEBot.Output(true, outp.carr, 2, 0);
 	}
 
 	servp.Close();
@@ -26145,15 +26959,13 @@ void* machine::CodeMaintenance(void* vp_)
 	return NULL;
 }
 
-std::string machine::Uppercase(c_char* str_)
+std::string machine::UCASE(c_char* str_)
 {
-	if (debug_lvl >= 1100 && debug_m)
+	if (debug_lvl >= 1500 && debug_m)
 	{
-		std::string output;
-		output.append("Uppercase(");
-		output.append(str_);
-		output.append(")");
-		sint oc = SOutput(output.c_str(), 2);
+		carr_48 ncar;
+		sint oc = bot_sprintf(ncar.carr, ncar.siz, "::UCASE(c_char* str_(%i))", (sint)str_);
+		oc = Output(ncar.carr, 2);
 	}
 
 	std::string r_str;
@@ -26163,166 +26975,78 @@ std::string machine::Uppercase(c_char* str_)
 		return r_str;
 	}
 
-	size_t slen = strlen(str_);
+	size_t slen = bot_cstrlen(str_);
 
 	for (size_t i = 0; i < slen; i++)
 	{
-		switch (str_[i])
+		if (bot_sisa(&str_[i], 1))
 		{
-		case 'a':
-		{
-			r_str.push_back('A');
-			break;
+			r_str.push_back(toupper(str_[i]));
 		}
-		case 'b':
-		{
-			r_str.push_back('B');
-			break;
-		}
-		case 'c':
-		{
-			r_str.push_back('C');
-			break;
-		}
-		case 'd':
-		{
-			r_str.push_back('D');
-			break;
-		}
-		case 'e':
-		{
-			r_str.push_back('E');
-			break;
-		}
-		case 'f':
-		{
-			r_str.push_back('F');
-			break;
-		}
-		case 'g':
-		{
-			r_str.push_back('G');
-			break;
-		}
-		case 'h':
-		{
-			r_str.push_back('H');
-			break;
-		}
-		case 'i':
-		{
-			r_str.push_back('I');
-			break;
-		}
-		case 'j':
-		{
-			r_str.push_back('J');
-			break;
-		}
-		case 'k':
-		{
-			r_str.push_back('K');
-			break;
-		}
-		case 'l':
-		{
-			r_str.push_back('L');
-			break;
-		}
-		case 'm':
-		{
-			r_str.push_back('M');
-			break;
-		}
-		case 'n':
-		{
-			r_str.push_back('N');
-			break;
-		}
-		case 'o':
-		{
-			r_str.push_back('O');
-			break;
-		}
-		case 'p':
-		{
-			r_str.push_back('P');
-			break;
-		}
-		case 'q':
-		{
-			r_str.push_back('Q');
-			break;
-		}
-		case 'r':
-		{
-			r_str.push_back('R');
-			break;
-		}
-		case 's':
-		{
-			r_str.push_back('S');
-			break;
-		}
-		case 't':
-		{
-			r_str.push_back('T');
-			break;
-		}
-		case 'u':
-		{
-			r_str.push_back('U');
-			break;
-		}
-		case 'v':
-		{
-			r_str.push_back('V');
-			break;
-		}
-		case 'w':
-		{
-			r_str.push_back('W');
-			break;
-		}
-		case 'x':
-		{
-			r_str.push_back('X');
-			break;
-		}
-		case 'y':
-		{
-			r_str.push_back('Y');
-			break;
-		}
-		case 'z':
-		{
-			r_str.push_back('Z');
-			break;
-		}
-		case '+':
+		else
 		{
 			r_str.push_back(str_[i]);
-			break;
-		}
-		default:
-		{
-			r_str.push_back(str_[i]);
-			break;
-		}
 		}
 	}
+		
 	if (debug_lvl >= 1100 && debug_m)
 	{
 		std::string output;
 		output.append("uppercased: ");
 		output.append(r_str);
-		sint oc = SOutput(output.c_str(), 2);
+		sint oc = Output(output.c_str(), 2);
 	}
 	return r_str;
 }
 
-std::string machine::CleanPunctuation(c_char* i_)
+std::string machine::LCASE(c_char* str_)
 {
+	if (debug_lvl >= 1500 && debug_m)
+	{
+		carr_48 ncar;
+		sint oc = bot_sprintf(ncar.carr, ncar.siz, "::LCASE(c_char* str_(%i))", (sint)str_);
+		oc = Output(ncar.carr, 2);
+	}
+
+	std::string r_str;
+
+	if (!str_)
+	{
+		return r_str;
+	}
+
+	size_t slen = bot_cstrlen(str_);
+
+	for (size_t i = 0; i < slen; i++)
+	{
+		if (bot_sisa(&str_[i], 1))
+		{
+			r_str.push_back(tolower(str_[i]));
+		}
+		else
+		{
+			r_str.push_back(str_[i]);
+		}
+	}
+
+	if (debug_lvl >= 1100 && debug_m)
+	{
+		std::string output;
+		output.append("lowercased: ");
+		output.append(r_str);
+		sint oc = Output(output.c_str(), 2);
+	}
+	return r_str;
+}
+
+std::string machine::CPunc(c_char* i_)
+{
+	if (debug_lvl >= 1500 && debug_m)
+	{
+		carr_48 ncar;
+		sint oc = bot_sprintf(ncar.carr, ncar.siz, "::CPunc(c_char* str_(%i))", (sint)i_);
+		oc = Output(ncar.carr, 2);
+	}
 	std::string str;
 
 	if (!i_)
@@ -26332,85 +27056,9 @@ std::string machine::CleanPunctuation(c_char* i_)
 
 	size_t slen = strlen(i_);
 
-	for (uint i = 0; i < slen; i++)
+	for (size_t i = 0; i < slen; i++)
 	{
-		bool b = true;
-
-		switch (i_[i])
-		{
-		case '+':
-		case 'A':
-		case 'B':
-		case 'C':
-		case 'D':
-		case 'E':
-		case 'F':
-		case 'G':
-		case 'H':
-		case 'I':
-		case 'J':
-		case 'K':
-		case 'L':
-		case 'M':
-		case 'N':
-		case 'O':
-		case 'P':
-		case 'Q':
-		case 'R':
-		case 'S':
-		case 'T':
-		case 'U':
-		case 'V':
-		case 'W':
-		case 'X':
-		case 'Y':
-		case 'Z':
-		case 'a':
-		case 'b':
-		case 'c':
-		case 'd':
-		case 'e':
-		case 'f':
-		case 'g':
-		case 'h':
-		case 'i':
-		case 'j':
-		case 'k':
-		case 'l':
-		case 'm':
-		case 'n':
-		case 'o':
-		case 'p':
-		case 'q':
-		case 'r':
-		case 's':
-		case 't':
-		case 'u':
-		case 'v':
-		case 'w':
-		case 'x':
-		case 'y':
-		case 'z':
-		case '0':
-		case '1':
-		case '2':
-		case '3':
-		case '4':
-		case '5':
-		case '6':
-		case '7':
-		case '8':
-		case '9':
-		{
-			break;
-		}
-		default:
-		{
-			b = false;
-			break;
-		}
-		}
-		if (b)
+		if (bot_sisa(&i_[i], 1) || bot_sisn(&i_[i], 1))
 		{
 			str.push_back(i_[i]);
 		}

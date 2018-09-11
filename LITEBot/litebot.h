@@ -499,6 +499,10 @@
 #define BOT_FO_REST (BOT_NANO_REST*50)
 #endif
 
+#ifndef BOT_IO_REST
+#define BOT_IO_REST (BOT_NANO_REST*40)
+#endif
+
 #ifndef BOT_CNSREST
 #define BOT_CNSREST (BOT_MILLI_REST*10)
 #endif
@@ -681,14 +685,15 @@ sllint bot_findin(u_char val[] = 0, size_t offs = 0, size_t lim = 0, u_char inv[
 
 enum bot_con_val
 {
-	BOT_F_CON = 0,
-	BOT_DB_CON = 1,
-	BOT_DIR_CON = 2,
-	BOT_I4_CON = 3,
-	BOT_I6_CON = 4,
-	BOT_E128_CON = 5,
-	BOT_E256_CON = 6,
-	BOT_MAX_CON = 7
+	BOT_IO_CON = 0,
+	BOT_DIR_CON = 1,
+	BOT_F_CON = 2,
+	BOT_DB_CON = 3,
+	BOT_I4_CON = 4,
+	BOT_I6_CON = 6,
+	BOT_E128_CON = 128,
+	BOT_E256_CON = 256,
+	BOT_MAX_CON = 1000
 };
 
 enum bot_rtv_vals
@@ -725,7 +730,7 @@ enum bot_rtv_vals
 	BOT_RTV_VMICS = 1011,
 	BOT_RTV_VMACS = 1012,
 	BOT_RTV_VSCRPT = 1013,
-	BOT_RTV_MAX = 1014
+	BOT_RTV_MAX = 1100
 };
 
 typedef struct bot_carr_2
@@ -733,7 +738,7 @@ typedef struct bot_carr_2
 	size_t siz = 2;
 	_char carr[2] = { 0 };
 
-	bot_carr_2(_char ncar[] = 0) { if (ncar) { memcpy((void*)carr, (void*)ncar, siz - 1); } }
+	bot_carr_2(_char ncar[] = 0) { if (ncar) { size_t nl = bot_strlen(ncar); size_t ns = (nl > siz) ? siz - 1 : nl - 1; memcpy((void*)carr, (void*)ncar, ns); } }
 	~bot_carr_2() { bot_strclr(carr); }
 }carr_2;
 
@@ -742,7 +747,7 @@ typedef struct bot_carr_3
 	size_t siz = 3;
 	_char carr[3] = { 0 };
 
-	bot_carr_3(_char ncar[] = 0) { if (ncar) { memcpy((void*)carr, (void*)ncar, siz - 1); } }
+	bot_carr_3(_char ncar[] = 0) { if (ncar) { size_t nl = bot_strlen(ncar); size_t ns = (nl > siz) ? siz - 1 : nl - 1; memcpy((void*)carr, (void*)ncar, ns); } }
 	~bot_carr_3() { bot_strclr(carr); }
 }carr_3;
 
@@ -751,7 +756,7 @@ typedef struct bot_carr_4
 	size_t siz = 4;
 	_char carr[4] = { 0 };
 
-	bot_carr_4(_char ncar[] = 0) { if (ncar) { memcpy((void*)carr, (void*)ncar, siz - 1); } }
+	bot_carr_4(_char ncar[] = 0) { if (ncar) { size_t nl = bot_strlen(ncar); size_t ns = (nl > siz) ? siz - 1 : nl - 1; memcpy((void*)carr, (void*)ncar, ns); } }
 	~bot_carr_4() { bot_strclr(carr); }
 }carr_4;
 
@@ -760,7 +765,7 @@ typedef struct bot_carr_6
 	size_t siz = 6;
 	_char carr[6] = { 0 };
 
-	bot_carr_6(_char ncar[] = 0) { if (ncar) { memcpy((void*)carr, (void*)ncar, siz - 1); } }
+	bot_carr_6(_char ncar[] = 0) { if (ncar) { size_t nl = bot_strlen(ncar); size_t ns = (nl > siz) ? siz - 1 : nl - 1; memcpy((void*)carr, (void*)ncar, ns); } }
 	~bot_carr_6() { bot_strclr(carr); }
 }carr_6;
 
@@ -769,7 +774,7 @@ typedef struct bot_carr_8
 	size_t siz = 8;
 	_char carr[8] = { 0 };
 
-	bot_carr_8(_char ncar[] = 0) { if (ncar) { memcpy((void*)carr, (void*)ncar, siz - 1); } }
+	bot_carr_8(_char ncar[] = 0) { if (ncar) { size_t nl = bot_strlen(ncar); size_t ns = (nl > siz) ? siz - 1 : nl - 1; memcpy((void*)carr, (void*)ncar, ns); } }
 	~bot_carr_8() { bot_strclr(carr); }
 }carr_8;
 
@@ -778,7 +783,7 @@ typedef struct bot_carr_9
 	size_t siz = 9;
 	_char carr[9] = { 0 };
 
-	bot_carr_9(_char ncar[] = 0) { if (ncar) { memcpy((void*)carr, (void*)ncar, siz - 1); } }
+	bot_carr_9(_char ncar[] = 0) { if (ncar) { size_t nl = bot_strlen(ncar); size_t ns = (nl > siz) ? siz - 1 : nl - 1; memcpy((void*)carr, (void*)ncar, ns); } }
 	~bot_carr_9() { bot_strclr(carr); }
 }carr_9;
 
@@ -787,7 +792,7 @@ typedef struct bot_carr_12
 	size_t siz = 12;
 	_char carr[12] = { 0 };
 
-	bot_carr_12(_char ncar[] = 0) { if (ncar) { memcpy((void*)carr, (void*)ncar, siz - 1); } }
+	bot_carr_12(_char ncar[] = 0) { if (ncar) { size_t nl = bot_strlen(ncar); size_t ns = (nl > siz) ? siz - 1 : nl - 1; memcpy((void*)carr, (void*)ncar, ns); } }
 	~bot_carr_12() { bot_strclr(carr); }
 }carr_12;
 
@@ -796,7 +801,7 @@ typedef struct bot_carr_16
 	size_t siz = 16;
 	_char carr[16] = { 0 };
 
-	bot_carr_16(_char ncar[] = 0) { if (ncar) { memcpy((void*)carr, (void*)ncar, siz - 1); } }
+	bot_carr_16(_char ncar[] = 0) { if (ncar) { size_t nl = bot_strlen(ncar); size_t ns = (nl > siz) ? siz - 1 : nl - 1; memcpy((void*)carr, (void*)ncar, ns); } }
 	~bot_carr_16() { bot_strclr(carr); }
 }carr_16;
 
@@ -805,7 +810,7 @@ typedef struct bot_carr_18
 	size_t siz = 18;
 	_char carr[18] = { 0 };
 
-	bot_carr_18(_char ncar[] = 0) { if (ncar) { memcpy((void*)carr, (void*)ncar, siz - 1); } }
+	bot_carr_18(_char ncar[] = 0) { if (ncar) { size_t nl = bot_strlen(ncar); size_t ns = (nl > siz) ? siz - 1 : nl - 1; memcpy((void*)carr, (void*)ncar, ns); } }
 	~bot_carr_18() { bot_strclr(carr); }
 }carr_18;
 
@@ -814,7 +819,7 @@ typedef struct bot_carr_21
 	size_t siz = 21;
 	_char carr[21] = { 0 };
 
-	bot_carr_21(_char ncar[] = 0) { if (ncar) { memcpy((void*)carr, (void*)ncar, siz - 1); } }
+	bot_carr_21(_char ncar[] = 0) { if (ncar) { size_t nl = bot_strlen(ncar); size_t ns = (nl > siz) ? siz - 1 : nl - 1; memcpy((void*)carr, (void*)ncar, ns); } }
 	~bot_carr_21() { bot_strclr(carr); }
 }carr_21;
 
@@ -823,7 +828,7 @@ typedef struct bot_carr_24
 	size_t siz = 24;
 	_char carr[24] = { 0 };
 
-	bot_carr_24(_char ncar[] = 0) { if (ncar) { memcpy((void*)carr, (void*)ncar, siz - 1); } }
+	bot_carr_24(_char ncar[] = 0) { if (ncar) { size_t nl = bot_strlen(ncar); size_t ns = (nl > siz) ? siz - 1 : nl - 1; memcpy((void*)carr, (void*)ncar, ns); } }
 	~bot_carr_24() { bot_strclr(carr); }
 }carr_24;
 
@@ -832,7 +837,7 @@ typedef struct bot_carr_32
 	size_t siz = 32;
 	_char carr[32] = { 0 };
 
-	bot_carr_32(_char ncar[] = 0) { if (ncar) { memcpy((void*)carr, (void*)ncar, siz - 1); } }
+	bot_carr_32(_char ncar[] = 0) { if (ncar) { size_t nl = bot_strlen(ncar); size_t ns = (nl > siz) ? siz - 1 : nl - 1; memcpy((void*)carr, (void*)ncar, ns); } }
 	~bot_carr_32() { bot_strclr(carr); }
 }carr_32;
 
@@ -841,7 +846,7 @@ typedef struct bot_carr_36
 	size_t siz = 36;
 	_char carr[36] = { 0 };
 
-	bot_carr_36(_char ncar[] = 0) { if (ncar) { memcpy((void*)carr, (void*)ncar, siz - 1); } }
+	bot_carr_36(_char ncar[] = 0) { if (ncar) { size_t nl = bot_strlen(ncar); size_t ns = (nl > siz) ? siz - 1 : nl - 1; memcpy((void*)carr, (void*)ncar, ns); } }
 	~bot_carr_36() { bot_strclr(carr); }
 }carr_36;
 
@@ -850,7 +855,7 @@ typedef struct bot_carr_48
 	size_t siz = 48;
 	_char carr[48] = { 0 };
 
-	bot_carr_48(_char ncar[] = 0) { if (ncar) { memcpy((void*)carr, (void*)ncar, siz - 1); } }
+	bot_carr_48(_char ncar[] = 0) { if (ncar) { size_t nl = bot_strlen(ncar); size_t ns = (nl > siz) ? siz - 1 : nl - 1; memcpy((void*)carr, (void*)ncar, ns); } }
 	~bot_carr_48() { bot_strclr(carr); }
 }carr_48;
 
@@ -859,7 +864,7 @@ typedef struct bot_carr_56
 	size_t siz = 56;
 	_char carr[56] = { 0 };
 
-	bot_carr_56(_char ncar[] = 0) { if (ncar) { memcpy((void*)carr, (void*)ncar, siz - 1); } }
+	bot_carr_56(_char ncar[] = 0) { if (ncar) { size_t nl = bot_strlen(ncar); size_t ns = (nl > siz) ? siz - 1 : nl - 1; memcpy((void*)carr, (void*)ncar, ns); } }
 	~bot_carr_56() { bot_strclr(carr); }
 }carr_56;
 
@@ -868,7 +873,7 @@ typedef struct bot_carr_64
 	size_t siz = 64;
 	_char carr[64] = { 0 };
 
-	bot_carr_64(_char ncar[] = 0) { if (ncar) { memcpy((void*)carr, (void*)ncar, siz - 1); } }
+	bot_carr_64(_char ncar[] = 0) { if (ncar) { size_t nl = bot_strlen(ncar); size_t ns = (nl > siz) ? siz - 1 : nl - 1; memcpy((void*)carr, (void*)ncar, ns); } }
 	~bot_carr_64() { bot_strclr(carr); }
 }carr_64;
 
@@ -877,7 +882,7 @@ typedef struct bot_carr_72
 	size_t siz = 72;
 	_char carr[72] = { 0 };
 
-	bot_carr_72(_char ncar[] = 0) { if (ncar) { memcpy((void*)carr, (void*)ncar, siz - 1); } }
+	bot_carr_72(_char ncar[] = 0) { if (ncar) { size_t nl = bot_strlen(ncar); size_t ns = (nl > siz) ? siz - 1 : nl - 1; memcpy((void*)carr, (void*)ncar, ns); } }
 	~bot_carr_72() { bot_strclr(carr); }
 }carr_72;
 
@@ -886,7 +891,7 @@ typedef struct bot_carr_81
 	size_t siz = 81;
 	_char carr[81] = { 0 };
 
-	bot_carr_81(_char ncar[] = 0) { if (ncar) { memcpy((void*)carr, (void*)ncar, siz - 1); } }
+	bot_carr_81(_char ncar[] = 0) { if (ncar) { size_t nl = bot_strlen(ncar); size_t ns = (nl > siz) ? siz - 1 : nl - 1; memcpy((void*)carr, (void*)ncar, ns); } }
 	~bot_carr_81() { bot_strclr(carr); }
 }carr_81;
 
@@ -895,7 +900,7 @@ typedef struct bot_carr_96
 	size_t siz = 96;
 	_char carr[96] = { 0 };
 
-	bot_carr_96(_char ncar[] = 0) { if (ncar) { memcpy((void*)carr, (void*)ncar, siz - 1); } }
+	bot_carr_96(_char ncar[] = 0) { if (ncar) { size_t nl = bot_strlen(ncar); size_t ns = (nl > siz) ? siz - 1 : nl - 1; memcpy((void*)carr, (void*)ncar, ns); } }
 	~bot_carr_96() { bot_strclr(carr); }
 }carr_96;
 
@@ -904,7 +909,7 @@ typedef struct bot_carr_112
 	size_t siz = 112;
 	_char carr[112] = { 0 };
 
-	bot_carr_112(_char ncar[] = 0) { if (ncar) { memcpy((void*)carr, (void*)ncar, siz - 1); } }
+	bot_carr_112(_char ncar[] = 0) { if (ncar) { size_t nl = bot_strlen(ncar); size_t ns = (nl > siz) ? siz - 1 : nl - 1; memcpy((void*)carr, (void*)ncar, ns); } }
 	~bot_carr_112() { bot_strclr(carr); }
 }carr_112;
 
@@ -913,7 +918,7 @@ typedef struct bot_carr_128
 	size_t siz = 128;
 	_char carr[128] = { 0 };
 
-	bot_carr_128(_char ncar[] = 0) { if (ncar) { memcpy((void*)carr, (void*)ncar, siz - 1); } }
+	bot_carr_128(_char ncar[] = 0) { if (ncar) { size_t nl = bot_strlen(ncar); size_t ns = (nl > siz) ? siz - 1 : nl - 1; memcpy((void*)carr, (void*)ncar, ns); } }
 	~bot_carr_128() { bot_strclr(carr); }
 }carr_128;
 
@@ -922,7 +927,7 @@ typedef struct bot_carr_144
 	size_t siz = 144;
 	_char carr[144] = { 0 };
 
-	bot_carr_144(_char ncar[] = 0) { if (ncar) { memcpy((void*)carr, (void*)ncar, siz - 1); } }
+	bot_carr_144(_char ncar[] = 0) { if (ncar) { size_t nl = bot_strlen(ncar); size_t ns = (nl > siz) ? siz - 1 : nl - 1; memcpy((void*)carr, (void*)ncar, ns); } }
 	~bot_carr_144() { bot_strclr(carr); }
 }carr_144;
 
@@ -931,7 +936,7 @@ typedef struct bot_carr_168
 	size_t siz = 168;
 	_char carr[168] = { 0 };
 
-	bot_carr_168(_char ncar[] = 0) { if (ncar) { memcpy((void*)carr, (void*)ncar, siz - 1); } }
+	bot_carr_168(_char ncar[] = 0) { if (ncar) { size_t nl = bot_strlen(ncar); size_t ns = (nl > siz) ? siz - 1 : nl - 1; memcpy((void*)carr, (void*)ncar, ns); } }
 	~bot_carr_168() { bot_strclr(carr); }
 }carr_168;
 
@@ -940,7 +945,7 @@ typedef struct bot_carr_192
 	size_t siz = 192;
 	_char carr[192] = { 0 };
 
-	bot_carr_192(_char ncar[] = 0) { if (ncar) { memcpy((void*)carr, (void*)ncar, siz - 1); } }
+	bot_carr_192(_char ncar[] = 0) { if (ncar) { size_t nl = bot_strlen(ncar); size_t ns = (nl > siz) ? siz - 1 : nl - 1; memcpy((void*)carr, (void*)ncar, ns); } }
 	~bot_carr_192() { bot_strclr(carr); }
 }carr_192;
 
@@ -949,7 +954,7 @@ typedef struct bot_carr_256
 	size_t siz = 256;
 	_char carr[256] = { 0 };
 
-	bot_carr_256(_char ncar[] = 0) { if (ncar) { memcpy((void*)carr, (void*)ncar, siz - 1); } }
+	bot_carr_256(_char ncar[] = 0) { if (ncar) { size_t nl = bot_strlen(ncar); size_t ns = (nl > siz) ? siz - 1 : nl - 1; memcpy((void*)carr, (void*)ncar, ns); } }
 	~bot_carr_256() { bot_strclr(carr); }
 }carr_256;
 
@@ -958,7 +963,7 @@ typedef struct bot_carr_384
 	size_t siz = 384;
 	_char carr[384] = { 0 };
 
-	bot_carr_384(_char ncar[] = 0) { if (ncar) { memcpy((void*)carr, (void*)ncar, siz - 1); } }
+	bot_carr_384(_char ncar[] = 0) { if (ncar) { size_t nl = bot_strlen(ncar); size_t ns = (nl > siz) ? siz - 1 : nl - 1; memcpy((void*)carr, (void*)ncar, ns); } }
 	~bot_carr_384() { bot_strclr(carr); }
 }carr_384;
 
@@ -967,7 +972,7 @@ typedef struct bot_carr_512
 	size_t siz = 512;
 	_char carr[512] = { 0 };
 
-	bot_carr_512(_char ncar[] = 0) { if (ncar) { memcpy((void*)carr, (void*)ncar, siz - 1); } }
+	bot_carr_512(_char ncar[] = 0) { if (ncar) { size_t nl = bot_strlen(ncar); size_t ns = (nl > siz) ? siz - 1 : nl - 1; memcpy((void*)carr, (void*)ncar, ns); } }
 	~bot_carr_512() { bot_strclr(carr); }
 }carr_512;
 
@@ -976,7 +981,7 @@ typedef struct bot_carr_768
 	size_t siz = 768;
 	_char carr[768] = { 0 };
 
-	bot_carr_768(_char ncar[] = 0) { if (ncar) { memcpy((void*)carr, (void*)ncar, siz - 1); } }
+	bot_carr_768(_char ncar[] = 0) { if (ncar) { size_t nl = bot_strlen(ncar); size_t ns = (nl > siz) ? siz - 1 : nl - 1; memcpy((void*)carr, (void*)ncar, ns); } }
 	~bot_carr_768() { bot_strclr(carr); }
 }carr_768;
 
@@ -985,7 +990,7 @@ typedef struct bot_carr_1024
 	size_t siz = 1024;
 	_char carr[1024] = { 0 };
 
-	bot_carr_1024(_char ncar[] = 0) { if (ncar) { memcpy((void*)carr, (void*)ncar, siz - 1); } }
+	bot_carr_1024(_char ncar[] = 0) { if (ncar) { size_t nl = bot_strlen(ncar); size_t ns = (nl > siz) ? siz - 1 : nl - 1; memcpy((void*)carr, (void*)ncar, ns); } }
 	~bot_carr_1024() { bot_strclr(carr); }
 }carr_1024;
 
@@ -994,7 +999,7 @@ typedef struct bot_carr_2048
 	size_t siz = 2048;
 	_char carr[2048] = { 0 };
 
-	bot_carr_2048(_char ncar[] = 0) { if (ncar) { memcpy((void*)carr, (void*)ncar, siz - 1); } }
+	bot_carr_2048(_char ncar[] = 0) { if (ncar) { size_t nl = bot_strlen(ncar); size_t ns = (nl > siz) ? siz - 1 : nl - 1; memcpy((void*)carr, (void*)ncar, ns); } }
 	~bot_carr_2048() { bot_strclr(carr); }
 }carr_2048;
 
@@ -1003,7 +1008,7 @@ typedef struct bot_carr_4096
 	size_t siz = 4096;
 	_char carr[4096] = { 0 };
 
-	bot_carr_4096(_char ncar[] = 0) { if (ncar) { memcpy((void*)carr, (void*)ncar, siz - 1); } }
+	bot_carr_4096(_char ncar[] = 0) { if (ncar) { size_t nl = bot_strlen(ncar); size_t ns = (nl > siz) ? siz - 1 : nl - 1; memcpy((void*)carr, (void*)ncar, ns); } }
 	~bot_carr_4096() { bot_strclr(carr); }
 }carr_4096;
 
@@ -1012,7 +1017,7 @@ typedef struct bot_carr_8192
 	size_t siz = 8192;
 	_char carr[8192] = { 0 };
 
-	bot_carr_8192(_char ncar[] = 0) { if (ncar) { memcpy((void*)carr, (void*)ncar, siz - 1); } }
+	bot_carr_8192(_char ncar[] = 0) { if (ncar) { size_t nl = bot_strlen(ncar); size_t ns = (nl > siz) ? siz - 1 : nl - 1; memcpy((void*)carr, (void*)ncar, ns); } }
 	~bot_carr_8192() { bot_strclr(carr); }
 }carr_8192;
 
@@ -1021,7 +1026,7 @@ typedef struct bot_carr_16384
 	size_t siz = 16384;
 	_char carr[16384] = { 0 };
 
-	bot_carr_16384(_char ncar[] = 0) { if (ncar) { memcpy((void*)carr, (void*)ncar, siz - 1); } }
+	bot_carr_16384(_char ncar[] = 0) { if (ncar) { size_t nl = bot_strlen(ncar); size_t ns = (nl > siz) ? siz - 1 : nl - 1; memcpy((void*)carr, (void*)ncar, ns); } }
 	~bot_carr_16384() { bot_strclr(carr); }
 }carr_16384;
 
@@ -1030,7 +1035,7 @@ typedef struct bot_carr_32768
 	size_t siz = 32768;
 	_char carr[32768] = { 0 };
 
-	bot_carr_32768(_char ncar[] = 0) { if (ncar) { memcpy((void*)carr, (void*)ncar, siz - 1); } }
+	bot_carr_32768(_char ncar[] = 0) { if (ncar) { size_t nl = bot_strlen(ncar); size_t ns = (nl > siz) ? siz - 1 : nl - 1; memcpy((void*)carr, (void*)ncar, ns); } }
 	~bot_carr_32768() { bot_strclr(carr); }
 }carr_32768;
 
@@ -1039,7 +1044,7 @@ typedef struct bot_ucar_2
 	size_t siz = 2;
 	u_char carr[2] = { 0 };
 
-	bot_ucar_2(u_char ncar[] = 0) { if (ncar) { memcpy((void*)carr, (void*)ncar, siz - 1); } }
+	bot_ucar_2(u_char ncar[] = 0) { if (ncar) { size_t nl = bot_ustrlen(ncar); size_t ns = (nl > siz) ? siz - 1 : nl - 1; memcpy((void*)carr, (void*)ncar, ns); } }
 	~bot_ucar_2() { bot_ustrclr(carr); }
 }ucar_2;
 
@@ -1048,7 +1053,7 @@ typedef struct bot_ucar_4
 	size_t siz = 4;
 	u_char carr[4] = { 0 };
 
-	bot_ucar_4(u_char ncar[] = 0) { if (ncar) { memcpy((void*)carr, (void*)ncar, siz - 1); } }
+	bot_ucar_4(u_char ncar[] = 0) { if (ncar) { size_t nl = bot_ustrlen(ncar); size_t ns = (nl > siz) ? siz - 1 : nl - 1; memcpy((void*)carr, (void*)ncar, ns); } }
 	~bot_ucar_4() { bot_ustrclr(carr); }
 }ucar_4;
 
@@ -1057,7 +1062,7 @@ typedef struct bot_ucar_8
 	size_t siz = 8;
 	u_char carr[8] = { 0 };
 
-	bot_ucar_8(u_char ncar[] = 0) { if (ncar) { memcpy((void*)carr, (void*)ncar, siz - 1); } }
+	bot_ucar_8(u_char ncar[] = 0) { if (ncar) { size_t nl = bot_ustrlen(ncar); size_t ns = (nl > siz) ? siz - 1 : nl - 1; memcpy((void*)carr, (void*)ncar, ns); } }
 	~bot_ucar_8() { bot_ustrclr(carr); }
 }ucar_8;
 
@@ -1066,7 +1071,7 @@ typedef struct bot_ucar_16
 	size_t siz = 16;
 	u_char carr[16] = { 0 };
 
-	bot_ucar_16(u_char ncar[] = 0) { if (ncar) { memcpy((void*)carr, (void*)ncar, siz - 1); } }
+	bot_ucar_16(u_char ncar[] = 0) { if (ncar) { size_t nl = bot_ustrlen(ncar); size_t ns = (nl > siz) ? siz - 1 : nl - 1; memcpy((void*)carr, (void*)ncar, ns); } }
 	~bot_ucar_16() { bot_ustrclr(carr); }
 }ucar_16;
 
@@ -1075,7 +1080,7 @@ typedef struct bot_ucar_32
 	size_t siz = 32;
 	u_char carr[32] = { 0 };
 
-	bot_ucar_32(u_char ncar[] = 0) { if (ncar) { memcpy((void*)carr, (void*)ncar, siz - 1); } }
+	bot_ucar_32(u_char ncar[] = 0) { if (ncar) { size_t nl = bot_ustrlen(ncar); size_t ns = (nl > siz) ? siz - 1 : nl - 1; memcpy((void*)carr, (void*)ncar, ns); } }
 	~bot_ucar_32() { bot_ustrclr(carr); }
 }ucar_32;
 
@@ -1084,7 +1089,7 @@ typedef struct bot_ucar_64
 	size_t siz = 64;
 	u_char carr[64] = { 0 };
 
-	bot_ucar_64(u_char ncar[] = 0) { if (ncar) { memcpy((void*)carr, (void*)ncar, siz - 1); } }
+	bot_ucar_64(u_char ncar[] = 0) { if (ncar) { size_t nl = bot_ustrlen(ncar); size_t ns = (nl > siz) ? siz - 1 : nl - 1; memcpy((void*)carr, (void*)ncar, ns); } }
 	~bot_ucar_64() { bot_ustrclr(carr); }
 }ucar_64;
 
@@ -1093,7 +1098,7 @@ typedef struct bot_ucar_128
 	size_t siz = 128;
 	u_char carr[128] = { 0 };
 
-	bot_ucar_128(u_char ncar[] = 0) { if (ncar) { memcpy((void*)carr, (void*)ncar, siz - 1); } }
+	bot_ucar_128(u_char ncar[] = 0) { if (ncar) { size_t nl = bot_ustrlen(ncar); size_t ns = (nl > siz) ? siz - 1 : nl - 1; memcpy((void*)carr, (void*)ncar, ns); } }
 	~bot_ucar_128() { bot_ustrclr(carr); }
 }ucar_128;
 
@@ -1102,7 +1107,7 @@ typedef struct bot_ucar_256
 	size_t siz = 256;
 	u_char carr[256] = { 0 };
 
-	bot_ucar_256(u_char ncar[] = 0) { if (ncar) { memcpy((void*)carr, (void*)ncar, siz - 1); } }
+	bot_ucar_256(u_char ncar[] = 0) { if (ncar) { size_t nl = bot_ustrlen(ncar); size_t ns = (nl > siz) ? siz - 1 : nl - 1; memcpy((void*)carr, (void*)ncar, ns); } }
 	~bot_ucar_256() { bot_ustrclr(carr); }
 }ucar_256;
 
@@ -1111,7 +1116,7 @@ typedef struct bot_ucar_512
 	size_t siz = 512;
 	u_char carr[512] = { 0 };
 
-	bot_ucar_512(u_char ncar[] = 0) { if (ncar) { memcpy((void*)carr, (void*)ncar, siz - 1); } }
+	bot_ucar_512(u_char ncar[] = 0) { if (ncar) { size_t nl = bot_ustrlen(ncar); size_t ns = (nl > siz) ? siz - 1 : nl - 1; memcpy((void*)carr, (void*)ncar, ns); } }
 	~bot_ucar_512() { bot_ustrclr(carr); }
 }ucar_512;
 
@@ -1120,7 +1125,7 @@ typedef struct bot_ucar_1024
 	size_t siz = 1024;
 	u_char carr[1024] = { 0 };
 
-	bot_ucar_1024(u_char ncar[] = 0) { if (ncar) { memcpy((void*)carr, (void*)ncar, siz - 1); } }
+	bot_ucar_1024(u_char ncar[] = 0) { if (ncar) { size_t nl = bot_ustrlen(ncar); size_t ns = (nl > siz) ? siz - 1 : nl - 1; memcpy((void*)carr, (void*)ncar, ns); } }
 	~bot_ucar_1024() { bot_ustrclr(carr); }
 }ucar_1024;
 
@@ -1129,7 +1134,7 @@ typedef struct bot_ucar_2048
 	size_t siz = 2048;
 	u_char carr[2048] = { 0 };
 
-	bot_ucar_2048(u_char ncar[] = 0) { if (ncar) { memcpy((void*)carr, (void*)ncar, siz - 1); } }
+	bot_ucar_2048(u_char ncar[] = 0) { if (ncar) { size_t nl = bot_ustrlen(ncar); size_t ns = (nl > siz) ? siz - 1 : nl - 1; memcpy((void*)carr, (void*)ncar, ns); } }
 	~bot_ucar_2048() { bot_ustrclr(carr); }
 }ucar_2048;
 
@@ -1138,7 +1143,7 @@ typedef struct bot_ucar_4096
 	size_t siz = 4096;
 	u_char carr[4096] = { 0 };
 
-	bot_ucar_4096(u_char ncar[] = 0) { if (ncar) { memcpy((void*)carr, (void*)ncar, siz - 1); } }
+	bot_ucar_4096(u_char ncar[] = 0) { if (ncar) { size_t nl = bot_ustrlen(ncar); size_t ns = (nl > siz) ? siz - 1 : nl - 1; memcpy((void*)carr, (void*)ncar, ns); } }
 	~bot_ucar_4096() { bot_ustrclr(carr); }
 }ucar_4096;
 
@@ -1147,7 +1152,7 @@ typedef struct bot_ucar_8192
 	size_t siz = 8192;
 	u_char carr[8192] = { 0 };
 
-	bot_ucar_8192(u_char ncar[] = 0) { if (ncar) { memcpy((void*)carr, (void*)ncar, siz - 1); } }
+	bot_ucar_8192(u_char ncar[] = 0) { if (ncar) { size_t nl = bot_ustrlen(ncar); size_t ns = (nl > siz) ? siz - 1 : nl - 1; memcpy((void*)carr, (void*)ncar, ns); } }
 	~bot_ucar_8192() { bot_ustrclr(carr); }
 }ucar_8192;
 
@@ -1156,7 +1161,7 @@ typedef struct bot_ucar_16384
 	size_t siz = 16384;
 	u_char carr[16384] = { 0 };
 
-	bot_ucar_16384(u_char ncar[] = 0) { if (ncar) { memcpy((void*)carr, (void*)ncar, siz - 1); } }
+	bot_ucar_16384(u_char ncar[] = 0) { if (ncar) { size_t nl = bot_ustrlen(ncar); size_t ns = (nl > siz) ? siz - 1 : nl - 1; memcpy((void*)carr, (void*)ncar, ns); } }
 	~bot_ucar_16384() { bot_ustrclr(carr); }
 }ucar_16384;
 
@@ -1165,7 +1170,7 @@ typedef struct bot_ucar_32768
 	size_t siz = 32768;
 	u_char carr[32768] = { 0 };
 
-	bot_ucar_32768(u_char ncar[] = 0) { if (ncar) { memcpy((void*)carr, (void*)ncar, siz - 1); } }
+	bot_ucar_32768(u_char ncar[] = 0) { if (ncar) { size_t nl = bot_ustrlen(ncar); size_t ns = (nl > siz) ? siz - 1 : nl - 1; memcpy((void*)carr, (void*)ncar, ns); } }
 	~bot_ucar_32768() { bot_ustrclr(carr); }
 }ucar_32768;
 
@@ -1174,7 +1179,7 @@ typedef struct bot_ucar_65535
 	size_t siz = 65535;
 	u_char carr[65535] = { 0 };
 
-	bot_ucar_65535(u_char ncar[] = 0) { if (ncar) { memcpy((void*)carr, (void*)ncar, siz - 1); } }
+	bot_ucar_65535(u_char ncar[] = 0) { if (ncar) { size_t nl = bot_ustrlen(ncar); size_t ns = (nl > siz) ? siz - 1 : nl - 1; memcpy((void*)carr, (void*)ncar, ns); } }
 	~bot_ucar_65535() { bot_ustrclr(carr); }
 }ucar_65535;
 
@@ -11242,27 +11247,83 @@ private:
 	std::chrono::steady_clock::time_point vtclr;
 };
 
-enum bot_valt
+enum vtool_valt
 {
-	BOT_VAL_MTX = 1024,
-	BOT_VAL_HMTX = 1025,
-	BOT_VAL_LRQ = 1026,
-	BOT_VAL_PORT = 1027,
-	BOT_VAL_PLUG = 1028,
-	BOT_VAL_FLD = 1029,
-	BOT_VAL_DRV = 1030,
-	BOT_VAL_DIR = 1031,
-	BOT_VAL_SCR = 1032,
-	BOT_VAL_STMT = 1033,
-	BOT_VAL_DB = 1034,
-	BOT_VAL_USR = 1035,
-	BOT_VAL_CMD = 1036,
-	BOT_VAL_LOG = 1037,
-	BOT_VAL_MICS = 1038,
-	BOT_VAL_MACS = 1039,
-	BOT_VAL_FIL = 1040,
-	BOT_VAL_THR = 1041,
-	BOT_VAL_MAX = 1042
+	VTV_BOOL = 0,
+	VTV_SINT = 1,
+	VTV_SLINT = 2,
+	VTV_SLLINT = 3,
+	VTV_UINT = 4,
+	VTV_ULINT = 5,
+	VTV_ULLINT = 6,
+	VTV_CHAR = 7,
+	VTV_UCAR = 8,
+	VTV_CCAR = 9,
+	VTV_CARP = 10,
+	VTV_UCARP = 11,
+	VTV_SINTP = 12,
+	VTV_SLINTP = 13,
+	VTV_SLLINTP = 14,
+	VTV_UINTP = 15,
+	VTV_ULINTP = 16,
+	VTV_ULLINTP = 17,
+	VTV_STR = 17,
+	VTV_MTX = 24,
+	VTV_HMTX = 25,
+	VTV_LRQ = 26,
+	VTV_PORT = 27,
+	VTV_PLUG = 28,
+	VTV_FLD = 29,
+	VTV_DRV = 30,
+	VTV_DIR = 31,
+	VTV_SCR = 32,
+	VTV_STMT = 33,
+	VTV_DB = 34,
+	VTV_USR = 35,
+	VTV_CMD = 36,
+	VTV_LOG = 37,
+	VTV_MICS = 38,
+	VTV_MACS = 39,
+	VTV_FIL = 40,
+	VTV_THR = 41,
+	VTV_VBOOL = 1000,
+	VTV_VSINT = 1001,
+	VTV_VSLINT = 1002,
+	VTV_VSLLINT = 1003,
+	VTV_VUINT = 1004,
+	VTV_VULINT = 1005,
+	VTV_VULLINT = 1006,
+	VTV_VCHAR = 1007,
+	VTV_VUCAR = 1008,
+	VTV_VCCAR = 1009,
+	VTV_VCARP = 1010,
+	VTV_VUCARP = 1011,
+	VTV_VSINTP = 1012,
+	VTV_VSLINTP = 1013,
+	VTV_VSLLINTP = 1014,
+	VTV_VUINTP = 1015,
+	VTV_VULINTP = 1016,
+	VTV_VULLINTP = 1017,
+	VTV_VSTR = 1017,
+	VTV_VMTX = 1024,
+	VTV_VHMTX = 1025,
+	VTV_VLRQ = 1026,
+	VTV_VPORT = 1027,
+	VTV_VPLUG = 1028,
+	VTV_VFLD = 1029,
+	VTV_VDRV = 1030,
+	VTV_VDIR = 1031,
+	VTV_VSCR = 1032,
+	VTV_VSTMT = 1033,
+	VTV_VDB = 1034,
+	VTV_VUSR = 1035,
+	VTV_VCMD = 1036,
+	VTV_VLOG = 1037,
+	VTV_VMICS = 1038,
+	VTV_VMACS = 1039,
+	VTV_VFIL = 1040,
+	VTV_VTHR = 1041,
+	VTV_MAX = 1042
 };
 
 class VTool
@@ -11629,8 +11690,623 @@ public:
 
 		return 0;
 	}
-	
-	sint SortV(std::vector<BOTCOMMAND>* vec_ = 0, sint valt = -1, sint mem = -1)
+	sint CombV(void* vec_ = 0, sint ovalt = -1, ...)
+	{
+		if (!vec_ || ovalt < 0)
+		{
+			return -1;
+		}
+
+		va_list args;
+		va_start(args, ovalt);
+
+		switch (ovalt)
+		{
+		case VTV_VSINT:
+		{
+			std::vector<sint>* p_ = reinterpret_cast<std::vector<sint>*>(vec_);
+
+			if (p_)
+			{
+				bool done = false;
+				
+				while (!done)
+				{
+					sint ivalt = va_arg(args, sint);
+
+					switch (ivalt)
+					{
+					case VTV_SINT:
+					{
+						sint val = va_arg(args, sint);
+						p_->push_back(val);
+						break;
+					}
+					case VTV_SLINT:
+					{
+						slint val = va_arg(args, slint);
+						p_->push_back((sint)val);
+						break;
+					}
+					case VTV_SLLINT:
+					{
+						sllint val = va_arg(args, sllint);
+						p_->push_back((sint)val);
+						break;
+					}
+					case VTV_UINT:
+					{
+						uint val = va_arg(args, uint);
+						p_->push_back((sint)val);
+						break;
+					}
+					case VTV_ULINT:
+					{
+						ulint val = va_arg(args, ulint);
+						p_->push_back((sint)val);
+						break;
+					}
+					case VTV_ULLINT:
+					{
+						ullint val = va_arg(args, ullint);
+						p_->push_back((sint)val);
+						break;
+					}
+					case VTV_CHAR:
+					{
+						_char val = va_arg(args, _char);
+						p_->push_back((sint)val);
+						break;
+					}
+					case VTV_UCAR:
+					{
+						u_char val = va_arg(args, u_char);
+						p_->push_back((sint)val);
+						break;
+					}
+					case VTV_CCAR:
+					{
+						c_char* np = va_arg(args, c_char*);
+
+						if (np)
+						{
+							p_->push_back((sint)atoi(np));
+						}
+						break;
+					}
+					case VTV_STR:
+					{
+						std::string* np = va_arg(args, std::string*);
+
+						if (np)
+						{
+							p_->push_back((sint)atoi(np->c_str()));
+						}
+						break;
+					}
+					case VTV_VSINT:
+					{
+						void* np = va_arg(args, void*);
+
+						if (np)
+						{
+							std::vector<sint>* nvec = reinterpret_cast<std::vector<sint>*>(np);
+
+							if (nvec)
+							{
+								for (size_t x = 0; x < nvec->size(); x++)
+								{
+									p_->push_back(nvec->at(x));
+								}
+							}
+						}
+						break;
+					}
+					case VTV_VSLINT:
+					{
+						void* np = va_arg(args, void*);
+
+						if (np)
+						{
+							std::vector<slint>* nvec = reinterpret_cast<std::vector<slint>*>(np);
+
+							if (nvec)
+							{
+								for (size_t x = 0; x < nvec->size(); x++)
+								{
+									p_->push_back((sint)nvec->at(x));
+								}
+							}
+						}
+						break;
+					}
+					case VTV_VSLLINT:
+					{
+						void* np = va_arg(args, void*);
+
+						if (np)
+						{
+							std::vector<sllint>* nvec = reinterpret_cast<std::vector<sllint>*>(np);
+
+							if (nvec)
+							{
+								for (size_t x = 0; x < nvec->size(); x++)
+								{
+									p_->push_back((sint)nvec->at(x));
+								}
+							}
+						}
+						break;
+					}
+					case VTV_VUINT:
+					{
+						void* np = va_arg(args, void*);
+
+						if (np)
+						{
+							std::vector<uint>* nvec = reinterpret_cast<std::vector<uint>*>(np);
+
+							if (nvec)
+							{
+								for (size_t x = 0; x < nvec->size(); x++)
+								{
+									p_->push_back((sint)nvec->at(x));
+								}
+							}
+						}
+						break;
+					}
+					case VTV_VULINT:
+					{
+						void* np = va_arg(args, void*);
+
+						if (np)
+						{
+							std::vector<ulint>* nvec = reinterpret_cast<std::vector<ulint>*>(np);
+
+							if (nvec)
+							{
+								for (size_t x = 0; x < nvec->size(); x++)
+								{
+									p_->push_back((sint)nvec->at(x));
+								}
+							}
+						}
+						break;
+					}
+					case VTV_VULLINT:
+					{
+						void* np = va_arg(args, void*);
+
+						if (np)
+						{
+							std::vector<ullint>* nvec = reinterpret_cast<std::vector<ullint>*>(np);
+
+							if (nvec)
+							{
+								for (size_t x = 0; x < nvec->size(); x++)
+								{
+									p_->push_back((sint)nvec->at(x));
+								}
+							}
+						}
+						break;
+					}
+					case VTV_VCHAR:
+					{
+						void* np = va_arg(args, void*);
+
+						if (np)
+						{
+							std::vector<_char>* nvec = reinterpret_cast<std::vector<_char>*>(np);
+
+							if (nvec)
+							{
+								for (size_t x = 0; x < nvec->size(); x++)
+								{
+									p_->push_back((sint)nvec->at(x));
+								}
+							}
+						}
+						break;
+					}
+					case VTV_VUCAR:
+					{
+						void* np = va_arg(args, void*);
+
+						if (np)
+						{
+							std::vector<u_char>* nvec = reinterpret_cast<std::vector<u_char>*>(np);
+
+							if (nvec)
+							{
+								for (size_t x = 0; x < nvec->size(); x++)
+								{
+									p_->push_back((sint)nvec->at(x));
+								}
+							}
+						}
+						break;
+					}
+					case VTV_VCCAR:
+					{
+						void* np = va_arg(args, void*);
+
+						if (np)
+						{
+							std::vector<c_char*>* nvec = reinterpret_cast<std::vector<c_char*>*>(np);
+
+							if (nvec)
+							{
+								for (size_t x = 0; x < nvec->size(); x++)
+								{
+									p_->push_back((sint)atoi(nvec->at(x)));
+								}
+							}
+						}
+						break;
+					}
+					case VTV_VSTR:
+					{
+						void* np = va_arg(args, void*);
+
+						if (np)
+						{
+							std::vector<std::string>* nvec = reinterpret_cast<std::vector<std::string>*>(np);
+
+							if (nvec)
+							{
+								for (size_t x = 0; x < nvec->size(); x++)
+								{
+									p_->push_back((sint)atoi(nvec->at(x).c_str()));
+								}
+							}
+						}
+						break;
+					}
+					case VTV_MAX:
+					{
+						done = true;
+						break;
+					}
+					default:
+					{
+						done = true;
+						break;
+					}
+					}
+				}
+			}
+			break;
+		}
+		case VTV_VUINT:
+		{
+			std::vector<uint>* p_ = reinterpret_cast<std::vector<uint>*>(vec_);
+
+			if (p_)
+			{
+
+			}
+			break;
+		}
+		case VTV_VCHAR:
+		{
+			std::vector<_char>* p_ = reinterpret_cast<std::vector<_char>*>(vec_);
+
+			if (p_)
+			{
+
+			}
+			break;
+		}
+		case VTV_VSTR:
+		{
+			std::vector<std::string>* p_ = reinterpret_cast<std::vector<std::string>*>(vec_);
+
+			if (p_)
+			{
+				bool done = false;
+
+				while (!done)
+				{
+					sint ivalt = va_arg(args, sint);
+
+					switch (ivalt)
+					{
+					case VTV_SINT:
+					{
+						sint val = va_arg(args, sint);
+						std::string str(stool->ITOA(val).c_str());
+						p_->push_back(str);
+						break;
+					}
+					case VTV_SLINT:
+					{
+						slint val = va_arg(args, slint);
+						std::string str(stool->LITOA(val).c_str());
+						p_->push_back(str);
+						break;
+					}
+					case VTV_SLLINT:
+					{
+						sllint val = va_arg(args, sllint);
+						std::string str(stool->LLITOA(val).c_str());
+						p_->push_back(str);
+						break;
+					}
+					case VTV_UINT:
+					{
+						uint val = va_arg(args, uint);
+						std::string str(stool->ITOA(val).c_str());
+						p_->push_back(str);
+						break;
+					}
+					case VTV_ULINT:
+					{
+						ulint val = va_arg(args, ulint);
+						std::string str(stool->LITOA(val).c_str());
+						p_->push_back(str);
+						break;
+					}
+					case VTV_ULLINT:
+					{
+						ullint val = va_arg(args, ullint);
+						std::string str(stool->LLITOA(val).c_str());
+						p_->push_back(str);
+						break;
+					}
+					case VTV_CHAR:
+					{
+						_char val = va_arg(args, _char);
+						std::string str;
+						str.push_back(val);
+						p_->push_back(str);
+						break;
+					}
+					case VTV_UCAR:
+					{
+						u_char val = va_arg(args, u_char);
+						std::string str;
+						str.push_back(val);
+						p_->push_back(str);
+						break;
+					}
+					case VTV_CCAR:
+					{
+						c_char* np = va_arg(args, c_char*);
+
+						if (np)
+						{
+							std::string str(np);
+							p_->push_back(str);
+						}
+						break;
+					}
+					case VTV_STR:
+					{
+						std::string* np = va_arg(args, std::string*);
+
+						if (np)
+						{
+							p_->push_back(*np);
+						}
+						break;
+					}
+					case VTV_VSINT:
+					{
+						void* np = va_arg(args, void*);
+
+						if (np)
+						{
+							std::vector<sint>* nvec = reinterpret_cast<std::vector<sint>*>(np);
+
+							if (nvec)
+							{
+								for (size_t x = 0; x < nvec->size(); x++)
+								{
+									std::string str(stool->ITOA(nvec->at(x)).c_str());
+									p_->push_back(str);
+								}
+							}
+						}
+						break;
+					}
+					case VTV_VSLINT:
+					{
+						void* np = va_arg(args, void*);
+
+						if (np)
+						{
+							std::vector<slint>* nvec = reinterpret_cast<std::vector<slint>*>(np);
+
+							if (nvec)
+							{
+								for (size_t x = 0; x < nvec->size(); x++)
+								{
+									std::string str(stool->LITOA(nvec->at(x)).c_str());
+									p_->push_back(str);
+								}
+							}
+						}
+						break;
+					}
+					case VTV_VSLLINT:
+					{
+						void* np = va_arg(args, void*);
+
+						if (np)
+						{
+							std::vector<sllint>* nvec = reinterpret_cast<std::vector<sllint>*>(np);
+
+							if (nvec)
+							{
+								for (size_t x = 0; x < nvec->size(); x++)
+								{
+									std::string str(stool->LLITOA(nvec->at(x)).c_str());
+									p_->push_back(str);
+								}
+							}
+						}
+						break;
+					}
+					case VTV_VUINT:
+					{
+						void* np = va_arg(args, void*);
+
+						if (np)
+						{
+							std::vector<uint>* nvec = reinterpret_cast<std::vector<uint>*>(np);
+
+							if (nvec)
+							{
+								for (size_t x = 0; x < nvec->size(); x++)
+								{
+									std::string str(stool->ITOA(nvec->at(x)).c_str());
+									p_->push_back(str);
+								}
+							}
+						}
+						break;
+					}
+					case VTV_VULINT:
+					{
+						void* np = va_arg(args, void*);
+
+						if (np)
+						{
+							std::vector<ulint>* nvec = reinterpret_cast<std::vector<ulint>*>(np);
+
+							if (nvec)
+							{
+								for (size_t x = 0; x < nvec->size(); x++)
+								{
+									std::string str(stool->LITOA(nvec->at(x)).c_str());
+									p_->push_back(str);
+								}
+							}
+						}
+						break;
+					}
+					case VTV_VULLINT:
+					{
+						void* np = va_arg(args, void*);
+
+						if (np)
+						{
+							std::vector<ullint>* nvec = reinterpret_cast<std::vector<ullint>*>(np);
+
+							if (nvec)
+							{
+								for (size_t x = 0; x < nvec->size(); x++)
+								{
+									std::string str(stool->LLITOA(nvec->at(x)).c_str());
+									p_->push_back(str);
+								}
+							}
+						}
+						break;
+					}
+					case VTV_VCHAR:
+					{
+						void* np = va_arg(args, void*);
+
+						if (np)
+						{
+							std::vector<_char>* nvec = reinterpret_cast<std::vector<_char>*>(np);
+
+							if (nvec)
+							{
+								for (size_t x = 0; x < nvec->size(); x++)
+								{
+									std::string str;
+									str.push_back(nvec->at(x));
+									p_->push_back(str);
+								}
+							}
+						}
+						break;
+					}
+					case VTV_VUCAR:
+					{
+						sllint np = va_arg(args, sllint);
+
+						if (np)
+						{
+							std::vector<u_char>* nvec = reinterpret_cast<std::vector<u_char>*>(np);
+
+							if (nvec)
+							{
+								for (size_t x = 0; x < nvec->size(); x++)
+								{
+									std::string str;
+									str.push_back(nvec->at(x));
+									p_->push_back(str);
+								}
+							}
+						}
+						break;
+					}
+					case VTV_VCCAR:
+					{
+						void* np = va_arg(args, void*);
+
+						if (np)
+						{
+							std::vector<c_char*>* nvec = reinterpret_cast<std::vector<c_char*>*>(np);
+
+							if (nvec)
+							{
+								for (size_t x = 0; x < nvec->size(); x++)
+								{
+									std::string sval(nvec->at(x));
+									p_->push_back(sval);
+								}
+							}
+						}
+						break;
+					}
+					case VTV_VSTR:
+					{
+						void* np = va_arg(args, void*);
+
+						if (np)
+						{
+							std::vector<std::string>* nvec = reinterpret_cast<std::vector<std::string>*>(np);
+
+							if (nvec)
+							{
+								for (size_t x = 0; x < nvec->size(); x++)
+								{
+									p_->push_back(nvec->at(x));
+								}
+							}
+						}
+						break;
+					}
+					case VTV_MAX:
+					{
+						done = true;
+						break;
+					}
+					default:
+					{
+						done = true;
+						break;
+					}
+					}
+				}
+			}
+			break;
+		}
+		default:
+		{
+			break;
+		}
+		}
+		va_end(args);
+		return 0;
+	}
+	sint SortV(void* vec_ = 0, sint valt = -1, sint mem = -1)
 	{
 		if (!vec_ || valt < 0)
 		{
@@ -11644,44 +12320,49 @@ public:
 
 		switch (valt)
 		{
-		case BOT_VAL_CMD:
+		case VTV_VCMD:
 		{
-			botcmd_mems cmem = (botcmd_mems)mem;
+			std::vector<BOTCOMMAND>* p_ = reinterpret_cast<std::vector<BOTCOMMAND>*>(vec_);
 
-			switch (cmem)
+			if (p_)
 			{
-			case BOT_CMD_CID:
-			{
-				for (size_t y = 0; y < vec_->size(); y++)
+				botcmd_mems cmem = (botcmd_mems)mem;
+
+				switch (cmem)
 				{
-					for (size_t x = y + 1; x < vec_->size(); x++)
+				case BOT_CMD_CID:
+				{
+					for (size_t y = 0; y < p_->size(); y++)
 					{
-						if (vec_->at(x).cmd_id < vec_->at(y).cmd_id || vec_->at(y).cmd_id < 0)
+						for (size_t x = y + 1; x < p_->size(); x++)
 						{
-							BOTCOMMAND xval;
-							xval.Renew(&vec_->at(y));
-							vec_->at(y).Renew(&vec_->at(x));
-							vec_->at(x).Renew(&xval);
+							if (p_->at(x).cmd_id < p_->at(y).cmd_id || p_->at(y).cmd_id < 0)
+							{
+								BOTCOMMAND xval;
+								xval.Renew(&p_->at(y));
+								p_->at(y).Renew(&p_->at(x));
+								p_->at(x).Renew(&xval);
+							}
 						}
 					}
+					for (sint y = (sint)p_->size() - 1; y > -1; y--)
+					{
+						if (p_->at(y).cmd_id < 0)
+						{
+							p_->pop_back();
+						}
+						else
+						{
+							y = -1;
+						}
+					}
+					break;
 				}
-				for (sint y = (sint)vec_->size() - 1; y > -1; y--)
+				default:
 				{
-					if (vec_->at(y).cmd_id < 0)
-					{
-						vec_->pop_back();
-					}
-					else
-					{
-						y = -1;
-					}
+					break;
 				}
-				break;
-			}
-			default:
-			{
-				break;
-			}
+				}
 			}
 			break;
 		}
@@ -15369,50 +16050,908 @@ private:
 	STool* stool;
 };
 
-class bot_strt_up
+class bot_strt_syms
 {
 public:
 
+	void Clear()
+	{
+		sql_vals_keywords.clear();
+		sql_opers_keywords.clear();
+		sql_trans_keywords.clear();
+		sql_obj_keywords.clear();
+		sql_cspec_keywords.clear();
+		sql_targ_keywords.clear();
+		sql_targ_keywords.clear();
+		sql_comp_keywords.clear();
+		sql_conj_keywords.clear();
+		sql_obj_qual_keywords.clear();
+		sql_decl_keywords.clear();
+		sql_order_keywords.clear();
+		sql_order_keywords.clear();
+		sql_lim_keywords.clear();
+		sql_cond_qual_keywords.clear();
+		sql_act_keywords.clear();
+		nrts_ign.clear();
+		nrts_lign.clear();
+		nrts_lign_.clear();
+		nrts_sep.clear();
+		nrts_ord.clear();
+		nrts_ord_.clear();
+		nrts_ass.clear();
+		nrts_end.clear();
+		nrts_lit.clear();
+		nrts_pun.clear();
+	}
+	void Renew(bot_strt_syms* val = 0)
+	{
+		Clear();
+
+		for (size_t x = 0; x < val->sql_vals_keywords.size(); x++)
+		{
+			sql_vals_keywords.push_back(val->sql_vals_keywords[x]);
+		}
+
+		for (size_t x = 0; x < val->sql_opers_keywords.size(); x++)
+		{
+			sql_opers_keywords.push_back(val->sql_opers_keywords[x]);
+		}
+
+		for (size_t x = 0; x < val->sql_trans_keywords.size(); x++)
+		{
+			sql_trans_keywords.push_back(val->sql_trans_keywords[x]);
+		}
+
+		for (size_t x = 0; x < val->sql_obj_keywords.size(); x++)
+		{
+			sql_obj_keywords.push_back(val->sql_obj_keywords[x]);
+		}
+
+		for (size_t x = 0; x < val->sql_cspec_keywords.size(); x++)
+		{
+			sql_cspec_keywords.push_back(val->sql_cspec_keywords[x]);
+		}
+
+		for (size_t x = 0; x < val->sql_targ_keywords.size(); x++)
+		{
+			sql_targ_keywords.push_back(val->sql_targ_keywords[x]);
+		}
+
+		for (size_t x = 0; x < val->sql_targ_keywords.size(); x++)
+		{
+			sql_targ_keywords.push_back(val->sql_targ_keywords[x]);
+		}
+
+		for (size_t x = 0; x < val->sql_comp_keywords.size(); x++)
+		{
+			sql_comp_keywords.push_back(val->sql_comp_keywords[x]);
+		}
+
+		for (size_t x = 0; x < val->sql_conj_keywords.size(); x++)
+		{
+			sql_conj_keywords.push_back(val->sql_conj_keywords[x]);
+		}
+
+		for (size_t x = 0; x < val->sql_obj_qual_keywords.size(); x++)
+		{
+			sql_obj_qual_keywords.push_back(val->sql_obj_qual_keywords[x]);
+		}
+
+		for (size_t x = 0; x < val->sql_decl_keywords.size(); x++)
+		{
+			sql_decl_keywords.push_back(val->sql_decl_keywords[x]);
+		}
+
+		for (size_t x = 0; x < val->sql_order_keywords.size(); x++)
+		{
+			sql_order_keywords.push_back(val->sql_order_keywords[x]);
+		}
+
+		for (size_t x = 0; x < val->sql_order_keywords.size(); x++)
+		{
+			sql_order_keywords.push_back(val->sql_order_keywords[x]);
+		}
+
+		for (size_t x = 0; x < val->sql_lim_keywords.size(); x++)
+		{
+			sql_lim_keywords.push_back(val->sql_lim_keywords[x]);
+		}
+
+		for (size_t x = 0; x < val->sql_cond_qual_keywords.size(); x++)
+		{
+			sql_cond_qual_keywords.push_back(val->sql_cond_qual_keywords[x]);
+		}
+
+		for (size_t x = 0; x < val->sql_act_keywords.size(); x++)
+		{
+			sql_act_keywords.push_back(val->sql_act_keywords[x]);
+		}
+
+		for (size_t x = 0; x < val->nrts_ign.size(); x++)
+		{
+			nrts_ign.push_back(val->nrts_ign[x]);
+		}
+
+		for (size_t x = 0; x < val->nrts_lign.size(); x++)
+		{
+			nrts_lign.push_back(val->nrts_lign[x]);
+		}
+
+		for (size_t x = 0; x < val->nrts_lign_.size(); x++)
+		{
+			nrts_lign_.push_back(val->nrts_lign_[x]);
+		}
+
+		for (size_t x = 0; x < val->nrts_sep.size(); x++)
+		{
+			nrts_sep.push_back(val->nrts_sep[x]);
+		}
+
+		for (size_t x = 0; x < val->nrts_ord.size(); x++)
+		{
+			nrts_ord.push_back(val->nrts_ord[x]);
+		}
+
+		for (size_t x = 0; x < val->nrts_ord_.size(); x++)
+		{
+			nrts_ord_.push_back(val->nrts_ord_[x]);
+		}
+
+		for (size_t x = 0; x < val->nrts_ass.size(); x++)
+		{
+			nrts_ass.push_back(val->nrts_ass[x]);
+		}
+
+		for (size_t x = 0; x < val->nrts_end.size(); x++)
+		{
+			nrts_end.push_back(val->nrts_end[x]);
+		}
+
+		for (size_t x = 0; x < val->nrts_lit.size(); x++)
+		{
+			nrts_lit.push_back(val->nrts_lit[x]);
+		}
+
+		for (size_t x = 0; x < val->nrts_pun.size(); x++)
+		{
+			nrts_pun.push_back(val->nrts_pun[x]);
+		}
+	}
+	void Update(bot_strt_syms* val = 0)
+	{
+		for (size_t x = 0; x < val->sql_vals_keywords.size(); x++)
+		{
+			size_t y = 0;
+			while (y < sql_vals_keywords.size())
+			{
+				if (!strcmp(val->sql_vals_keywords[x].c_str(), sql_vals_keywords[y].c_str()))
+				{
+					y = sql_vals_keywords.size();
+				}
+				y++;
+			}
+
+			if (y == sql_vals_keywords.size())
+			{
+				sql_vals_keywords.push_back(val->sql_vals_keywords[x]);
+			}
+		}
+
+		for (size_t x = 0; x < val->sql_opers_keywords.size(); x++)
+		{
+			size_t y = 0;
+			while (y < sql_opers_keywords.size())
+			{
+				if (!memcmp((void*)&val->sql_opers_keywords[x], (void*)&sql_opers_keywords[y], sizeof(_char)))
+				{
+					y = sql_opers_keywords.size();
+				}
+				y++;
+			}
+
+			if (y == sql_opers_keywords.size())
+			{
+				sql_opers_keywords.push_back(val->sql_opers_keywords[x]);
+			}
+		}
+
+		for (size_t x = 0; x < val->sql_trans_keywords.size(); x++)
+		{
+			size_t y = 0;
+			while (y < sql_trans_keywords.size())
+			{
+				if (!strcmp(val->sql_trans_keywords[x].c_str(), sql_trans_keywords[y].c_str()))
+				{
+					y = sql_trans_keywords.size();
+				}
+				y++;
+			}
+
+			if (y == sql_trans_keywords.size())
+			{
+				sql_trans_keywords.push_back(val->sql_trans_keywords[x]);
+			}
+		}
+
+		for (size_t x = 0; x < val->sql_obj_keywords.size(); x++)
+		{
+			size_t y = 0;
+			while (y < sql_obj_keywords.size())
+			{
+				if (!strcmp(val->sql_obj_keywords[x].c_str(), sql_obj_keywords[y].c_str()))
+				{
+					y = sql_obj_keywords.size();
+				}
+				y++;
+			}
+
+			if (y == sql_obj_keywords.size())
+			{
+				sql_obj_keywords.push_back(val->sql_obj_keywords[x]);
+			}
+		}
+
+		for (size_t x = 0; x < val->sql_cspec_keywords.size(); x++)
+		{
+			size_t y = 0;
+			while (y < sql_cspec_keywords.size())
+			{
+				if (!strcmp(val->sql_cspec_keywords[x].c_str(), sql_cspec_keywords[y].c_str()))
+				{
+					y = sql_cspec_keywords.size();
+				}
+				y++;
+			}
+
+			if (y == sql_cspec_keywords.size())
+			{
+				sql_cspec_keywords.push_back(val->sql_cspec_keywords[x]);
+			}
+		}
+
+		for (size_t x = 0; x < val->sql_targ_keywords.size(); x++)
+		{
+			size_t y = 0;
+			while (y < sql_targ_keywords.size())
+			{
+				if (!strcmp(val->sql_targ_keywords[x].c_str(), sql_targ_keywords[y].c_str()))
+				{
+					y = sql_targ_keywords.size();
+				}
+				y++;
+			}
+
+			if (y == sql_targ_keywords.size())
+			{
+				sql_targ_keywords.push_back(val->sql_targ_keywords[x]);
+			}
+		}
+
+		for (size_t x = 0; x < val->sql_targ_keywords.size(); x++)
+		{
+			size_t y = 0;
+			while (y < sql_targ_keywords.size())
+			{
+				if (!strcmp(val->sql_targ_keywords[x].c_str(), sql_targ_keywords[y].c_str()))
+				{
+					y = sql_targ_keywords.size();
+				}
+				y++;
+			}
+
+			if (y == sql_targ_keywords.size())
+			{
+				sql_targ_keywords.push_back(val->sql_targ_keywords[x]);
+			}
+		}
+
+		for (size_t x = 0; x < val->sql_comp_keywords.size(); x++)
+		{
+			size_t y = 0;
+
+			while (y < sql_comp_keywords.size())
+			{
+				if (!strcmp(val->sql_comp_keywords[x].c_str(), sql_comp_keywords[y].c_str()))
+				{
+					y = sql_comp_keywords.size();
+				}
+				y++;
+			}
+
+			if (y == sql_comp_keywords.size())
+			{
+				sql_comp_keywords.push_back(val->sql_comp_keywords[x]);
+			}
+		}
+
+		for (size_t x = 0; x < val->sql_conj_keywords.size(); x++)
+		{
+			size_t y = 0;
+
+			while (y < sql_conj_keywords.size())
+			{
+				if (!strcmp(val->sql_conj_keywords[x].c_str(), sql_conj_keywords[y].c_str()))
+				{
+					y = sql_conj_keywords.size();
+				}
+				y++;
+			}
+
+			if (y == sql_conj_keywords.size())
+			{
+				sql_conj_keywords.push_back(val->sql_conj_keywords[x]);
+			}
+		}
+
+		for (size_t x = 0; x < val->sql_obj_qual_keywords.size(); x++)
+		{
+			size_t y = 0;
+
+			while (y < sql_obj_qual_keywords.size())
+			{
+				if (!strcmp(val->sql_obj_qual_keywords[x].c_str(), sql_obj_qual_keywords[y].c_str()))
+				{
+					y = sql_obj_qual_keywords.size();
+				}
+				y++;
+			}
+
+			if (y == sql_obj_qual_keywords.size())
+			{
+				sql_obj_qual_keywords.push_back(val->sql_obj_qual_keywords[x]);
+			}
+		}
+
+		for (size_t x = 0; x < val->sql_decl_keywords.size(); x++)
+		{
+			size_t y = 0;
+
+			while (y < sql_decl_keywords.size())
+			{
+				if (!strcmp(val->sql_decl_keywords[x].c_str(), sql_decl_keywords[y].c_str()))
+				{
+					y = sql_decl_keywords.size();
+				}
+				y++;
+			}
+
+			if (y == sql_decl_keywords.size())
+			{
+				sql_decl_keywords.push_back(val->sql_decl_keywords[x]);
+			}
+		}
+
+		for (size_t x = 0; x < val->sql_order_keywords.size(); x++)
+		{
+			size_t y = 0;
+
+			while (y < sql_order_keywords.size())
+			{
+				if (!strcmp(val->sql_order_keywords[x].c_str(), sql_order_keywords[y].c_str()))
+				{
+					y = sql_order_keywords.size();
+				}
+				y++;
+			}
+
+			if (y == sql_order_keywords.size())
+			{
+				sql_order_keywords.push_back(val->sql_order_keywords[x]);
+			}
+		}
+
+		for (size_t x = 0; x < val->sql_order_keywords.size(); x++)
+		{
+			size_t y = 0;
+
+			while (y < sql_order_keywords.size())
+			{
+				if (!strcmp(val->sql_order_keywords[x].c_str(), sql_order_keywords[y].c_str()))
+				{
+					y = sql_order_keywords.size();
+				}
+				y++;
+			}
+
+			if (y == sql_order_keywords.size())
+			{
+				sql_order_keywords.push_back(val->sql_order_keywords[x]);
+			}
+		}
+
+		for (size_t x = 0; x < val->sql_lim_keywords.size(); x++)
+		{
+			size_t y = 0;
+
+			while (y < sql_lim_keywords.size())
+			{
+				if (!strcmp(val->sql_lim_keywords[x].c_str(), sql_lim_keywords[y].c_str()))
+				{
+					y = sql_lim_keywords.size();
+				}
+				y++;
+			}
+
+			if (y == sql_lim_keywords.size())
+			{
+				sql_lim_keywords.push_back(val->sql_lim_keywords[x]);
+			}
+		}
+
+		for (size_t x = 0; x < val->sql_cond_qual_keywords.size(); x++)
+		{
+			size_t y = 0;
+
+			while (y < sql_cond_qual_keywords.size())
+			{
+				if (!strcmp(val->sql_cond_qual_keywords[x].c_str(), sql_cond_qual_keywords[y].c_str()))
+				{
+					y = sql_cond_qual_keywords.size();
+				}
+				y++;
+			}
+
+			if (y == sql_cond_qual_keywords.size())
+			{
+				sql_cond_qual_keywords.push_back(val->sql_cond_qual_keywords[x]);
+			}
+		}
+
+		for (size_t x = 0; x < val->sql_act_keywords.size(); x++)
+		{
+			size_t y = 0;
+
+			while (y < sql_act_keywords.size())
+			{
+				if (!strcmp(val->sql_act_keywords[x].c_str(), sql_act_keywords[y].c_str()))
+				{
+					y = sql_act_keywords.size();
+				}
+				y++;
+			}
+
+			if (y == sql_act_keywords.size())
+			{
+				sql_act_keywords.push_back(val->sql_act_keywords[x]);
+			}
+		}
+
+		for (size_t x = 0; x < val->nrts_ign.size(); x++)
+		{
+			size_t y = 0;
+			while (y < nrts_ign.size())
+			{
+				if (!memcmp((void*)&val->nrts_ign[x], (void*)&nrts_ign[y], sizeof(_char)))
+				{
+					y = nrts_ign.size();
+				}
+				y++;
+			}
+
+			if (y == nrts_ign.size())
+			{
+				nrts_ign.push_back(val->nrts_ign[x]);
+			}
+		}
+
+		for (size_t x = 0; x < val->nrts_lign.size(); x++)
+		{
+			size_t y = 0;
+
+			while (y < nrts_lign.size())
+			{
+				if (!strcmp(val->nrts_lign[x].c_str(), nrts_lign[y].c_str()))
+				{
+					y = nrts_lign.size();
+				}
+				y++;
+			}
+
+			if (y == nrts_lign.size())
+			{
+				nrts_lign.push_back(val->nrts_lign[x]);
+			}
+		}
+
+		for (size_t x = 0; x < val->nrts_lign_.size(); x++)
+		{
+			size_t y = 0;
+
+			while (y < nrts_lign_.size())
+			{
+				if (!strcmp(val->nrts_lign_[x].c_str(), nrts_lign_[y].c_str()))
+				{
+					y = nrts_lign_.size();
+				}
+				y++;
+			}
+
+			if (y == nrts_lign_.size())
+			{
+				nrts_lign_.push_back(val->nrts_lign_[x]);
+			}
+		}
+
+		for (size_t x = 0; x < val->nrts_sep.size(); x++)
+		{
+			size_t y = 0;
+			while (y < nrts_sep.size())
+			{
+				if (!memcmp((void*)&val->nrts_sep[x], (void*)&nrts_sep[y], sizeof(_char)))
+				{
+					y = nrts_sep.size();
+				}
+				y++;
+			}
+
+			if (y == nrts_sep.size())
+			{
+				nrts_sep.push_back(val->nrts_sep[x]);
+			}
+		}
+
+		for (size_t x = 0; x < val->nrts_ord.size(); x++)
+		{
+			size_t y = 0;
+			while (y < nrts_ord.size())
+			{
+				if (!memcmp((void*)&val->nrts_ord[x], (void*)&nrts_ord[y], sizeof(_char)))
+				{
+					y = nrts_ord.size();
+				}
+				y++;
+			}
+
+			if (y == nrts_ord.size())
+			{
+				nrts_ord.push_back(val->nrts_ord[x]);
+			}
+		}
+
+		for (size_t x = 0; x < val->nrts_ord_.size(); x++)
+		{
+			size_t y = 0;
+			while (y < nrts_ord_.size())
+			{
+				if (!memcmp((void*)&val->nrts_ord_[x], (void*)&nrts_ord_[y], sizeof(_char)))
+				{
+					y = nrts_ord_.size();
+				}
+				y++;
+			}
+
+			if (y == nrts_ord_.size())
+			{
+				nrts_ord_.push_back(val->nrts_ord_[x]);
+			}
+		}
+
+		for (size_t x = 0; x < val->nrts_ass.size(); x++)
+		{
+			size_t y = 0;
+			while (y < nrts_ass.size())
+			{
+				if (!memcmp((void*)&val->nrts_ass[x], (void*)&nrts_ass[y], sizeof(_char)))
+				{
+					y = nrts_ass.size();
+				}
+				y++;
+			}
+
+			if (y == nrts_ass.size())
+			{
+				nrts_ass.push_back(val->nrts_ass[x]);
+			}
+		}
+
+		for (size_t x = 0; x < val->nrts_end.size(); x++)
+		{
+			size_t y = 0;
+			while (y < nrts_end.size())
+			{
+				if (!memcmp((void*)&val->nrts_end[x], (void*)&nrts_end[y], sizeof(_char)))
+				{
+					y = nrts_end.size();
+				}
+				y++;
+			}
+
+			if (y == nrts_end.size())
+			{
+				nrts_end.push_back(val->nrts_end[x]);
+			}
+		}
+
+		for (size_t x = 0; x < val->nrts_lit.size(); x++)
+		{
+			size_t y = 0;
+			while (y < nrts_lit.size())
+			{
+				if (!memcmp((void*)&val->nrts_lit[x], (void*)&nrts_lit[y], sizeof(_char)))
+				{
+					y = nrts_lit.size();
+				}
+				y++;
+			}
+
+			if (y == nrts_lit.size())
+			{
+				nrts_lit.push_back(val->nrts_lit[x]);
+			}
+		}
+
+		for (size_t x = 0; x < val->nrts_pun.size(); x++)
+		{
+			size_t y = 0;
+			while (y < nrts_pun.size())
+			{
+				if (!memcmp((void*)&val->nrts_pun[x], (void*)&nrts_pun[y], sizeof(_char)))
+				{
+					y = nrts_pun.size();
+				}
+				y++;
+			}
+
+			if (y == nrts_pun.size())
+			{
+				nrts_pun.push_back(val->nrts_pun[x]);
+			}
+		}
+	}
+
+	std::vector<std::string> sql_vals_keywords
+	{
+		"INTEGER",
+		"REAL",
+		"TEXT",
+		"BLOB",
+		"NULL"
+	};
+
+	std::vector<_char> sql_opers_keywords
+	{
+		' ',
+		'*',
+		'"',
+		'\'',
+		'[',
+		']',
+		'(',
+		')',
+		'{',
+		'}',
+		',',
+		'.',
+		';'
+	};
+
+	//it_type
+	std::vector<std::string> sql_trans_keywords
+	{
+		"SELECT",
+		"UPDATE",
+		"INSERT INTO",
+		"CREATE",
+		"DELETE",
+		"DROP",
+		"REINDEX",
+		"ALTER",
+		"ANALYZE",
+		"ATTACH",
+		"DETACH"
+	};
+
+	//ic_type and cont
+	std::vector<std::string> sql_obj_keywords
+	{
+		"DATABASE",
+		"TABLE",
+		"INDEX",
+		"COLUMN",
+		"VIEW",
+		"TRIGGER",
+		"ROW"
+	};
+
+	//cspec
+	std::vector<std::string> sql_cspec_keywords
+	{
+		"WHERE",
+		"AS",
+		"VALUES"
+	};
+
+	//targ
+	std::vector<std::string> sql_targ_keywords
+	{
+		"USING",
+		"FROM",
+		"ON"
+	};
+
+	//opts[0]
+	std::vector<std::string> sql_comp_keywords
+	{
+		"BETWEEN",
+		"HAVING",
+		"LIKE",
+		"NOT IN",
+		"IN",
+		"=",
+		">",
+		"<",
+		">=",
+		"<=",
+		"!="
+	};
+
+	//opts[1]
+	std::vector<std::string> sql_conj_keywords
+	{
+		"AND",
+		"OR",
+		"BETWEEN"
+	};
+
+	// ospec
+	std::vector<std::string> sql_obj_qual_keywords
+	{
+		"UNIQUE",
+		"TEMP",
+		"DISTINCT",
+		"VIRTUAL"
+	};
+
+	//opts[2][0]
+	std::vector<std::string> sql_decl_keywords
+	{
+		"ORDER BY",
+		"GROUP BY"
+	};
+
+	//opts[2][1]
+	std::vector<std::string> sql_order_keywords
+	{
+		"ASC",
+		"DESC"
+	};
+
+	//rlim
+	std::vector<std::string> sql_lim_keywords
+	{
+		"LIMIT"
+	};
+
+
+	//ifex
+	std::vector<std::string> sql_cond_qual_keywords
+	{
+		"IF EXISTS",
+		"IF NOT EXISTS"
+	};
+
+	//act
+	std::vector<std::string> sql_act_keywords
+	{
+		"SET",
+		"ADD",
+		"RENAME TO"
+	};
+
+	std::vector<_char> nrts_ign
+	{
+		'\\'
+	};
+
+	std::vector<std::string> nrts_lign
+	{
+		"//",
+		"/*"
+	};
+
+	std::vector<std::string> nrts_lign_
+	{
+		"\n",
+		"*/"
+	};
+
+	std::vector<_char> nrts_sep
+	{
+		' ',
+		',',
+		';'
+	};
+
+	std::vector<_char> nrts_ord
+	{
+		'(',
+		'{',
+		'['
+	};
+	std::vector<_char> nrts_ord_
+	{
+		')',
+		'}',
+		']'
+	};
+
+	std::vector<_char> nrts_ass
+	{
+		'='
+	};
+
+	std::vector<_char> nrts_end
+	{
+		';',
+		'\n',
+		'\0'
+	};
+
+	std::vector<_char> nrts_lit
+	{
+		'\'',
+		'"'
+	};
+
+	std::vector<_char> nrts_pun
+	{
+		';',
+		'.',
+		'?',
+		'!',
+		','
+	};
+
+private:
+
+};
+
+typedef struct bot_strt_up
+{
 	std::vector<c_char*> litebot_stmts
 	{
 		"INSERT INTO litebot.COMMANDS (" \
-		"COMMAND, PRIV, CMD_ID ) VALUES (" \
+		"CMD, PRIV, CMD_ID ) VALUES (" \
 		"\"QUIT\", 0, 1 );",
 
 		"INSERT INTO litebot.COMMANDS (" \
-		"COMMAND, PRIV, CMD_ID ) VALUES (" \
+		"CMD, PRIV, CMD_ID ) VALUES (" \
 		"\"LOGIN\", 0, 2 );",
 
 		"INSERT INTO litebot.COMMANDS (" \
-		"COMMAND, PRIV, CMD_ID ) VALUES (" \
+		"CMD, PRIV, CMD_ID ) VALUES (" \
 		"\"HELP\", 0, 3 );",
 
 		"INSERT INTO litebot.COMMANDS (" \
-		"COMMAND, PRIV, CMD_ID ) VALUES (" \
+		"CMD, PRIV, CMD_ID ) VALUES (" \
 		"\"LOGOUT\", 1, 4 );",
 
 		"INSERT INTO litebot.COMMANDS (" \
-		"COMMAND, PRIV, CMD_ID ) VALUES (" \
+		"CMD, PRIV, CMD_ID ) VALUES (" \
 		"\"DEBUGLEVEL\", 1, 5 );",
 
 		"INSERT INTO litebot.COMMANDS (" \
-		"COMMAND, PRIV, CMD_ID ) VALUES (" \
-		"\"ADDCOMMAND\", 100, 17 );",
+		"CMD, PRIV, CMD_ID ) VALUES (" \
+		"\"ADDCOMMAND\", 999, 1000 );",
 
 		"INSERT INTO litebot.COMMANDS (" \
-		"COMMAND, PRIV, CMD_ID ) VALUES (" \
+		"CMD, PRIV, CMD_ID ) VALUES (" \
+		"\"REMOVECOMMAND\", 999, 1001 );",
+
+		"INSERT INTO litebot.COMMANDS (" \
+		"CMD, PRIV, CMD_ID ) VALUES (" \
 		"\"READFILE\", 10, 96 );",
 
 		"INSERT INTO litebot.COMMANDS (" \
-		"COMMAND, PRIV, CMD_ID ) VALUES (" \
+		"CMD, PRIV, CMD_ID ) VALUES (" \
 		"\"ADDSCRIPT\", 100, 98 );",
 
 		"INSERT INTO litebot.COMMANDS (" \
-		"COMMAND, PRIV, CMD_ID ) VALUES (" \
+		"CMD, PRIV, CMD_ID ) VALUES (" \
 		"\"RUNSCRIPT\", 100, 99 );",
 
 		"INSERT INTO litebot.COMMANDS (" \
-		"COMMAND, PRIV, CMD_ID ) VALUES (" \
+		"CMD, PRIV, CMD_ID ) VALUES (" \
 		"\"GIPS\", 100, 100 );",
 
 		"INSERT INTO litebot.ACCOUNTS ( LOGIN_NAME, PASSWORD, " \
@@ -15428,26 +16967,7 @@ public:
 		"L_CASE_VOWELS, NUMBER_SYMS ) VALUES ( \"ENGLISH\", " \
 		"\"AaBbCcDdEeFfGgHhIiJjKkLlMmNnOoPpQqRrSsTtUuVvWwXxYyZz\", " \
 		"\"BCDFGHJKLMNPQRSTVWXY\", \"bcdfghjklmnpqrstvwxyz\", \"AEIOU\", " \
-		"\"aeiou\", \"0123456789\" );",
-
-		"INSERT INTO litebot.LANGUAGES ( LANGUAGE, ALPHABET, " \
-		"U_CASE_CONSONANTS, L_CASE_CONSONANTS, U_CASE_VOWELS, " \
-		"L_CASE_VOWELS, NUMBER_SYMS ) VALUES ( \"DUETSCHE\", " \
-		"\"Aa��BbCcDdEe��FfGgHhIi��JjKkLlMmNnOo��PpQqRrSs�TtUu��VvWwXxYyZz\", " \
-		"\"BCDFGHJKLMNPQRSTVWXY\", \"bcdfghjklmnpqrs�tvwxyz\", \"A�E�I�O�U�\", " \
-		"\"a�e�i�o�u�\", \"0123456789\" );"
-		/*
-		"INSERT INTO litebot.LANGUAGES ( LANGUAGE, ALPHABET, " \
-		"U_CASE_CONSONANTS, L_CASE_CONSONANTS, U_CASE_VOWELS, " \
-		"L_CASE_VOWELS, NUMBER_SYMS ) VALUES ( \"l337 5p34k\", " \
-		"\"Aa��BbCcDdEe��FfGgHhIi��JjKkLlMmNnOo��PpQqRrSs�TtUu��VvWwXxYyZz123456780\", " \
-		"\"BCDFGHJKLMNPQRSTVWXY\", \"bcdfghjklmnpqrs�tvwxyz25678\", \"A�E�I�O�U�1340\", " \
-		"\"a�e�i�o�u�\", \"0123456789\" );"
-
-		"INSERT INTO litebot.COMMON_SYMS (" \
-		"SYMBOL, USAGES ) VALUES (" \
-		"\"/#\", \"5\" );"
-		*/
+		"\"aeiou\", \"0123456789\" );"
 	};
 
 	std::vector<BOT_STMT> litebot_pend;
@@ -15510,7 +17030,7 @@ public:
 	{
 		"ID INTEGER " \
 		"CMD_ID INTEGER " \
-		"COMMAND TEXT " \
+		"CMD TEXT " \
 		"PRIV INTEGER " \
 		"LAST_MODIFIED INTEGER " \
 		"LAST_MAINTAINED INTEGER " \
@@ -15655,9 +17175,7 @@ public:
 		"LAST_MODIFIED_NS INTEGER " \
 		"LAST_MAINTAINED_NS INTEGER"
 	};
-
-private:
-};
+}BOT_STRT_UP;
 
 typedef struct log_vec
 {
@@ -15734,208 +17252,7 @@ private:
 	std::vector<BOTF_CONN*> f_con;
 	std::vector<lok_req> relocks;
 	uint stk_ct;
-
-	std::vector<c_char*> sql_vals_keywords
-	{
-		"INTEGER",
-		"REAL",
-		"TEXT",
-		"BLOB",
-		"NULL"
-	};
-
-	std::vector<_char> sql_opers_keywords
-	{
-		' ',
-		'*',
-		'"',
-		'\'',
-		'[',
-		']',
-		'(',
-		')',
-		'{',
-		'}',
-		',',
-		'.',
-		';'
-	};
-
-	//it_type
-	std::vector<c_char*> sql_trans_keywords
-	{
-		"SELECT",
-		"UPDATE",
-		"INSERT INTO",
-		"CREATE",
-		"DELETE",
-		"DROP",
-		"REINDEX",
-		"ALTER",
-		"ANALYZE",
-		"ATTACH",
-		"DETACH"
-	};
-
-	//ic_type and cont
-	std::vector<c_char*> sql_obj_keywords
-	{
-		"DATABASE",
-		"TABLE",
-		"INDEX",
-		"COLUMN",
-		"VIEW",
-		"TRIGGER",
-		"ROW"
-	};
-
-	//cspec
-	std::vector<c_char*> sql_cspec_keywords
-	{
-		"WHERE",
-		"AS",
-		"VALUES"
-	};
-
-	//targ
-	std::vector<c_char*> sql_targ_keywords
-	{
-		"USING",
-		"FROM",
-		"ON"
-	};
-
-	//opts[0]
-	std::vector<c_char*> sql_comp_keywords
-	{
-		"BETWEEN",
-		"HAVING",
-		"LIKE",
-		"NOT IN",
-		"IN",
-		"=",
-		">",
-		"<",
-		">=",
-		"<=",
-		"!="
-	};
-
-	//opts[1]
-	std::vector<c_char*> sql_conj_keywords
-	{
-		"AND",
-		"OR",
-		"BETWEEN"
-	};
-
-	// ospec
-	std::vector<c_char*> sql_obj_qual_keywords
-	{
-		"UNIQUE",
-		"TEMP",
-		"DISTINCT",
-		"VIRTUAL"
-	};
-
-	//opts[2][0]
-	std::vector<c_char*> sql_decl_keywords
-	{
-		"ORDER BY",
-		"GROUP BY"
-	};
-
-	//opts[2][1]
-	std::vector<c_char*> sql_order_keywords
-	{
-		"ASC",
-		"DESC"
-	};
-
-	//rlim
-	std::vector<c_char*> sql_lim_keywords
-	{
-		"LIMIT"
-	};
-	
-
-	//ifex
-	std::vector<c_char*> sql_cond_qual_keywords
-	{
-		"IF EXISTS",
-		"IF NOT EXISTS"
-	};
-
-	//act
-	std::vector<c_char*> sql_act_keywords
-	{
-		"SET",
-		"ADD",
-		"RENAME TO"
-	};
-	
-	std::vector<_char> nrts_ign
-	{
-		'\\'
-	};
-
-	std::vector<c_char*> nrts_lign
-	{
-		"//",
-		"/*"
-	};
-
-	std::vector<c_char*> nrts_lign_
-	{
-		"\n",
-		"*/"
-	};
-
-	std::vector<_char> nrts_sep
-	{
-		' ',
-		','
-	};
-
-	std::vector<_char> nrts_ord
-	{
-		'(',
-		'{',
-		'['
-	};
-	std::vector<_char> nrts_ord_
-	{
-		')',
-		'}',
-		']'
-	};
-
-	std::vector<_char> nrts_ass
-	{
-		'='
-	};
-
-	std::vector<_char> nrts_end
-	{
-		';',
-		'\n',
-		'\0'
-	};
-
-	std::vector<_char> nrts_lit
-	{
-		'\'',
-		'"'
-	};
-
-	std::vector<_char> nrts_pun
-	{
-		';',
-		'.',
-		'?',
-		'!',
-		','
-	};
+	bot_strt_syms msy;
 	
 	sint GetDebugLevel() { return debug_lvl; }
 	sint GetDebugMode() { return debug_m; }
@@ -15999,7 +17316,7 @@ private:
 
 	// Commands
 
-	sint Command(std::vector<std::string> *vec_ = 0);
+	sint Command(std::vector<std::string>* vec_ = 0);
 
 	// File Directory
 
@@ -16033,6 +17350,7 @@ private:
 	sint BOTFindInFile(BOT_FILE_M* file_ = 0, bool indat = false, size_t f = 0, size_t t = 0, void* f_ = 0, size_t len = 0);
 	sint BOTFileOUT(BOT_FILE_M* file_ = 0, size_t f = 0, bool to_fdat = false, ...);
 	sint BOTFileIN(BOT_FILE_M* file_ = 0, bool f_fdat = false, size_t from = -1, size_t to = -1, ...);
+	sint BOTFileER(BOT_FILE_M* file_ = 0, bool f_fdat = false, size_t from = -1, size_t to = -1);
 	sint BOTCloseFile(sint flid = -1, bool clear_conn = true, bool del = false, bool clear_dat = false);
 	sint BOTCloseFile(BOT_FILE_M* xfile_ = 0, bool clear_conn = true, bool del = false, bool clear_dat = false);
 	sint BOTSaveFile(BOT_FILE_M* xfile_ = 0, c_char* to_ = 0, bool ow = false);
@@ -16055,40 +17373,29 @@ private:
 	sint SetClientLoggedIn(bool x);	
 
 	// Console I/O Functions
-
-	sint Output(c_char* op_ = "", ...);
-	sint BotOut(sint num = 0, ...);
-	sint BotOut(c_char* str_ = "");
-	sint SOutput(c_char* op_ = "", sint o = 0);
-	sint Input(std::string* np = 0, bool itrp = true);
-	sint DoOutput();
-	sint InterpretInput(std::string *input_ = 0);
-	std::string DetermineOutput();
-	sint BOTConsole();
+	sint BOTCOutput(std::string* np = 0);
+	sint Output(c_char* op_ = "", sint opt = -1, bool newl = true);
+	sint Output(bool newl = true, c_char* op_ = "", ...);
+	sint BOTCInput(std::string* np = 0, carr_64* tdata = 0);
+	sint Input(c_char* prp = 0, std::string* np = 0, bool itrp = true);
+	sint BOTConsole(c_char* prp = 0);
 	sint ArgSep(std::vector <std::string>* ret_ = 0, c_char* val = 0, size_t f = 0, size_t t = 0, carr_4* sep = 0);
 	sint ArgSep(std::vector <std::string>* ret_ = 0, c_char* val = 0, carr_4* sep = 0);
-	sint ArgSep(std::vector <std::string>* ret_ = 0, c_char* val = 0, ...);
+	sint ArgSep(std::vector <std::string>* ret_ = 0, bool ksep = false, size_t f = 0, size_t t = 0, c_char* val = 0, ...);
 
 	// Str Manip
 
-	std::string CleanPunctuation(c_char* i_ = "");
-	std::string Uppercase(c_char* str_ = "");
+	std::string CPunc(c_char* i_ = "");
+	std::string UCASE(c_char* str_ = "");
+	std::string LCASE(c_char* str_ = "");
 	std::string LEncStrI(c_char* str_ = "", sint opt = -1);
-	sint OrdLocs(std::vector<size_t>* litlocs_ = 0, std::vector<size_t>* locs_ = 0, c_char* str_ = 0);
-	sint OrdEnc(size_t at_loc = 0, std::vector<size_t>* litlocs_ = 0, std::vector<size_t>* locs_ = 0, c_char* str_ = 0);
-	sint LitLocs(std::vector<size_t>* locs_, c_char* str_);
-	sint LitEnc(size_t at_loc, std::vector<size_t>* locs_, c_char* str_);
-	bool XEnclosedInY(std::vector<size_t>* ll_ = 0, std::string* stmts_ = 0, sint sc_loc = -1, sint x_loc = -1, std::string* fy_char = 0);
-	bool XEnclosedInY(std::vector<size_t>* ll_ = 0, c_char* stmts_ = "", sint sc_loc = -1, sint x_loc = -1, _char fy_char = '\0');
 
 	// SQL statement manip
 
-	sint SeparateSQL(std::string* stmts_ = 0, std::vector<std::string>* vec_ = 0);
 	sint AnalyzeStmt(BOT_STMT *t_ = 0);
 	sint BQS(BOT_STMT *t_ = 0);
 	sint BTS(BOT_STMT *t_ = 0);
 	sint BuildStatements(std::vector<BOT_STMT>* stmts_ = 0, BOT_COMMIT *com_ = 0, std::vector<BOT_STMT>* pend_ = 0);
-	sint OutpuTINFO(BOT_STMT *t_ = 0);
 
 	// Database Functions
 
@@ -16147,14 +17454,6 @@ private:
 	sint TM(uint* is_s = 0);
 	sllint TestThreadIter(sint to_ = (sint)BOT_ITER_TO);
 	sllint TestThreadTRat(sint to_ = (sint)BOT_ITER_TO);
-	sint CheckPrintFs();
-
-	// work
-
-	sint ProcErrLog(sint opt = -1, c_char* in_file_p = "", c_char* in_file_n = "", c_char* in_file_t = "", c_char* rampid = "", c_char* insp_type = "", c_char* date_ = "", c_char* eid_ = "", c_char* toval_ = "");
-	sint ProcVINs(sint opt = -1, c_char* in_file_p = "", c_char* in_file_n = "", c_char* in_file_t = "", c_char* rampid = "", c_char* insp_type = "", c_char* date_ = "", c_char* eid_ = "", c_char* toval_ = "");
-	sint GetVINs(c_char* in_file_p = "", c_char* in_file_n = "", c_char* in_file_t = "", c_char* rampid = "");
-	sint AddDlrCode(c_char* to_vin = "", c_char* in_file = "");
 
 	static void* DBMaintenance(void* vp_ = 0);
 	static void* LITEBotMaintenance(void* vp_ = 0);
