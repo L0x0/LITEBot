@@ -7228,8 +7228,13 @@ sint machine::Command(std::vector<std::string>* vec_)
 						{
 							oc = bot_sprintf(xcar.carr, xcar.siz, "%s" \
 								"\n(optional)a: new level 0-UINT_MAX - If arg(a) set the current level. debug_level restricts debug messages by 'approximate' level within code where more basic functions debug messages are a higher level." \
-								"\n(optional)b: new mode 0-UINT_MAX - If arg(b) set the current mode 0: no debug output, 1: debug output to logs only, 2: debug to console and logs" \
+								"\n(optional)b: new mode 0-UINT_MAX - If arg(b) set the current mode 0: no debug output, 1: output debug to logs only, 2: output debug to console and logs" \
 								"\nIf 0 args: show current level and mode", ncar.carr);
+							break;
+						}
+						case 6:
+						{
+
 							break;
 						}
 						case 96:
@@ -7329,6 +7334,10 @@ sint machine::Command(std::vector<std::string>* vec_)
 				"\nIf 0 args: show current level and mode");
 			oc = Output(true, xcar.carr, 2, 0);
 		}
+		break;
+	}
+	case 6:
+	{
 		break;
 	}
 	case 96:
@@ -15804,12 +15813,22 @@ sint machine::BOTFileER(BOT_FILE_M* file_, bool f_fdat, size_t from, size_t to)
 				file_->omode = std::ios::trunc;
 				sint nx = -1;
 				ret = BOTOpenFile(file_, &nx);
-				file_->omode = sv_mth;
 
+				if (file_->omode != sv_mth)
+				{
+					file_->omode = sv_mth;
+					ret = GetOFConn(file_, &nx);
+				}
 				if (!ox)
 				{
 					ox = BOTCloseFile(file_);
 				}
+			}
+
+			if (ret > -1)
+			{
+				BOT_CRS ncs((sllint)f_con[file_->fcon], lid, from);
+				sint xc = PushToVecEleMem((void*)&ncs, MTX_FO, file_->lid, BOT_FS_CRSV, 2, false);
 			}
 		}
 	}
@@ -15841,6 +15860,9 @@ sint machine::BOTFileER(BOT_FILE_M* file_, bool f_fdat, size_t from, size_t to)
 				{
 					ret = SetVecEleMem((void*)&fileo_vec.d_vec[file_->lid].dsiz, MTX_FO, file_->lid, BOT_FS_DSIZ, false);
 				}
+
+				BOT_CRS ncs(0, lid, from);
+				sint xc = PushToVecEleMem((void*)&ncs, MTX_FO, file_->lid, BOT_FS_CRSV, 2, false);
 
 				if (!ox)
 				{
@@ -16363,6 +16385,29 @@ sllint machine::Rest(sllint i, bool keep_mtx)
 
 // Console I/O Functions
 
+sint machine::UNRTS(bool com)
+{
+	sint ox = -1;
+	sint hx = LockGMutex(MTX_STRT, &ox);
+
+	if (hx > -1)
+	{
+		bot_strt_s.Update(&msy);
+		hx = msy.Update(&bot_strt_s);
+
+		if (!ox)
+		{
+			ox = UnlockGMutex(MTX_STRT);
+		}
+		if (com)
+		{
+			std::vector<BOT_STMT> stmts;
+			BOT_STMT t;
+
+		}
+	}
+	return hx;
+}
 sint machine::BOTCOutput(std::string* np)
 {
 	if (!np)
@@ -16493,8 +16538,6 @@ sint machine::BOTCInput(std::string* np, carr_64* tdata)
 		sllint rst = 0;
 		sint chk = '\n';
 		sint spc = ' ';
-		sint tab = '\t';
-		sint trm = '\0';
 		sint x = -1;
 		sint rc = -1;
 
@@ -16506,11 +16549,11 @@ sint machine::BOTCInput(std::string* np, carr_64* tdata)
 			{
 				if (x < 0)
 				{
-					if (!memcmp((void*)&spc, (void*)&rc, sizeof(sint)) || !memcmp((void*)&tab, (void*)&rc, sizeof(sint)))
+					if (!memcmp((void*)&spc, (void*)&rc, sizeof(sint)))
 					{
 
 					}
-					else if (!memcmp((void*)&trm, (void*)&rc, sizeof(sint)) || !memcmp((void*)&chk, (void*)&rc, sizeof(sint)))
+					else if (!memcmp((void*)&bot_strt_s.nrts_term[0], (void*)&rc, sizeof(sint)) || !memcmp((void*)&chk, (void*)&rc, sizeof(sint)))
 					{
 						x = -2;
 					}
@@ -16522,7 +16565,7 @@ sint machine::BOTCInput(std::string* np, carr_64* tdata)
 				}
 				else if (rc)
 				{
-					if (!memcmp((void*)&chk, (void*)&rc, sizeof(sint)) || !memcmp((void*)&trm, (void*)&rc, sizeof(sint)))
+					if (!memcmp((void*)&chk, (void*)&rc, sizeof(sint)) || !memcmp((void*)&bot_strt_s.nrts_term[0], (void*)&rc, sizeof(sint)))
 					{
 						x = -2;
 					}
@@ -16537,7 +16580,9 @@ sint machine::BOTCInput(std::string* np, carr_64* tdata)
 				rst = nsRest(BOT_IO_REST);
 			}
 		}
+
 		x = GetTimeMS(tdata->carr);
+
 		if (!h)
 		{
 			h = UnlockGMutex(MTX_O);
@@ -16559,6 +16604,8 @@ sint machine::Input(c_char* prp, std::string* np, bool itrp)
 		return -1;
 	}
 
+	sint ret = UNRTS();
+
 	if (prp)
 	{
 		sint op = Output(prp, 0, false);
@@ -16566,7 +16613,7 @@ sint machine::Input(c_char* prp, std::string* np, bool itrp)
 
 	std::vector<std::string> args;
 	std::vector<std::string> vec;
-	sint ret = vtool.CombV(&args, VTV_VSTR, VTV_VCHAR, &msy.nrts_sep, VTV_CCAR, "/#", VTV_MAX);
+	ret = vtool.CombV(&args, VTV_VSTR, VTV_VCHAR, &msy.nrts_sep, VTV_CCAR, "/#", VTV_MAX);
 	carr_64 tdata;
 	carr_512 instr;
 	std::string nstr;

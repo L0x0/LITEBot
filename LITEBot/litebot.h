@@ -16082,6 +16082,7 @@ public:
 		nrts_end.clear();
 		nrts_lit.clear();
 		nrts_pun.clear();
+		nrts_term.clear();
 	}
 	void Renew(bot_strt_syms* val = 0)
 	{
@@ -16216,9 +16217,15 @@ public:
 		{
 			nrts_pun.push_back(val->nrts_pun[x]);
 		}
+
+		for (size_t x = 0; x < val->nrts_term.size(); x++)
+		{
+			nrts_term.push_back(val->nrts_term[x]);
+		}
 	}
-	void Update(bot_strt_syms* val = 0)
+	sint Update(bot_strt_syms* val = 0)
 	{
+		sint ret = 0;
 		for (size_t x = 0; x < val->sql_vals_keywords.size(); x++)
 		{
 			size_t y = 0;
@@ -16234,6 +16241,7 @@ public:
 			if (y == sql_vals_keywords.size())
 			{
 				sql_vals_keywords.push_back(val->sql_vals_keywords[x]);
+				ret++;
 			}
 		}
 
@@ -16252,6 +16260,7 @@ public:
 			if (y == sql_opers_keywords.size())
 			{
 				sql_opers_keywords.push_back(val->sql_opers_keywords[x]);
+				ret++;
 			}
 		}
 
@@ -16270,6 +16279,7 @@ public:
 			if (y == sql_trans_keywords.size())
 			{
 				sql_trans_keywords.push_back(val->sql_trans_keywords[x]);
+				ret++;
 			}
 		}
 
@@ -16288,6 +16298,7 @@ public:
 			if (y == sql_obj_keywords.size())
 			{
 				sql_obj_keywords.push_back(val->sql_obj_keywords[x]);
+				ret++;
 			}
 		}
 
@@ -16306,6 +16317,7 @@ public:
 			if (y == sql_cspec_keywords.size())
 			{
 				sql_cspec_keywords.push_back(val->sql_cspec_keywords[x]);
+				ret++;
 			}
 		}
 
@@ -16324,6 +16336,7 @@ public:
 			if (y == sql_targ_keywords.size())
 			{
 				sql_targ_keywords.push_back(val->sql_targ_keywords[x]);
+				ret++;
 			}
 		}
 
@@ -16342,6 +16355,7 @@ public:
 			if (y == sql_targ_keywords.size())
 			{
 				sql_targ_keywords.push_back(val->sql_targ_keywords[x]);
+				ret++;
 			}
 		}
 
@@ -16361,6 +16375,7 @@ public:
 			if (y == sql_comp_keywords.size())
 			{
 				sql_comp_keywords.push_back(val->sql_comp_keywords[x]);
+				ret++;
 			}
 		}
 
@@ -16380,6 +16395,7 @@ public:
 			if (y == sql_conj_keywords.size())
 			{
 				sql_conj_keywords.push_back(val->sql_conj_keywords[x]);
+				ret++;
 			}
 		}
 
@@ -16399,6 +16415,7 @@ public:
 			if (y == sql_obj_qual_keywords.size())
 			{
 				sql_obj_qual_keywords.push_back(val->sql_obj_qual_keywords[x]);
+				ret++;
 			}
 		}
 
@@ -16418,6 +16435,7 @@ public:
 			if (y == sql_decl_keywords.size())
 			{
 				sql_decl_keywords.push_back(val->sql_decl_keywords[x]);
+				ret++;
 			}
 		}
 
@@ -16437,6 +16455,7 @@ public:
 			if (y == sql_order_keywords.size())
 			{
 				sql_order_keywords.push_back(val->sql_order_keywords[x]);
+				ret++;
 			}
 		}
 
@@ -16456,6 +16475,7 @@ public:
 			if (y == sql_order_keywords.size())
 			{
 				sql_order_keywords.push_back(val->sql_order_keywords[x]);
+				ret++;
 			}
 		}
 
@@ -16475,6 +16495,7 @@ public:
 			if (y == sql_lim_keywords.size())
 			{
 				sql_lim_keywords.push_back(val->sql_lim_keywords[x]);
+				ret++;
 			}
 		}
 
@@ -16494,6 +16515,7 @@ public:
 			if (y == sql_cond_qual_keywords.size())
 			{
 				sql_cond_qual_keywords.push_back(val->sql_cond_qual_keywords[x]);
+				ret++;
 			}
 		}
 
@@ -16513,6 +16535,7 @@ public:
 			if (y == sql_act_keywords.size())
 			{
 				sql_act_keywords.push_back(val->sql_act_keywords[x]);
+				ret++;
 			}
 		}
 
@@ -16531,6 +16554,7 @@ public:
 			if (y == nrts_ign.size())
 			{
 				nrts_ign.push_back(val->nrts_ign[x]);
+				ret++;
 			}
 		}
 
@@ -16550,6 +16574,7 @@ public:
 			if (y == nrts_lign.size())
 			{
 				nrts_lign.push_back(val->nrts_lign[x]);
+				ret++;
 			}
 		}
 
@@ -16569,6 +16594,7 @@ public:
 			if (y == nrts_lign_.size())
 			{
 				nrts_lign_.push_back(val->nrts_lign_[x]);
+				ret++;
 			}
 		}
 
@@ -16587,6 +16613,7 @@ public:
 			if (y == nrts_sep.size())
 			{
 				nrts_sep.push_back(val->nrts_sep[x]);
+				ret++;
 			}
 		}
 
@@ -16605,6 +16632,7 @@ public:
 			if (y == nrts_ord.size())
 			{
 				nrts_ord.push_back(val->nrts_ord[x]);
+				ret++;
 			}
 		}
 
@@ -16623,6 +16651,7 @@ public:
 			if (y == nrts_ord_.size())
 			{
 				nrts_ord_.push_back(val->nrts_ord_[x]);
+				ret++;
 			}
 		}
 
@@ -16641,6 +16670,7 @@ public:
 			if (y == nrts_ass.size())
 			{
 				nrts_ass.push_back(val->nrts_ass[x]);
+				ret++;
 			}
 		}
 
@@ -16659,6 +16689,7 @@ public:
 			if (y == nrts_end.size())
 			{
 				nrts_end.push_back(val->nrts_end[x]);
+				ret++;
 			}
 		}
 
@@ -16677,6 +16708,7 @@ public:
 			if (y == nrts_lit.size())
 			{
 				nrts_lit.push_back(val->nrts_lit[x]);
+				ret++;
 			}
 		}
 
@@ -16695,8 +16727,29 @@ public:
 			if (y == nrts_pun.size())
 			{
 				nrts_pun.push_back(val->nrts_pun[x]);
+				ret++;
 			}
 		}
+
+		for (size_t x = 0; x < val->nrts_term.size(); x++)
+		{
+			size_t y = 0;
+			while (y < nrts_term.size())
+			{
+				if (!memcmp((void*)&val->nrts_term[x], (void*)&nrts_term[y], sizeof(_char)))
+				{
+					y = nrts_term.size();
+				}
+				y++;
+			}
+
+			if (y == nrts_term.size())
+			{
+				nrts_term.push_back(val->nrts_term[x]);
+				ret++;
+			}
+		}
+		return ret;
 	}
 
 	std::vector<std::string> sql_vals_keywords
@@ -16858,8 +16911,8 @@ public:
 	std::vector<_char> nrts_sep
 	{
 		' ',
-		',',
-		';'
+		'\t',
+		','
 	};
 
 	std::vector<_char> nrts_ord
@@ -16868,6 +16921,7 @@ public:
 		'{',
 		'['
 	};
+
 	std::vector<_char> nrts_ord_
 	{
 		')',
@@ -16883,8 +16937,7 @@ public:
 	std::vector<_char> nrts_end
 	{
 		';',
-		'\n',
-		'\0'
+		'\n'
 	};
 
 	std::vector<_char> nrts_lit
@@ -16900,6 +16953,11 @@ public:
 		'?',
 		'!',
 		','
+	};
+
+	std::vector<_char> nrts_term
+	{
+		'\0'
 	};
 
 private:
@@ -16980,7 +17038,8 @@ typedef struct bot_strt_up
 	{
 		"COMMANDS",
 		"ACCOUNTS",
-		"LANGUAGES"
+		"LANGUAGES",
+		"NRTS"
 	};
 
 	std::vector<c_char*> syms_tablenames
@@ -17060,6 +17119,15 @@ typedef struct bot_strt_up
 		"U_CASE_VOWELS TEXT " \
 		"L_CASE_VOWELS TEXT " \
 		"NUMBER_SYMS TEXT " \
+		"LAST_MODIFIED INTEGER " \
+		"LAST_MAINTAINED INTEGER " \
+		"LAST_MODIFIED_NS INTEGER " \
+		"LAST_MAINTAINED_NS INTEGER",
+
+		"ID INTEGER " \
+		"SYM BLOB " \
+		"TYP BLOB " \
+		"WID BLOB " \
 		"LAST_MODIFIED INTEGER " \
 		"LAST_MAINTAINED INTEGER " \
 		"LAST_MODIFIED_NS INTEGER " \
@@ -17373,6 +17441,7 @@ private:
 	sint SetClientLoggedIn(bool x);	
 
 	// Console I/O Functions
+	sint UNRTS(bool com = false);
 	sint BOTCOutput(std::string* np = 0);
 	sint Output(c_char* op_ = "", sint opt = -1, bool newl = true);
 	sint Output(bool newl = true, c_char* op_ = "", ...);
