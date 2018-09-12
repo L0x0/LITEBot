@@ -4289,6 +4289,12 @@ sint machine::WithdMTXReq(lok_req* nreq)
 
 sint machine::HasLock(sint g_opt, sint ele, bool is_meta)
 {
+	if (debug_lvl >= 900 && debug_m)
+	{
+		carr_128 outp;
+		sint op = bot_sprintf(outp.carr, outp.siz, "::HasLock(sint g_opt(%i), sint ele(%i), bool is_meta(%u))", g_opt, ele, (uint)is_meta);
+		op = Output(outp.carr, 2);
+	}
 	if (g_opt < 0)
 	{
 		return -1;
@@ -4428,7 +4434,7 @@ sint machine::UnlockGMutex(sint g_opt)
 	if (debug_lvl >= 900 && debug_m)
 	{
 		carr_256 outp;
-		sint op = bot_sprintf(outp.carr, outp.siz, "UnlockGMutex(sint g_opt(%i))", g_opt);
+		sint op = bot_sprintf(outp.carr, outp.siz, "::UnlockGMutex(sint g_opt(%i))", g_opt);
 		op = Output(outp.carr, 2);
 	}
 
@@ -4489,7 +4495,7 @@ sint machine::LockElement(sint g_opt, sint ele, sint* had_lock, bool sleep_wait 
 	if (debug_lvl >= 900 && debug_m)
 	{
 		carr_256 outp;
-		sint op = bot_sprintf(outp.carr, outp.siz, "LockElement(sint g_opt(%i), sint ele(%i), sint* had_lock(%i), bool sleep_wait(%u), bool is_meta(%u))", g_opt, ele, (sint)had_lock, (uint)sleep_wait, (uint)is_meta);
+		sint op = bot_sprintf(outp.carr, outp.siz, "::LockElement(sint g_opt(%i), sint ele(%i), sint* had_lock(%i), bool sleep_wait(%u), bool is_meta(%u))", g_opt, ele, (sint)had_lock, (uint)sleep_wait, (uint)is_meta);
 		op = Output(outp.carr, 2);
 	}
 
@@ -4595,7 +4601,7 @@ sint machine::UnlockElement(sint g_opt, sint ele, bool is_meta)
 	if (debug_lvl >= 900 && debug_m)
 	{
 		carr_256 outp;
-		sint op = bot_sprintf(outp.carr, outp.siz, "UnlockElement(sint g_opt(%i), sint ele(%i), bool is_meta(%u))", g_opt, ele, (uint)is_meta);
+		sint op = bot_sprintf(outp.carr, outp.siz, "::UnlockElement(sint g_opt(%i), sint ele(%i), bool is_meta(%u))", g_opt, ele, (uint)is_meta);
 		op = Output(outp.carr, 2);
 	}
 
@@ -4659,6 +4665,12 @@ sint machine::UnlockElement(sint g_opt, sint ele, bool is_meta)
 
 sint machine::OpenObject(sint nobj, sint nele, sint is_meta, sint* omode, sint* r_opt, sint* n_opt)
 {
+	if (debug_lvl >= 900 && debug_m)
+	{
+		carr_256 outp;
+		sint op = bot_sprintf(outp.carr, outp.siz, "::OpenObject(sint nobj(%i), sint nele(%i), sint is_meta(%i), sint* omode(%i), sint* r_opt(%i), sint* n_opt(%i))", nobj, nele, (uint)is_meta, (sint)omode, (sint)r_opt, (sint)n_opt);
+		op = Output(outp.carr, 2);
+	}
 	if (!omode)
 	{
 		return -1;
@@ -4722,6 +4734,12 @@ sint machine::OpenObject(sint nobj, sint nele, sint is_meta, sint* omode, sint* 
 }
 sint machine::CloseObject(sint nobj, sint nele, sint is_meta, sint* r_opt, sint* n_opt)
 {
+	if (debug_lvl >= 900 && debug_m)
+	{
+		carr_256 outp;
+		sint op = bot_sprintf(outp.carr, outp.siz, "::CloseObject(sint nobj(%i), sint nele(%i), sint is_meta(%i), sint* r_opt(%i), sint* n_opt(%i))", nobj, nele, is_meta, (sint)r_opt, (sint)n_opt);
+		op = Output(outp.carr, 2);
+	}
 	if (nobj < 0)
 	{
 		return -1;
@@ -6839,6 +6857,12 @@ sllint machine::GetCentSec()
 
 sint machine::SetDBG(sint lv, sint m)
 {
+	if (debug_lvl >= 1100 && debug_m)
+	{
+		carr_72 outp;
+		sint op = bot_sprintf(outp.carr, outp.siz, "::SetDBG(sint lv(%i), sint m(%i))", lv, m);
+		op = Output(outp.carr, 2);
+	}
 	if (lv < 0 && m < 0)
 	{
 		return -1;
@@ -6868,6 +6892,12 @@ sint machine::SetDBG(sint lv, sint m)
 }
 sint machine::GetDBG(sint* lv, sint* m)
 {
+	if (debug_lvl >= 1100 && debug_m)
+	{
+		carr_72 outp;
+		sint op = bot_sprintf(outp.carr, outp.siz, "::GetDBG(sint lv(%i), sint m(%i))", (sint)lv, (sint)m);
+		op = Output(outp.carr, 2);
+	}
 	if (!lv && !m)
 	{
 		return -1;
@@ -8244,6 +8274,12 @@ sint machine::Command(std::vector<std::string>* vec_)
 
 sint machine::ArgSep(std::vector <std::string>* ret_, c_char* val, size_t f, size_t t, carr_4* sep)
 {
+	if (debug_lvl >= 1100 && debug_m)
+	{
+		carr_256 outp;
+		sint op = bot_sprintf(outp.carr, outp.siz, "::ArgSep(std::vector <std::string>* ret_(%i), c_char* val(%i), size_t f(%u), size_t t(%u), carr_4* sep(%i))", (sint)ret_, (sint)val, f, t, (sint)sep);
+		op = Output(outp.carr, 2);
+	}
 	if (!ret_ || !val || !sep)
 	{
 		return -1;
@@ -8530,8 +8566,14 @@ sint machine::ArgSep(std::vector <std::string>* ret_, c_char* val, size_t f, siz
 	return ret;
 }
 
-sint machine::ArgSep(std::vector <std::string>* ret_ , c_char* val, carr_4* sep)
+sint machine::ArgSep(std::vector <std::string>* ret_, c_char* val, carr_4* sep)
 {
+	if (debug_lvl >= 1100 && debug_m)
+	{
+		carr_168 outp;
+		sint op = bot_sprintf(outp.carr, outp.siz, "::ArgSep(std::vector <std::string>* ret_(%i), c_char* val(%i), carr_4* sep(%i))", (sint)ret_, (sint)val, (sint)sep);
+		op = Output(outp.carr, 2);
+	}
 	if (!ret_ || !val || !sep)
 	{
 		return -1;
@@ -8878,6 +8920,13 @@ sint machine::ArgSep(std::vector <std::string>* ret_ , c_char* val, carr_4* sep)
 
 sint machine::ArgSep(std::vector <std::string>* ret_, bool ksep, size_t f, size_t t, c_char* val, ...)
 {
+	if (debug_lvl >= 1100 && debug_m)
+	{
+		carr_256 outp;
+		sint op = bot_sprintf(outp.carr, outp.siz, "::ArgSep(std::vector <std::string>* ret_(%i), bool ksep(%u), size_t f(%u), size_t t(%u), c_char* val(%s), ...)", (sint)ret_, (uint)ksep, f, t, (sint)val);
+		op = Output(outp.carr, 2);
+	}
+
 	if (!ret_ || !val)
 	{
 		return -1;
@@ -11927,6 +11976,12 @@ sint machine::ArgSep(std::vector <std::string>* ret_, bool ksep, size_t f, size_
 
 std::string machine::BOTPathS(c_char* spath_)
 {
+	if (debug_lvl >= 650 && debug_m)
+	{
+		carr_128 ncar;
+		sint oc = bot_sprintf(ncar.carr, ncar.siz, "::BOTPathS(c_char* spath_(%i))", (sint)spath_);
+		oc = Output(ncar.carr, 2);
+	}
 	std::string str;
 	sint h = -1;
 	sint p = LockGMutex(MTX_DMAP, &h);
@@ -11966,6 +12021,13 @@ std::string machine::BOTPathS(c_char* spath_)
 }
 sint machine::BOTPath(std::string* str_, c_char* spath_)
 {
+	if (debug_lvl >= 650 && debug_m)
+	{
+		carr_128 ncar;
+		sint oc = bot_sprintf(ncar.carr, ncar.siz, "::BOTPath(std::string* str_(%i), c_char* spath_(%i))", (sint)str_, (sint)spath_);
+		oc = Output(ncar.carr, 2);
+	}
+
 	if (!str_)
 	{
 		return -1;
@@ -12485,6 +12547,13 @@ sint machine::OutputFileStats(BOT_FILE* file_, sint opt)
 }
 sint machine::BOTFileStr(std::string* str_, BOT_FILE_M* file_)
 {
+	if (debug_lvl >= 600 && debug_m)
+	{
+		carr_64 ncar;
+		sint oc = bot_sprintf(ncar.carr, ncar.siz, "::BOTFileStr(std::string* str_(%i), BOT_FILE_M* file_(%i))", (sint)str_, (sint)file_);
+		oc = Output(ncar.carr, 2);
+	}
+
 	if (!str_ || !file_)
 	{
 		return -1;
@@ -12524,6 +12593,13 @@ sint machine::BOTFileStr(std::string* str_, BOT_FILE_M* file_)
 }
 std::string machine::BOTFileStr(BOT_FILE_M* file_)
 {
+	if (debug_lvl >= 600 && debug_m)
+	{
+		carr_64 ncar;
+		sint oc = bot_sprintf(ncar.carr, ncar.siz, "::BOTFileStr(BOT_FILE_M* file_(%i))", (sint)file_);
+		oc = Output(ncar.carr, 2);
+	}
+
 	std::string str;
 
 	if (!file_)
@@ -14431,6 +14507,12 @@ sint machine::BOTFindInFile(BOT_FILE_M* file_, bool indat, size_t f, size_t t, v
 }
 sint machine::BOTFileOUT(BOT_FILE_M* file_, size_t f, bool to_fdat, ...)
 {
+	if (debug_lvl >= 600 && debug_m)
+	{
+		carr_192 ncar;
+		sint oc = bot_sprintf(ncar.carr, ncar.siz, "::BOTFileOUT(BOT_FILE_M* file_(%i), size_t f(%u), bool to_fdat(%u), ...)", (sint)file_, (uint)f, (uint)to_fdat);
+		oc = Output(ncar.carr, 2);
+	}
 	if (!file_)
 	{
 		return -1;
@@ -15353,6 +15435,12 @@ sint machine::BOTFileOUT(BOT_FILE_M* file_, size_t f, bool to_fdat, ...)
 
 sint machine::BOTFileIN(BOT_FILE_M* file_, bool f_fdat, size_t from, size_t to, ...)
 {
+	if (debug_lvl >= 600 && debug_m)
+	{
+		carr_192 ncar;
+		sint oc = bot_sprintf(ncar.carr, ncar.siz, "::BOTFileIN(BOT_FILE_M* file_(%i), bool f_fdat(%u), size_t from(%u), size_t to(%u), ...)", (sint)file_, (uint)f_fdat, (uint)from, (uint)to);
+		oc = Output(ncar.carr, 2);
+	}
 	if (!file_ || to < from)
 	{
 		return -1;
@@ -16076,6 +16164,12 @@ sint machine::BOTFileIN(BOT_FILE_M* file_, bool f_fdat, size_t from, size_t to, 
 }
 sint machine::BOTFileER(BOT_FILE_M* file_, bool f_fdat, size_t from, size_t to)
 {
+	if (debug_lvl >= 600 && debug_m)
+	{
+		carr_192 ncar;
+		sint oc = bot_sprintf(ncar.carr, ncar.siz, "::BOTFileER(BOT_FILE_M* file_(%i), bool f_fdat(%u), size_t from(%u), size_t to(%u))", (sint)file_, (uint)f_fdat, (uint)from, (uint)to);
+		oc = Output(ncar.carr, 2);
+	}
 	if (!file_)
 	{
 		return -1;
@@ -16531,7 +16625,7 @@ sllint machine::nsRest(sllint i, bool keep_mtx)
 	if (debug_lvl >= 1000 && debug_m)
 	{
 		carr_128 instr;
-		sint oc = bot_sprintf(instr.carr, instr.siz, "nsRest(sllint i(%lli), bool keep_mtx(%u))", i, (uint)keep_mtx);
+		sint oc = bot_sprintf(instr.carr, instr.siz, "::nsRest(sllint i(%lli), bool keep_mtx(%u))", i, (uint)keep_mtx);
 		oc = Output(instr.carr, 2);
 	}
 	stk_ct++;
@@ -16616,7 +16710,7 @@ sllint machine::Rest(sllint i, bool keep_mtx)
 	if (debug_lvl >= 1000 && debug_m)
 	{
 		carr_128 instr;
-		sint oc = bot_sprintf(instr.carr, instr.siz, "Rest(sllint i(%lli), bool keep_mtx(%u))", i, (uint)keep_mtx);
+		sint oc = bot_sprintf(instr.carr, instr.siz, "::Rest(sllint i(%lli), bool keep_mtx(%u))", i, (uint)keep_mtx);
 		oc = Output(instr.carr, 2);
 	}
 	stk_ct++;
@@ -16706,6 +16800,13 @@ sllint machine::Rest(sllint i, bool keep_mtx)
 
 sint machine::UNRTS()
 {
+	if (debug_lvl >= 1000 && debug_m)
+	{
+		carr_12 instr;
+		sint oc = bot_sprintf(instr.carr, instr.siz, "::UNRTS()");
+		oc = Output(instr.carr, 2);
+	}
+	
 	sint ox = -1;
 	sint hx = LockGMutex(MTX_STRT, &ox);
 
@@ -26035,6 +26136,12 @@ sint machine::TM(uint* is_s)
 }
 sllint machine::TestThreadIter(sint to_)
 {
+	if (debug_lvl >= 200 && debug_m)
+	{
+		carr_64 outp;
+		sint op = bot_sprintf(outp.carr, outp.siz, "::TestThreadIter(sint to_(%i))", (sint)to_);
+		op = Output(outp.carr, 2);
+	}
 	std::chrono::steady_clock::time_point t_I = std::chrono::steady_clock::now();
 	float val = 3611.0f;
 	//slint xval[2]{ 0 };
@@ -26060,6 +26167,12 @@ sllint machine::TestThreadIter(sint to_)
 }
 sllint machine::TestThreadTRat(sint to_)
 {
+	if (debug_lvl >= 200 && debug_m)
+	{
+		carr_64 outp;
+		sint op = bot_sprintf(outp.carr, outp.siz, "::TestThreadTRat(sint to_(%i))", (sint)to_);
+		op = Output(outp.carr, 2);
+	}
 	sllint rc = TestThreadIter(to_);
 	sllint xc = rc;
 	sint h = -1;
@@ -26111,6 +26224,12 @@ sllint machine::TestThreadTRat(sint to_)
 
 sint machine::GetPCli(BOT_CLIENT* val)
 {
+	if (debug_lvl >= 90 && debug_m)
+	{
+		carr_64 outp;
+		sint op = bot_sprintf(outp.carr, outp.siz, "::GetPCli(BOT_CLIENT* val(%i))", (sint)val);
+		op = Output(outp.carr, 2);
+	}
 	if (!val)
 	{
 		return -1;
@@ -26279,6 +26398,12 @@ sint machine::GetPCliMem(sint mem, void* val)
 
 sint machine::SetPCliMem(sint mem, void* val)
 {
+	if (debug_lvl >= 90 && debug_m)
+	{
+		carr_128 outp;
+		sint op = bot_sprintf(outp.carr, outp.siz, "::SetPCliMem(sint mem(%i), void* val(%i))", mem, (sint)val);
+		op = Output(outp.carr, 2);
+	}
 	if (mem < 0 || !val)
 	{
 		return -1;
@@ -26434,6 +26559,12 @@ sint machine::SetPCliMem(sint mem, void* val)
 
 sint machine::SetClientLoggedIn(bool x)
 {
+	if (debug_lvl >= 90 && debug_m)
+	{
+		carr_128 outp;
+		sint op = bot_sprintf(outp.carr, outp.siz, "::SetClientLoggedIn(bool x(%u))", (uint)x);
+		op = Output(outp.carr, 2);
+	}
 	sint lx = -1;
 	sint xc = LockGMutex(MTX_PCL, &lx);
 
@@ -26451,6 +26582,10 @@ sint machine::SetClientLoggedIn(bool x)
 
 bool machine::GetClientLoggedIn()
 {
+	if (debug_lvl >= 90 && debug_m)
+	{
+		sint op = Output("::SetClientLoggedIn()", 2);
+	}
 	bool x = false;
 	sint lx = -1;
 	sint xc = LockGMutex(MTX_PCL, &lx);
