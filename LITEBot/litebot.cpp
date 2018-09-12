@@ -4,6 +4,10 @@
 _mtx req_mtx;
 lok_defr lok_d;
 
+// MTX_DBG
+sint bot_dbg_l;
+sint bot_dbg_m;
+
 // MTX_CV
 C_VEC bot_c_vec;
 
@@ -3520,7 +3524,8 @@ sint machine::LITEBot(carr_256 *ncar_, bool do_start_up)
 	{
 		return -1;
 	}
-	sint xc = -1;
+
+	sint xc = SetDBG(debug_lvl, debug_m);
 
 #ifdef _WIN32
 	WSADATA WSD;
@@ -6832,6 +6837,62 @@ sllint machine::GetCentSec()
 
 // Log Function
 
+sint machine::SetDBG(sint lv, sint m)
+{
+	if (lv < 0 && m < 0)
+	{
+		return -1;
+	}
+	sint ox = -1;
+	sint hx = LockGMutex(MTX_DBG, &ox);
+
+	if (hx > -1)
+	{
+		if (lv > -1)
+		{
+			bot_dbg_l = lv;
+		}
+
+		if (m > -1)
+		{
+			bot_dbg_m = m;
+		}
+
+		if (!ox)
+		{
+			ox = UnlockGMutex(MTX_DBG);
+		}
+	}
+	hx = GetDBG(&debug_lvl, &debug_m);
+	return hx;
+}
+sint machine::GetDBG(sint* lv, sint* m)
+{
+	if (!lv && !m)
+	{
+		return -1;
+	}
+	sint ox = -1;
+	sint hx = LockGMutex(MTX_DBG, &ox);
+
+	if (hx > -1)
+	{
+		if (lv)
+		{
+			*lv = bot_dbg_l;
+		}
+
+		if (m)
+		{
+			*m = bot_dbg_m;
+		}
+		if (!ox)
+		{
+			ox = UnlockGMutex(MTX_DBG);
+		}
+	}
+	return hx;
+}
 sint machine::UsingLog(_char nm[])
 {
 	if (nm)
@@ -7308,29 +7369,60 @@ sint machine::Command(std::vector<std::string>* vec_)
 			sint oc = Output("Found BOTCOMMAND id 5", 2);
 		}
 
+		xc = -1;
+
 		if (vec_->size() == 1)
 		{
+			xc = GetDBG(&debug_lvl, &debug_m);;
 			carr_128 ncar;
 			xc = bot_sprintf(ncar.carr, ncar.siz, "debug level:%i debug mode:%i", debug_lvl, debug_m);
 			xc = Output(true, ncar.carr, 2, 0);
 		}
-		else if ((vec_->size() == 2) && (vec_->at(1).length() && bot_sisn(vec_->at(1).c_str(), (sint)vec_->at(1).length())))
+		else if (vec_->size() == 2)
 		{
-			debug_lvl = atoi(vec_->at(1).c_str());
-			xc = 0;
+			if (bot_sisn(vec_->at(1).c_str(), (sint)vec_->at(1).length()))
+			{
+				xc = SetDBG(atoi(vec_->at(1).c_str()), -1);
+			}
+			else if (!strcmp(&vec_->at(1)[0], "l"))
+			{
+				xc = GetDBG(&debug_lvl, &debug_m);;
+				carr_64 ncar;
+				xc = bot_sprintf(ncar.carr, ncar.siz, "debug level:%i", debug_lvl);
+				xc = Output(true, ncar.carr, 2, 0);
+			}
+			else if (!strcmp(&vec_->at(1)[0], "m"))
+			{
+				xc = GetDBG(&debug_lvl, &debug_m);;
+				carr_64 ncar;
+				xc = bot_sprintf(ncar.carr, ncar.siz, "debug mode:%i", debug_m);
+				xc = Output(true, ncar.carr, 2, 0);
+			}
+			else {}
 		}
-		else if ((vec_->size() == 3) && (vec_->at(1).length() && bot_sisn(vec_->at(1).c_str(), (sint)vec_->at(1).length())) && (vec_->at(2).length() && bot_sisn(vec_->at(2).c_str(), (sint)vec_->at(2).length())))
+		else if (vec_->size() == 3)
 		{
-			debug_lvl = atoi(vec_->at(1).c_str());
-			debug_m = atoi(vec_->at(2).c_str());
-			xc = 0;
+			if (!strcmp(&vec_->at(1)[0], "l") && bot_sisn(vec_->at(2).c_str(), (sint)vec_->at(2).length()))
+			{
+				xc = SetDBG(atoi(vec_->at(2).c_str()), -1);
+			}
+			else if (!strcmp(&vec_->at(1)[0], "m") && bot_sisn(vec_->at(2).c_str(), (sint)vec_->at(2).length()))
+			{
+				xc = SetDBG(-1, atoi(vec_->at(2).c_str()));
+			}
+			else if (bot_sisn(vec_->at(1).c_str(), (sint)vec_->at(1).length()) && bot_sisn(vec_->at(2).c_str(), (sint)vec_->at(2).length()))
+			{
+				xc = SetDBG(atoi(vec_->at(1).c_str()), atoi(vec_->at(2).c_str()));
+			}
+			else {}
 		}
 		else
 		{
 			carr_512 xcar;
 			sint oc = bot_sprintf(xcar.carr, xcar.siz,
-				"\n(optional)a: new level 0-UINT_MAX - If arg(a) set the current level. debug_level restricts debug messages by 'approximate' level within code where more basic functions debug messages are a higher level." \
-				"\n(optional)b: new mode 0-UINT_MAX - If arg(b) set the current mode 0: no debug output, 1: debug output to logs only, 2: debug output to console and logs" \
+				"\n(optional)a: if num: new level 0-UINT_MAX else 'level'/'mode'" \
+				"\n(optional)b: if arg(a) is num and arg(b) is num: new mode 0-UINT_MAX else set value for arg(a)" \
+				"\nIf args: \ndebug_level restricts debug messages by 'approximate' level within code where more basic functions debug messages are a higher level.\nmode 0: no debug output, 1: debug output to logs only, 2: debug output to console and logs" \
 				"\nIf 0 args: show current level and mode");
 			oc = Output(true, xcar.carr, 2, 0);
 		}
@@ -7453,7 +7545,7 @@ sint machine::Command(std::vector<std::string>* vec_)
 
 				t.cols[rc].append("'");
 			}
-			t.cspec = 2;
+			t.spec = 2;
 			tvec.push_back(t);
 			xc = Commit(&tvec);
 		}
@@ -7711,7 +7803,7 @@ sint machine::Command(std::vector<std::string>* vec_)
 				xc = t.AddCol("CMD", UCASE(LEncStrI(vec_->at(1).c_str(), -1).c_str()).c_str());
 				xc = t.AddCol("CMD_ID", vec_->at(2).c_str());
 				xc = t.AddCol("PRIV", vec_->at(3).c_str());
-				t.cspec = 2;
+				t.spec = 2;
 				std::vector<BOT_STMT> tvec;
 				xc = vtool.AVTV(&tvec, &t, true, true);
 				xc = Commit(&tvec);
@@ -8037,7 +8129,7 @@ sint machine::Command(std::vector<std::string>* vec_)
 			for (size_t x = 1; x < vec_->size(); x++)
 			{
 				t.Renew(false, 4, "litebot", "COMMANDS", 1);
-				t.cspec = 0;
+				t.spec = 0;
 
 				if (bot_sisn(vec_->at(1).c_str(), vec_->at(1).length()))
 				{
@@ -8305,37 +8397,34 @@ sint machine::ArgSep(std::vector <std::string>* ret_, c_char* val, size_t f, siz
 								{
 									if (!memcmp((void*)&val[x], (void*)&sep->carr[0], sizeof(_char)))
 									{
-										if (memcmp((void*)&ig, (void*)&val[x - 1], sizeof(_char)))
+										if (!x)
 										{
-											if (x > 1)
+											size_t y = 1;
+
+											while (y < sl && x + y < vl)
 											{
-												if (memcmp((void*)&ig, (void*)&val[x - 2], sizeof(_char)))
+												if (memcmp((void*)&val[x + y], &sep->carr[y], sizeof(_char)))
 												{
-													size_t y = 1;
-
-													while (y < sl && x + y < vl)
-													{
-														if (memcmp((void*)&val[x + y], &sep->carr[y], sizeof(_char)))
-														{
-															y = sl;
-														}
-														y++;
-													}
-
-													if (y == sl)
-													{
-														for (; mk < x; mk++)
-														{
-															rstr.push_back(val[mk]);
-														}
-														x += sl;
-														mk = x;
-														ret_->push_back(rstr);
-														rstr.clear();
-													}
+													y = sl;
 												}
+												y++;
 											}
-											else
+
+											if (y == sl)
+											{
+												for (; mk < x; mk++)
+												{
+													rstr.push_back(val[mk]);
+												}
+												x += sl;
+												mk = x;
+												ret_->push_back(rstr);
+												rstr.clear();
+											}
+										}
+										else
+										{
+											if (memcmp((void*)&ig, (void*)&val[x - 1], sizeof(_char)))
 											{
 												size_t y = 1;
 
@@ -8358,6 +8447,37 @@ sint machine::ArgSep(std::vector <std::string>* ret_, c_char* val, size_t f, siz
 													mk = x;
 													ret_->push_back(rstr);
 													rstr.clear();
+												}
+											}
+											else
+											{
+												if (x > 1)
+												{
+													if (!memcmp((void*)&ig, (void*)&val[x - 2], sizeof(_char)))
+													{
+														size_t y = 1;
+
+														while (y < sl && x + y < vl)
+														{
+															if (memcmp((void*)&val[x + y], &sep->carr[y], sizeof(_char)))
+															{
+																y = sl;
+															}
+															y++;
+														}
+
+														if (y == sl)
+														{
+															for (; mk < x; mk++)
+															{
+																rstr.push_back(val[mk]);
+															}
+															x += sl;
+															mk = x;
+															ret_->push_back(rstr);
+															rstr.clear();
+														}
+													}
 												}
 											}
 										}
@@ -8623,37 +8743,34 @@ sint machine::ArgSep(std::vector <std::string>* ret_ , c_char* val, carr_4* sep)
 								{
 									if (!memcmp((void*)&val[x], (void*)&sep->carr[0], sizeof(_char)))
 									{
-										if (memcmp((void*)&ig, (void*)&val[x - 1], sizeof(_char)))
+										if (!x)
 										{
-											if (x > 1)
+											size_t y = 1;
+
+											while (y < sl && x + y < vl)
 											{
-												if (memcmp((void*)&ig, (void*)&val[x - 2], sizeof(_char)))
+												if (memcmp((void*)&val[x + y], &sep->carr[y], sizeof(_char)))
 												{
-													size_t y = 1;
-
-													while (y < sl && x + y < vl)
-													{
-														if (memcmp((void*)&val[x + y], &sep->carr[y], sizeof(_char)))
-														{
-															y = sl;
-														}
-														y++;
-													}
-
-													if (y == sl)
-													{
-														for (; mk < x; mk++)
-														{
-															rstr.push_back(val[mk]);
-														}
-														x += (sl-1);
-														mk = x + 1;
-														ret_->push_back(rstr);
-														rstr.clear();
-													}
+													y = sl;
 												}
+												y++;
 											}
-											else
+
+											if (y == sl)
+											{
+												for (; mk < x; mk++)
+												{
+													rstr.push_back(val[mk]);
+												}
+												x += (sl - 1);
+												mk = (x + 1);
+												ret_->push_back(rstr);
+												rstr.clear();
+											}
+										}
+										else
+										{
+											if (memcmp((void*)&ig, (void*)&val[x - 1], sizeof(_char)))
 											{
 												size_t y = 1;
 
@@ -8676,6 +8793,37 @@ sint machine::ArgSep(std::vector <std::string>* ret_ , c_char* val, carr_4* sep)
 													mk = (x + 1);
 													ret_->push_back(rstr);
 													rstr.clear();
+												}
+											}
+											else
+											{
+												if (x > 1)
+												{
+													if (memcmp((void*)&ig, (void*)&val[x - 2], sizeof(_char)))
+													{
+														size_t y = 1;
+
+														while (y < sl && x + y < vl)
+														{
+															if (memcmp((void*)&val[x + y], &sep->carr[y], sizeof(_char)))
+															{
+																y = sl;
+															}
+															y++;
+														}
+
+														if (y == sl)
+														{
+															for (; mk < x; mk++)
+															{
+																rstr.push_back(val[mk]);
+															}
+															x += (sl - 1);
+															mk = x + 1;
+															ret_->push_back(rstr);
+															rstr.clear();
+														}
+													}
 												}
 											}
 										}
@@ -8977,34 +9125,20 @@ sint machine::ArgSep(std::vector <std::string>* ret_, bool ksep, size_t f, size_
 									{
 										if (!memcmp((void*)&val[x], (void*)&sep, sl))
 										{
-											if (memcmp((void*)&ig, (void*)&val[x - 1], sl))
+											if (!x)
 											{
-												if (x > 1)
+												if (ksep)
 												{
-													if (memcmp((void*)&ig, (void*)&val[x - 2], sl))
-													{
-														for (; mk < x; mk++)
-														{
-															rstr.push_back(val[mk]);
-														}
-														x += (sl - 1);
-														mk = x + 1;
-
-														if (!rstr.empty())
-														{
-															ret_->push_back(rstr);
-															rstr.clear();
-														}
-
-														if (ksep)
-														{
-															std::string nsep;
-															nsep.push_back(sep);
-															ret_->push_back(nsep);
-														}
-													}
+													std::string nsep;
+													nsep.push_back(sep);
+													ret_->push_back(nsep);
 												}
-												else
+												x += sl - 1;
+												mk = x + 1;
+											}
+											else
+											{
+												if (memcmp((void*)&ig, (void*)&val[x - 1], sl))
 												{
 													for (; mk < x; mk++)
 													{
@@ -9024,6 +9158,34 @@ sint machine::ArgSep(std::vector <std::string>* ret_, bool ksep, size_t f, size_
 														std::string nsep;
 														nsep.push_back(sep);
 														ret_->push_back(nsep);
+													}
+												}
+												else
+												{
+													if (x > 1)
+													{
+														if (memcmp((void*)&ig, (void*)&val[x - 2], sl))
+														{
+															for (; mk < x; mk++)
+															{
+																rstr.push_back(val[mk]);
+															}
+															x += (sl - 1);
+															mk = x + 1;
+
+															if (!rstr.empty())
+															{
+																ret_->push_back(rstr);
+																rstr.clear();
+															}
+
+															if (ksep)
+															{
+																std::string nsep;
+																nsep.push_back(sep);
+																ret_->push_back(nsep);
+															}
+														}
 													}
 												}
 											}
@@ -9306,34 +9468,20 @@ sint machine::ArgSep(std::vector <std::string>* ret_, bool ksep, size_t f, size_
 										{
 											if (!memcmp((void*)&val[x], (void*)&sep, sl))
 											{
-												if (memcmp((void*)&ig, (void*)&val[x - 1], sl))
+												if (!x)
 												{
-													if (x > 1)
+													if (ksep)
 													{
-														if (memcmp((void*)&ig, (void*)&val[x - 2], sl))
-														{
-															for (; mk < x; mk++)
-															{
-																rstr.push_back(val[mk]);
-															}
-															x += (sl - 1);
-															mk = x + 1;
-
-															if (!rstr.empty())
-															{
-																ret_->push_back(rstr);
-																rstr.clear();
-															}
-
-															if (ksep)
-															{
-																std::string nsep;
-																nsep.push_back(sep);
-																ret_->push_back(nsep);
-															}
-														}
+														std::string nsep;
+														nsep.push_back(sep);
+														ret_->push_back(nsep);
 													}
-													else
+													x += sl - 1;
+													mk = x + 1;
+												}
+												else
+												{
+													if (memcmp((void*)&ig, (void*)&val[x - 1], sl))
 													{
 														for (; mk < x; mk++)
 														{
@@ -9353,6 +9501,34 @@ sint machine::ArgSep(std::vector <std::string>* ret_, bool ksep, size_t f, size_
 															std::string nsep;
 															nsep.push_back(sep);
 															ret_->push_back(nsep);
+														}
+													}
+													else
+													{
+														if (x > 1)
+														{
+															if (memcmp((void*)&ig, (void*)&val[x - 2], sl))
+															{
+																for (; mk < x; mk++)
+																{
+																	rstr.push_back(val[mk]);
+																}
+																x += (sl - 1);
+																mk = x + 1;
+
+																if (!rstr.empty())
+																{
+																	ret_->push_back(rstr);
+																	rstr.clear();
+																}
+
+																if (ksep)
+																{
+																	std::string nsep;
+																	nsep.push_back(sep);
+																	ret_->push_back(nsep);
+																}
+															}
 														}
 													}
 												}
@@ -9636,53 +9812,39 @@ sint machine::ArgSep(std::vector <std::string>* ret_, bool ksep, size_t f, size_
 										{
 											if (!memcmp((void*)&val[x], (void*)&sep[0], sizeof(_char)))
 											{
-												if (memcmp((void*)&ig, (void*)&val[x - 1], sizeof(_char)))
+												if (!x)
 												{
-													if (x > 1)
+													size_t y = 1;
+
+													while (y < sl && x + y < vl)
 													{
-														if (memcmp((void*)&ig, (void*)&val[x - 2], sizeof(_char)))
+														if (memcmp((void*)&val[x + y], (void*)&sep[y], sizeof(_char)))
 														{
-															size_t y = 1;
-
-															while (y < sl && x + y < vl)
-															{
-																if (memcmp((void*)&val[x + y], (void*)&sep[y], sizeof(_char)))
-																{
-																	y = sl;
-																}
-																y++;
-															}
-
-															if (y == sl)
-															{
-																for (; mk < x; mk++)
-																{
-																	rstr.push_back(val[mk]);
-																}
-																x += (sl - 1);
-																mk = x + 1;
-
-																if (!rstr.empty())
-																{
-																	ret_->push_back(rstr);
-																	rstr.clear();
-																}
-
-																if (ksep)
-																{
-																	std::string nsep(sep);
-																	ret_->push_back(nsep);
-																}
-															}
+															y = sl;
 														}
+														y++;
 													}
-													else
+
+													if (y == sl)
+													{
+														if (ksep)
+														{
+															std::string nsep(sep);
+															ret_->push_back(nsep);
+														}
+														x += sl - 1;
+														mk = x + 1;
+													}
+												}
+												else
+												{
+													if (memcmp((void*)&ig, (void*)&val[x - 1], sizeof(_char)))
 													{
 														size_t y = 1;
 
 														while (y < sl && x + y < vl)
 														{
-															if (memcmp((void*)&val[x + y], &sep[y], sizeof(_char)))
+															if (memcmp((void*)&val[x + y], (void*)&sep[y], sizeof(_char)))
 															{
 																y = sl;
 															}
@@ -9708,6 +9870,47 @@ sint machine::ArgSep(std::vector <std::string>* ret_, bool ksep, size_t f, size_
 															{
 																std::string nsep(sep);
 																ret_->push_back(nsep);
+															}
+														}
+													}
+													else
+													{
+														if (x > 1)
+														{
+															if (!memcmp((void*)&ig, (void*)&val[x - 2], sizeof(_char)))
+															{
+																size_t y = 1;
+
+																while (y < sl && x + y < vl)
+																{
+																	if (memcmp((void*)&val[x + y], (void*)&sep[y], sizeof(_char)))
+																	{
+																		y = sl;
+																	}
+																	y++;
+																}
+
+																if (y == sl)
+																{
+																	for (; mk < x; mk++)
+																	{
+																		rstr.push_back(val[mk]);
+																	}
+																	x += (sl - 1);
+																	mk = x + 1;
+
+																	if (!rstr.empty())
+																	{
+																		ret_->push_back(rstr);
+																		rstr.clear();
+																	}
+
+																	if (ksep)
+																	{
+																		std::string nsep(sep);
+																		ret_->push_back(nsep);
+																	}
+																}
 															}
 														}
 													}
@@ -9992,47 +10195,33 @@ sint machine::ArgSep(std::vector <std::string>* ret_, bool ksep, size_t f, size_
 										{
 											if (!memcmp((void*)&val[x], (void*)&sep[0], sizeof(_char)))
 											{
-												if (memcmp((void*)&ig, (void*)&val[x - 1], sizeof(_char)))
+												if (!x)
 												{
-													if (x > 1)
+													size_t y = 1;
+
+													while (y < sl && x + y < vl)
 													{
-														if (memcmp((void*)&ig, (void*)&val[x - 2], sizeof(_char)))
+														if (memcmp((void*)&val[x + y], &sep[y], sizeof(_char)))
 														{
-															size_t y = 1;
-
-															while (y < sl && x + y < vl)
-															{
-																if (memcmp((void*)&val[x + y], (void*)&sep[y], sizeof(_char)))
-																{
-																	y = sl;
-																}
-																y++;
-															}
-
-															if (y == sl)
-															{
-																for (; mk < x; mk++)
-																{
-																	rstr.push_back(val[mk]);
-																}
-																x += (sl - 1);
-																mk = x + 1;
-
-																if (!rstr.empty())
-																{
-																	ret_->push_back(rstr);
-																	rstr.clear();
-																}
-
-																if (ksep)
-																{
-																	std::string nsep(sep);
-																	ret_->push_back(nsep);
-																}
-															}
+															y = sl;
 														}
+														y++;
 													}
-													else
+
+													if (y == sl)
+													{
+														if (ksep)
+														{
+															std::string nsep(sep);
+															ret_->push_back(nsep);
+														}
+														x += sl - 1;
+														mk = x + 1;
+													}
+												}
+												else
+												{
+													if (memcmp((void*)&ig, (void*)&val[x - 1], sizeof(_char)))
 													{
 														size_t y = 1;
 
@@ -10064,6 +10253,47 @@ sint machine::ArgSep(std::vector <std::string>* ret_, bool ksep, size_t f, size_
 															{
 																std::string nsep(sep);
 																ret_->push_back(nsep);
+															}
+														}
+													}
+													else
+													{
+														if (x > 1)
+														{
+															if (!memcmp((void*)&ig, (void*)&val[x - 2], sizeof(_char)))
+															{
+																size_t y = 1;
+
+																while (y < sl && x + y < vl)
+																{
+																	if (memcmp((void*)&val[x + y], (void*)&sep[y], sizeof(_char)))
+																	{
+																		y = sl;
+																	}
+																	y++;
+																}
+
+																if (y == sl)
+																{
+																	for (; mk < x; mk++)
+																	{
+																		rstr.push_back(val[mk]);
+																	}
+																	x += (sl - 1);
+																	mk = x + 1;
+
+																	if (!rstr.empty())
+																	{
+																		ret_->push_back(rstr);
+																		rstr.clear();
+																	}
+
+																	if (ksep)
+																	{
+																		std::string nsep(sep);
+																		ret_->push_back(nsep);
+																	}
+																}
 															}
 														}
 													}
@@ -10347,46 +10577,32 @@ sint machine::ArgSep(std::vector <std::string>* ret_, bool ksep, size_t f, size_
 										{
 											if (!memcmp((void*)&val[x], (void*)&sep->at(0), sizeof(_char)))
 											{
-												if (memcmp((void*)&ig, (void*)&val[x - 1], sizeof(_char)))
+												if (!x)
 												{
-													if (x > 1)
+													size_t y = 1;
+
+													while (y < sep->length() && x + y < vl)
 													{
-														if (memcmp((void*)&ig, (void*)&val[x - 2], sizeof(_char)))
+														if (memcmp((void*)&val[x + y], &sep->at(y), sizeof(_char)))
 														{
-															size_t y = 1;
-
-															while (y < sep->length() && x + y < vl)
-															{
-																if (memcmp((void*)&val[x + y], &sep->at(y), sizeof(_char)))
-																{
-																	y = sep->length();
-																}
-																y++;
-															}
-
-															if (y == sep->length())
-															{
-																for (; mk < x; mk++)
-																{
-																	rstr.push_back(val[mk]);
-																}
-																x += (sep->length() - 1);
-																mk = x + 1;
-
-																if (!rstr.empty())
-																{
-																	ret_->push_back(rstr);
-																	rstr.clear();
-																}
-
-																if (ksep)
-																{
-																	ret_->push_back(*sep);
-																}
-															}
+															y = sep->length();
 														}
+														y++;
 													}
-													else
+
+													if (y == sep->length())
+													{
+														if (ksep)
+														{
+															ret_->push_back(*sep);
+														}
+														x += sep->length() - 1;
+														mk = x + 1;
+													}
+												}
+												else
+												{
+													if (memcmp((void*)&ig, (void*)&val[x - 1], sizeof(_char)))
 													{
 														size_t y = 1;
 
@@ -10417,6 +10633,46 @@ sint machine::ArgSep(std::vector <std::string>* ret_, bool ksep, size_t f, size_
 															if (ksep)
 															{
 																ret_->push_back(*sep);
+															}
+														}
+													}
+													else
+													{
+														if (x > 1)
+														{
+															if (!memcmp((void*)&ig, (void*)&val[x - 2], sizeof(_char)))
+															{
+																size_t y = 1;
+
+																while (y < sep->length() && x + y < vl)
+																{
+																	if (memcmp((void*)&val[x + y], &sep->at(y), sizeof(_char)))
+																	{
+																		y = sep->length();
+																	}
+																	y++;
+																}
+
+																if (y == sep->length())
+																{
+																	for (; mk < x; mk++)
+																	{
+																		rstr.push_back(val[mk]);
+																	}
+																	x += (sep->length() - 1);
+																	mk = x + 1;
+
+																	if (!rstr.empty())
+																	{
+																		ret_->push_back(rstr);
+																		rstr.clear();
+																	}
+
+																	if (ksep)
+																	{
+																		ret_->push_back(*sep);
+																	}
+																}
 															}
 														}
 													}
@@ -10722,41 +10978,27 @@ sint machine::ArgSep(std::vector <std::string>* ret_, bool ksep, size_t f, size_
 											{
 												if (!memcmp((void*)&val[x], (void*)&sep->at(xt), sizeof(_char)))
 												{
-													if (memcmp((void*)&ig, (void*)&val[x - 1], sizeof(_char)))
+													if (!x)
 													{
-														if (x > 1)
+														if (ksep)
 														{
-															if (memcmp((void*)&ig, (void*)&val[x - 2], sizeof(_char)))
-															{
-																for (; mk < x; mk++)
-																{
-																	rstr.push_back(val[mk]);
-																}
-																x += sizeof(_char) - 1;
-																mk = x + 1;
-
-																if (!rstr.empty())
-																{
-																	ret_->push_back(rstr);
-																	rstr.clear();
-																}
-
-																if (ksep)
-																{
-																	std::string str;
-																	str.push_back(sep->at(xt));
-																	ret_->push_back(str);
-																}
-																xt = sep->size();
-															}
+															std::string str;
+															str.push_back(sep->at(xt));
+															ret_->push_back(str);
 														}
-														else
+														x += sizeof(_char) - 1;
+														mk = x + 1;
+														xt = sep->size();
+													}
+													else
+													{
+														if (memcmp((void*)&ig, (void*)&val[x - 1], sizeof(_char)))
 														{
 															for (; mk < x; mk++)
 															{
 																rstr.push_back(val[mk]);
 															}
-															x += (sizeof(_char) - 1);
+															x += sizeof(_char) - 1;
 															mk = x + 1;
 
 															if (!rstr.empty())
@@ -10772,6 +11014,35 @@ sint machine::ArgSep(std::vector <std::string>* ret_, bool ksep, size_t f, size_
 																ret_->push_back(str);
 															}
 															xt = sep->size();
+														}
+														else
+														{
+															if (x > 1)
+															{
+																if (!memcmp((void*)&ig, (void*)&val[x - 2], sizeof(_char)))
+																{
+																	for (; mk < x; mk++)
+																	{
+																		rstr.push_back(val[mk]);
+																	}
+																	x += sizeof(_char) - 1;
+																	mk = x + 1;
+
+																	if (!rstr.empty())
+																	{
+																		ret_->push_back(rstr);
+																		rstr.clear();
+																	}
+
+																	if (ksep)
+																	{
+																		std::string str;
+																		str.push_back(sep->at(xt));
+																		ret_->push_back(str);
+																	}
+																	xt = sep->size();
+																}
+															}
 														}
 													}
 												}
@@ -11082,48 +11353,34 @@ sint machine::ArgSep(std::vector <std::string>* ret_, bool ksep, size_t f, size_
 											{
 												if (!memcmp((void*)&val[x], (void*)&sep->at(xt)[0], sizeof(_char)))
 												{
-													if (memcmp((void*)&ig, (void*)&val[x - 1], sizeof(_char)))
+													if (!x)
 													{
-														if (x > 1)
+														size_t sl = bot_cstrlen(sep->at(xt));
+														size_t y = 1;
+
+														while (y < sl && x + y < vl)
 														{
-															if (memcmp((void*)&ig, (void*)&val[x - 2], sizeof(_char)))
+															if (memcmp((void*)&val[x + y], &sep->at(xt)[y], sizeof(_char)))
 															{
-																size_t sl = bot_cstrlen(sep->at(xt));
-																size_t y = 1;
-
-																while (y < sl && x + y < vl)
-																{
-																	if (memcmp((void*)&val[x + y], &sep->at(xt)[y], sizeof(_char)))
-																	{
-																		y = sl;
-																	}
-																	y++;
-																}
-
-																if (y == sl)
-																{
-																	for (; mk < x; mk++)
-																	{
-																		rstr.push_back(val[mk]);
-																	}
-																	x += (sl - 1);
-																	mk = x + 1;
-
-																	if (!rstr.empty())
-																	{
-																		ret_->push_back(rstr);
-																		rstr.clear();
-																	}
-
-																	if (ksep)
-																	{
-																		ret_->push_back(sep->at(xt));
-																	}
-																	xt = sep->size();
-																}
+																y = sl;
 															}
+															y++;
 														}
-														else
+
+														if (y == sl)
+														{
+															if (ksep)
+															{
+																ret_->push_back(sep->at(xt));
+															}
+															x += (sl - 1);
+															mk = x + 1;
+															xt = sep->size();
+														}
+													}
+													else
+													{
+														if (memcmp((void*)&ig, (void*)&val[x - 1], sizeof(_char)))
 														{
 															size_t sl = bot_cstrlen(sep->at(xt));
 															size_t y = 1;
@@ -11157,6 +11414,48 @@ sint machine::ArgSep(std::vector <std::string>* ret_, bool ksep, size_t f, size_
 																	ret_->push_back(sep->at(xt));
 																}
 																xt = sep->size();
+															}
+														}
+														else
+														{
+															if (x > 1)
+															{
+																if (!memcmp((void*)&ig, (void*)&val[x - 2], sizeof(_char)))
+																{
+																	size_t sl = bot_cstrlen(sep->at(xt));
+																	size_t y = 1;
+
+																	while (y < sl && x + y < vl)
+																	{
+																		if (memcmp((void*)&val[x + y], &sep->at(xt)[y], sizeof(_char)))
+																		{
+																			y = sl;
+																		}
+																		y++;
+																	}
+
+																	if (y == sl)
+																	{
+																		for (; mk < x; mk++)
+																		{
+																			rstr.push_back(val[mk]);
+																		}
+																		x += (sl - 1);
+																		mk = x + 1;
+
+																		if (!rstr.empty())
+																		{
+																			ret_->push_back(rstr);
+																			rstr.clear();
+																		}
+
+																		if (ksep)
+																		{
+																			ret_->push_back(sep->at(xt));
+																		}
+																		xt = sep->size();
+																	}
+																}
 															}
 														}
 													}
@@ -11462,47 +11761,33 @@ sint machine::ArgSep(std::vector <std::string>* ret_, bool ksep, size_t f, size_
 											{
 												if (!memcmp((void*)&val[x], (void*)&sep->at(xt)[0], sizeof(_char)))
 												{
-													if (memcmp((void*)&ig, (void*)&val[x - 1], sizeof(_char)))
+													if (!x)
 													{
-														if (x > 1)
+														size_t y = 1;
+
+														while (y < sep->at(xt).length() && x + y < vl)
 														{
-															if (memcmp((void*)&ig, (void*)&val[x - 2], sizeof(_char)))
+															if (memcmp((void*)&val[x + y], &sep->at(xt)[y], sizeof(_char)))
 															{
-																size_t y = 1;
-
-																while (y < sep->at(xt).length() && x + y < vl)
-																{
-																	if (memcmp((void*)&val[x + y], &sep->at(xt)[y], sizeof(_char)))
-																	{
-																		y = sep->at(xt).length();
-																	}
-																	y++;
-																}
-
-																if (y == sep->at(xt).length())
-																{
-																	for (; mk < x; mk++)
-																	{
-																		rstr.push_back(val[mk]);
-																	}
-																	x += (sep->at(xt).length() - 1);
-																	mk = x + 1;
-
-																	if (!rstr.empty())
-																	{
-																		ret_->push_back(rstr);
-																		rstr.clear();
-																	}
-
-																	if (ksep)
-																	{
-																		ret_->push_back(sep->at(xt));
-																	}
-																	xt = sep->size();
-																}
+																y = sep->at(xt).length();
 															}
+															y++;
 														}
-														else
+
+														if (y == sep->at(xt).length())
+														{
+															if (ksep)
+															{
+																ret_->push_back(sep->at(xt));
+															}
+															x += (sep->at(xt).length() - 1);
+															mk = x + 1;
+															xt = sep->size();
+														}
+													}
+													else
+													{
+														if (memcmp((void*)&ig, (void*)&val[x - 1], sizeof(_char)))
 														{
 															size_t y = 1;
 
@@ -11535,6 +11820,47 @@ sint machine::ArgSep(std::vector <std::string>* ret_, bool ksep, size_t f, size_
 																	ret_->push_back(sep->at(xt));
 																}
 																xt = sep->size();
+															}
+														}
+														else
+														{
+															if (x > 1)
+															{
+																if (!memcmp((void*)&ig, (void*)&val[x - 2], sizeof(_char)))
+																{
+																	size_t y = 1;
+
+																	while (y < sep->at(xt).length() && x + y < vl)
+																	{
+																		if (memcmp((void*)&val[x + y], &sep->at(xt)[y], sizeof(_char)))
+																		{
+																			y = sep->at(xt).length();
+																		}
+																		y++;
+																	}
+
+																	if (y == sep->at(xt).length())
+																	{
+																		for (; mk < x; mk++)
+																		{
+																			rstr.push_back(val[mk]);
+																		}
+																		x += (sep->at(xt).length() - 1);
+																		mk = x + 1;
+
+																		if (!rstr.empty())
+																		{
+																			ret_->push_back(rstr);
+																			rstr.clear();
+																		}
+
+																		if (ksep)
+																		{
+																			ret_->push_back(sep->at(xt));
+																		}
+																		xt = sep->size();
+																	}
+																}
 															}
 														}
 													}
@@ -13173,13 +13499,6 @@ sint machine::BOTFileStats(BOT_FILE_M *file_, bool doscan, sint scan_lvl)
 		carr_96 ncar;
 		sint oc = bot_sprintf(ncar.carr, ncar.siz, "::BOTFileStats(BOT_FILE_M *file_(%i), bool doscan(%u), sint scan_lvl(%i))", (sint)file_, (uint)doscan, scan_lvl);
 		oc = Output(ncar.carr, 2);
-
-		if (debug_lvl >= 10)
-		{
-			std::string xcar;
-			oc = bot_sprintfs(&xcar, false, "%s%s%s", file_->path.c_str(), file_->name.c_str(), file_->type.c_str());
-			oc = Output(xcar.c_str(), 2);
-		}
 	}
 
 	if (!file_)
@@ -16385,25 +16704,19 @@ sllint machine::Rest(sllint i, bool keep_mtx)
 
 // Console I/O Functions
 
-sint machine::UNRTS(bool com)
+sint machine::UNRTS()
 {
 	sint ox = -1;
 	sint hx = LockGMutex(MTX_STRT, &ox);
 
 	if (hx > -1)
 	{
-		bot_strt_s.Update(&msy);
+		hx = bot_strt_s.Update(&msy);
 		hx = msy.Update(&bot_strt_s);
 
 		if (!ox)
 		{
 			ox = UnlockGMutex(MTX_STRT);
-		}
-		if (com)
-		{
-			std::vector<BOT_STMT> stmts;
-			BOT_STMT t;
-
 		}
 	}
 	return hx;
@@ -16745,7 +17058,7 @@ sint machine::AnalyzeStmt(BOT_STMT *t_)
 	std::string stmt(t_->stmt.c_str());
 	t_->Clear();
 	std::vector<std::string> rets, args;
-	sint xc = vtool.CombV(&args, VTV_VSTR, VTV_CCAR, " ", VTV_CCAR, "\t", VTV_VSTR, &msy.sql_trans_keywords, VTV_VSTR, &msy.sql_cspec_keywords, VTV_MAX);
+	sint xc = vtool.CombV(&args, VTV_VSTR, VTV_CCAR, " ", VTV_CCAR, "\t", VTV_VSTR, &msy.sql_trans_keywords, VTV_VSTR, &msy.sql_spec_keywords, VTV_MAX);
 	xc = ArgSep(&rets, true, 0, stmt.length() - 1, stmt.c_str(), BOT_RTV_VSTR, &args);
 
 	if (xc > -1)
@@ -17019,9 +17332,9 @@ sint machine::BQS(BOT_STMT *t_)
 	statement.append(" ");
 	uint x = 0;
 
-	if (t_->cspec > -1 && (!t_->vals.empty() || !t_->cols.empty() || !t_->conds.empty()))
+	if (t_->spec > -1 && (!t_->vals.empty() || !t_->cols.empty() || !t_->conds.empty()))
 	{
-		statement.append(msy.sql_cspec_keywords[t_->cspec].c_str());
+		statement.append(msy.sql_spec_keywords[t_->spec].c_str());
 		statement.append(" ");
 
 		if (!t_->conds.empty())
@@ -17369,12 +17682,12 @@ sint machine::BTS(BOT_STMT *t_)
 			}
 		}
 
-		if (t_->cspec > -1)
+		if (t_->spec > -1)
 		{
-			if (t_->cspec == 0)
+			if (t_->spec == 0)
 			{
 				statement.append(" ");
-				statement.append(msy.sql_cspec_keywords[t_->cspec].c_str());
+				statement.append(msy.sql_spec_keywords[t_->spec].c_str());
 
 				for (uint x = 0; x < t_->conds.size(); x++)
 				{
@@ -17382,7 +17695,7 @@ sint machine::BTS(BOT_STMT *t_)
 					statement.append(t_->conds[x]);
 				}
 			}
-			else if (t_->cspec == 2)
+			else if (t_->spec == 2)
 			{
 				if (t_->cols.size() == t_->vals.size())
 				{
@@ -17472,7 +17785,7 @@ sint machine::BTS(BOT_STMT *t_)
 
 		if (t_->opts[11].size() > 1)
 		{
-		trans.cspec = t_->opts[11][1];
+		trans.spec = t_->opts[11][1];
 		}
 
 		if (!t_->conds.empty())
@@ -17718,7 +18031,7 @@ sint machine::BuildStatements(std::vector<BOT_STMT>* stmts_, BOT_COMMIT *com_, s
 		}
 
 		BOT_STMT trans((bool)db_maint[i], 1, com_->dbs[i].name.c_str(), "LAST_ACCESS", 1);
-		trans.cspec = 0;
+		trans.spec = 0;
 		trans.act = 0;
 		xc = vtool.AVTV(&trans.conds, "ID > 0", false, false);
 		xc = vtool.AVTV(&com_->t, &trans, true, false);
@@ -20458,7 +20771,7 @@ sint machine::VerifyTable(BOT_DB *dbs_, std::vector<BOT_STMT> *tvec_, sint x, si
 			{
 				trans.Clear();
 				trans.Renew(false, 2, dbs_->name.c_str(), dbs_->tables[x].c_str(), 1);
-				trans.cspec = 2;
+				trans.spec = 2;
 				rc = vtool.AVTV(tvec_, &trans, true, true);
 			}
 			return 1;
@@ -20763,7 +21076,7 @@ sint machine::VerifyTable(BOT_DB *dbs_, std::vector<BOT_STMT> *tvec_, sint x, si
 					if (e && !x)
 					{
 						BOT_STMT t(false, 2, dbs_->name.c_str(), dbs_->tables[x].c_str(), 1);
-						t.cspec = 2;
+						t.spec = 2;
 						rc = vtool.AVTV(tvec_, &t, true, true);
 					}
 					xxc++;
@@ -21138,7 +21451,7 @@ sint machine::CreateDatabase(BOT_DB_M *dbs_)
 		{
 			t.Clear();
 			t.Renew(false, 2, dbs.name.c_str(), dbs.tables[s].c_str(), 1);
-			t.cspec = 2;
+			t.spec = 2;
 			xc = vtool.AVTV(&sepsql, &t, true, true);
 		}
 	}
@@ -21233,7 +21546,7 @@ sint machine::GetSymbols(std::vector <MICSYM> *syms_, c_char x_cond_[], bool mai
 
 			if (!maint)
 			{
-				t.cspec = 0;
+				t.spec = 0;
 				_char dval[(sizeof(syms_->at(nsiz).sym) * 2) + 4]{ 0 };
 				rc = bot_sprintf(dval, sizeof(dval), "X'%02X'", syms_->at(nsiz).sym);
 				rc = t.AddCond(0, "SYMBOL", msy.sql_comp_keywords[5].c_str(), dval);
@@ -21876,7 +22189,7 @@ sint machine::AddSymbols(std::vector <MICSYM> *syms_)
 		if (syms_->at(eles[x]).id < 0)
 		{
 			t.it_type = 2;
-			t.cspec = 2;
+			t.spec = 2;
 
 			if (sizeof(syms_->at(eles[x]).sym))
 			{
@@ -22017,7 +22330,7 @@ sint machine::AddSymbols(std::vector <MICSYM> *syms_)
 		}
 		else
 		{
-			t.cspec = 0;
+			t.spec = 0;
 			t.act = 0;
 
 			if (syms_->at(eles[x]).ud_id)
@@ -22232,7 +22545,7 @@ sint machine::GetCode(std::vector<MACSYM>* codes_, c_char x_cond_[], bool maint)
 				}
 
 				BOT_STMT t(maint, 0, cdb.name.c_str(), cdb.tables[siz].c_str(), 1);
-				t.cspec = 0;
+				t.spec = 0;
 
 				if (!maint)
 				{
@@ -23250,7 +23563,7 @@ sint machine::AddCode(std::vector<MACSYM > *codes_)
 			if (codes_->at(eles[x]).id < 0)
 			{
 				t.it_type = 2;
-				t.cspec = 2;
+				t.spec = 2;
 
 				if (!codes_->at(eles[x]).cons.empty())
 				{
@@ -23423,7 +23736,7 @@ sint machine::AddCode(std::vector<MACSYM > *codes_)
 			}
 			else
 			{
-				t.cspec = 0;
+				t.spec = 0;
 				t.act = 0;
 
 				if (codes_->at(eles[x]).ud_id)
@@ -23681,7 +23994,7 @@ sint machine::GetCommands(std::vector<BOTCOMMAND> *Commands_, std::vector<std::s
 		for (uint x = 0; x < Commands_->size(); x++)
 		{
 			BOT_STMT t(false, 0, "litebot", "COMMANDS", 1);
-			t.cspec = 0;
+			t.spec = 0;
 
 			if (!Commands_->at(x).cmd.empty())
 			{
@@ -23729,7 +24042,7 @@ sint machine::GetCommands(std::vector<BOTCOMMAND> *Commands_, std::vector<std::s
 				for (size_t siz = 0; siz < conds_->size(); siz++)
 				{
 					BOT_STMT t(false, 0, "litebot", "COMMANDS", 1);
-					t.cspec = 0;
+					t.spec = 0;
 					xc = t.AddCond(&conds_->at(siz));
 					xc = BQS(&t);
 
@@ -23745,7 +24058,7 @@ sint machine::GetCommands(std::vector<BOTCOMMAND> *Commands_, std::vector<std::s
 		else
 		{
 			BOT_STMT t(false, 0, "litebot", "COMMANDS", 1);
-			t.cspec = 0;
+			t.spec = 0;
 			xc = BQS(&t);
 
 			if (xc)
@@ -23914,7 +24227,7 @@ sint machine::GetLogin(c_char* str_)
 	std::string clstr;
 	sint xc = GetPCliMem(BOT_C_LOGIN_NAME, &clstr);
 	t.AddCond(0, "LOGIN_NAME", msy.sql_comp_keywords[5].c_str(), LEncStrI(UCASE(clstr.c_str()).c_str(), -1).c_str());
-	t.cspec = 0;
+	t.spec = 0;
 	t.rlim = 1;
 	xc = BQS(&t);
 
@@ -24116,7 +24429,7 @@ sint machine::UpdateAccount(BOT_CLIENT *Client_)
 	}
 	std::vector<BOT_STMT> tvec;
 	BOT_STMT t(false, 1, "litebot", "ACCOUNTS", 1);
-	t.cspec = 0;
+	t.spec = 0;
 	t.act = 0;
 	sint xc = t.AddCond(0, "LOGIN_NAME", msy.sql_comp_keywords[5].c_str(), LEncStrI(Client_->login_name.c_str(), -1).c_str());
 	xc = t.AddCond(0, "ID", msy.sql_comp_keywords[5].c_str(), stool.ITOA(Client_->lid).c_str());
@@ -24395,7 +24708,7 @@ sint machine::LastAccessMaintenance(BOT_DB_M *dbs_)
 									nstr.append("ID = ");
 									nstr.append(stool.ITOA(xc).c_str());
 									sint ac = vtool.AVTV(&t.conds, nstr.c_str(), true, true);
-									t.cspec = 0;
+									t.spec = 0;
 									tvec.push_back(t);
 								}
 							}
@@ -24422,7 +24735,7 @@ sint machine::LastAccessMaintenance(BOT_DB_M *dbs_)
 									nstr.append("ID = ");
 									nstr.append(stool.ITOA(xc).c_str());
 									sint ac = vtool.AVTV(&t.conds, nstr.c_str(), true, true);
-									t.cspec = 0;
+									t.spec = 0;
 									ac = vtool.AVTV(&tvec, &t, true, true);
 								}
 							}
@@ -24846,6 +25159,7 @@ sint machine::StartThread(sint* thr_opt)
 	}
 	mk_thr = false;
 	UpdMTXPrio();
+	rc = GetDBG(&debug_lvl, &debug_m);
 	return (sint)BOT_THR_RUN;
 }
 sint machine::ThreadRest(sllint dur, sint qt_lvl)
@@ -24864,6 +25178,7 @@ sint machine::ThreadRest(sllint dur, sint qt_lvl)
 		sllint rst = Rest(dur);
 		std::chrono::steady_clock::time_point nt = std::chrono::steady_clock::now();
 		sint rc = SetVecEleMem((void*)&nt, MTX_TTS, lid, BOT_TTS_TIMEP, false);
+		rc = GetDBG(&debug_lvl, &debug_m);
 		return 0;
 	}
 	return -1;
@@ -26328,6 +26643,7 @@ void* machine::LogMaintenance(void* vp_)
 								if (!op)
 								{
 									bot_log_vec.d_vec[logm.lid].log_q.clear();
+									rc = LITEBot.SetVecEleMem((void*)&bot_log_vec.d_vec[logm.lid].log_q, MTX_LOG, logm.lid, BOT_LOG_Q, false);
 								}
 								if (!ox)
 								{

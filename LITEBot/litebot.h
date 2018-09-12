@@ -1216,7 +1216,8 @@ enum bot_strt_mtx
 	MTX_PORTS = 17,
 	MTX_PCL = 18,
 	MTX_FPAD = 19,
-	MTX_MAX = 20
+	MTX_DBG = 20,
+	MTX_MAX = 21
 };
 
 enum bot_thr_qlvl
@@ -3389,7 +3390,7 @@ enum stmt_mems
 	BOT_STMT_DBNAME = 5,
 	BOT_STMT_DBALIAS = 6,
 	BOT_STMT_OPTS = 7,
-	BOT_STMT_CSPEC = 8,
+	BOT_STMT_SPEC = 8,
 	BOT_STMT_RLIM = 9,
 	BOT_STMT_TARG = 10,
 	BOT_STMT_ACT = 11,
@@ -3418,7 +3419,7 @@ public:
 	std::string cont;
 	std::string dbname;
 	std::string dbalias;
-	sint cspec;
+	sint spec;
 	sint rlim;
 	sint targ;
 	sint act;
@@ -3434,7 +3435,7 @@ public:
 	{
 		an = maint = false;
 		rblk = 0;
-		opts[0] = opts[1] = ifex = ospec = act = targ = rlim = cspec = lid = it_type = ic_type = -1;
+		opts[0] = opts[1] = ifex = ospec = act = targ = rlim = spec = lid = it_type = ic_type = -1;
 
 		if (!stmt.empty())
 		{
@@ -3685,7 +3686,7 @@ public:
 		an = false;
 		maint = nmaint;
 		rblk = nrblk;
-		ifex = ospec = act = rlim = cspec = targ = lid = -1;
+		ifex = ospec = act = rlim = spec = targ = lid = -1;
 		opts[0] = -1;
 		opts[1] = -1;
 		it_type = nit_type;
@@ -11549,7 +11550,7 @@ public:
 			return -1;
 		}
 
-		if ((valI->maint != valII->maint) || (valI->ic_type != valII->ic_type) || (valI->it_type != valII->it_type) || (valI->cspec != valII->cspec) || (valI->act != valII->act) || (valI->ifex != valII->ifex) || (valI->targ != valII->targ))
+		if ((valI->maint != valII->maint) || (valI->ic_type != valII->ic_type) || (valI->it_type != valII->it_type) || (valI->spec != valII->spec) || (valI->act != valII->act) || (valI->ifex != valII->ifex) || (valI->targ != valII->targ))
 		{
 			return -1;
 		}
@@ -13502,7 +13503,7 @@ public:
 				else if (memb == BOT_STMT_DBNAME) { std::string* vp = reinterpret_cast<std::string*>(val); size_t siz = 0; vp->append(vec_->at(ele).dbname.c_str()); }
 				else if (memb == BOT_STMT_DBALIAS) { std::string* vp = reinterpret_cast<std::string*>(val); vp->clear(); vp->append(vec_->at(ele).dbalias.c_str()); }
 				else if (memb == BOT_STMT_OPTS) { sint* vp = reinterpret_cast<sint*>(val); size_t siz = 0; while (siz < sizeof(vec_->at(ele).opts)) { vp[siz] = vec_->at(ele).opts[siz]; siz++; } }
-				else if (memb == BOT_STMT_CSPEC) { sint* vp = reinterpret_cast<sint*>(val); *vp = vec_->at(ele).cspec; }
+				else if (memb == BOT_STMT_SPEC) { sint* vp = reinterpret_cast<sint*>(val); *vp = vec_->at(ele).spec; }
 				else if (memb == BOT_STMT_RLIM) { sint* vp = reinterpret_cast<sint*>(val); *vp = vec_->at(ele).rlim; }
 				else if (memb == BOT_STMT_TARG) { sint* vp = reinterpret_cast<sint*>(val); *vp = vec_->at(ele).targ; }
 				else if (memb == BOT_STMT_ACT) { sint* vp = reinterpret_cast<sint*>(val); *vp = vec_->at(ele).act; }
@@ -14163,7 +14164,7 @@ public:
 			else if (memb == BOT_STMT_DBNAME) { std::string* val_ = reinterpret_cast<std::string*>(val); size_t siz = 0; vec_->at(ele).dbname.clear(); vec_->at(ele).dbname.append(val_->c_str()); }
 			else if (memb == BOT_STMT_DBALIAS) { std::string* val_ = reinterpret_cast<std::string*>(val); vec_->at(ele).dbalias.clear(); vec_->at(ele).dbalias.append(val_->c_str()); }
 			else if (memb == BOT_STMT_OPTS) { sint* val_ = reinterpret_cast<sint*>(val); size_t siz = 0; while (siz < sizeof(vec_->at(ele).opts)) { val_[siz] = vec_->at(ele).opts[siz]; siz++; } }
-			else if (memb == BOT_STMT_CSPEC) { sint* val_ = reinterpret_cast<sint*>(val); vec_->at(ele).cspec = *val_; }
+			else if (memb == BOT_STMT_SPEC) { sint* val_ = reinterpret_cast<sint*>(val); vec_->at(ele).spec = *val_; }
 			else if (memb == BOT_STMT_RLIM) { sint* val_ = reinterpret_cast<sint*>(val); vec_->at(ele).rlim = *val_; }
 			else if (memb == BOT_STMT_TARG) { sint* val_ = reinterpret_cast<sint*>(val); vec_->at(ele).targ = *val_; }
 			else if (memb == BOT_STMT_ACT) { sint* val_ = reinterpret_cast<sint*>(val); vec_->at(ele).act = *val_; }
@@ -16060,7 +16061,7 @@ public:
 		sql_opers_keywords.clear();
 		sql_trans_keywords.clear();
 		sql_obj_keywords.clear();
-		sql_cspec_keywords.clear();
+		sql_spec_keywords.clear();
 		sql_targ_keywords.clear();
 		sql_targ_keywords.clear();
 		sql_comp_keywords.clear();
@@ -16108,9 +16109,9 @@ public:
 			sql_obj_keywords.push_back(val->sql_obj_keywords[x]);
 		}
 
-		for (size_t x = 0; x < val->sql_cspec_keywords.size(); x++)
+		for (size_t x = 0; x < val->sql_spec_keywords.size(); x++)
 		{
-			sql_cspec_keywords.push_back(val->sql_cspec_keywords[x]);
+			sql_spec_keywords.push_back(val->sql_spec_keywords[x]);
 		}
 
 		for (size_t x = 0; x < val->sql_targ_keywords.size(); x++)
@@ -16302,21 +16303,21 @@ public:
 			}
 		}
 
-		for (size_t x = 0; x < val->sql_cspec_keywords.size(); x++)
+		for (size_t x = 0; x < val->sql_spec_keywords.size(); x++)
 		{
 			size_t y = 0;
-			while (y < sql_cspec_keywords.size())
+			while (y < sql_spec_keywords.size())
 			{
-				if (!strcmp(val->sql_cspec_keywords[x].c_str(), sql_cspec_keywords[y].c_str()))
+				if (!strcmp(val->sql_spec_keywords[x].c_str(), sql_spec_keywords[y].c_str()))
 				{
-					y = sql_cspec_keywords.size();
+					y = sql_spec_keywords.size();
 				}
 				y++;
 			}
 
-			if (y == sql_cspec_keywords.size())
+			if (y == sql_spec_keywords.size())
 			{
-				sql_cspec_keywords.push_back(val->sql_cspec_keywords[x]);
+				sql_spec_keywords.push_back(val->sql_spec_keywords[x]);
 				ret++;
 			}
 		}
@@ -16752,15 +16753,6 @@ public:
 		return ret;
 	}
 
-	std::vector<std::string> sql_vals_keywords
-	{
-		"INTEGER",
-		"REAL",
-		"TEXT",
-		"BLOB",
-		"NULL"
-	};
-
 	std::vector<_char> sql_opers_keywords
 	{
 		' ',
@@ -16776,6 +16768,15 @@ public:
 		',',
 		'.',
 		';'
+	};
+
+	std::vector<std::string> sql_vals_keywords
+	{
+		"INTEGER",
+		"REAL",
+		"TEXT",
+		"BLOB",
+		"NULL"
 	};
 
 	//it_type
@@ -16806,20 +16807,29 @@ public:
 		"ROW"
 	};
 
-	//cspec
-	std::vector<std::string> sql_cspec_keywords
-	{
-		"WHERE",
-		"AS",
-		"VALUES"
-	};
-
 	//targ
 	std::vector<std::string> sql_targ_keywords
 	{
 		"USING",
 		"FROM",
 		"ON"
+	};
+
+	// ospec
+	std::vector<std::string> sql_obj_qual_keywords
+	{
+		"UNIQUE",
+		"TEMP",
+		"DISTINCT",
+		"VIRTUAL"
+	};
+
+	//spec
+	std::vector<std::string> sql_spec_keywords
+	{
+		"WHERE",
+		"AS",
+		"VALUES"
 	};
 
 	//opts[0]
@@ -16846,15 +16856,6 @@ public:
 		"BETWEEN"
 	};
 
-	// ospec
-	std::vector<std::string> sql_obj_qual_keywords
-	{
-		"UNIQUE",
-		"TEMP",
-		"DISTINCT",
-		"VIRTUAL"
-	};
-
 	//opts[2][0]
 	std::vector<std::string> sql_decl_keywords
 	{
@@ -16874,7 +16875,6 @@ public:
 	{
 		"LIMIT"
 	};
-
 
 	//ifex
 	std::vector<std::string> sql_cond_qual_keywords
@@ -17378,6 +17378,8 @@ private:
 
 	// Log Function
 
+	sint SetDBG(sint lv = BOT_DEBUG_LVL, sint m = BOT_DEBUG_M);
+	sint GetDBG(sint* lv = 0, sint* m = 0);
 	sint UsingLog(_char nm[] = 0);
 	sint LogName(sint opt, carr_256* nm = 0, carr_32* dat = 0, bool tomine = false);
 	sint LogPut(c_char* msg_ = "", sint option = -1);
@@ -17441,7 +17443,7 @@ private:
 	sint SetClientLoggedIn(bool x);	
 
 	// Console I/O Functions
-	sint UNRTS(bool com = false);
+	sint UNRTS();
 	sint BOTCOutput(std::string* np = 0);
 	sint Output(c_char* op_ = "", sint opt = -1, bool newl = true);
 	sint Output(bool newl = true, c_char* op_ = "", ...);
