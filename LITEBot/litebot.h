@@ -17938,8 +17938,6 @@ private:
 	sint BOTCInput(std::string* np = 0, carr_64* tdata = 0);
 	sint Input(c_char* prp = 0, std::string* np = 0, bool itrp = true);
 	sint BOTConsole(c_char* prp = 0);
-	sint ArgSep(std::vector <std::string>* ret_ = 0, c_char* val = 0, size_t f = 0, size_t t = 0, carr_4* sep = 0);
-	sint ArgSep(std::vector <std::string>* ret_ = 0, c_char* val = 0, carr_4* sep = 0);
 	sint ArgSep(std::vector <std::string>* ret_ = 0, bool ksep = false, size_t f = 0, size_t t = 0, c_char* val = 0, ...);
 
 	// Str Manip
