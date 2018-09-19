@@ -681,6 +681,7 @@ errno_t bot_dtoa(double i, std::string* str = 0, sint radix = 10);
 errno_t bot_dtoa(long double i, std::string* str = 0, size_t in_siz = 0, sint radix = 10);
 
 sllint bot_findin(_char val[] = 0, size_t offs = 0, size_t lim = 0, _char inv[] = 0);
+sllint bot_findin(_char val[] = 0, size_t offs = 0, size_t lim = 0, c_char* inv = 0);
 sllint bot_findin(u_char val[] = 0, size_t offs = 0, size_t lim = 0, u_char inv[] = 0);
 
 enum bot_con_val
@@ -712,10 +713,11 @@ enum bot_rtv_vals
 	BOT_RTV_UCHARP = 12,
 	BOT_RTV_CCHAR = 13,
 	BOT_RTV_STR = 14,
-	BOT_RTV_REAL = 15,
-	BOT_RTV_MICS = 16,
-	BOT_RTV_MACS = 17,
-	BOT_RTV_SCRPT = 18,
+	BOT_RTV_BLOB = 15,
+	BOT_RTV_REAL = 16,
+	BOT_RTV_MICS = 17,
+	BOT_RTV_MACS = 18,
+	BOT_RTV_SCRPT = 19,
 	BOT_RTV_VSINT = 1000,
 	BOT_RTV_VSLINT = 1001,
 	BOT_RTV_VSLLINT = 1002,
@@ -727,9 +729,11 @@ enum bot_rtv_vals
 	BOT_RTV_VCCHAR = 1008,
 	BOT_RTV_VSTR = 1009,
 	BOT_RTV_VREAL = 1010,
-	BOT_RTV_VMICS = 1011,
-	BOT_RTV_VMACS = 1012,
-	BOT_RTV_VSCRPT = 1013,
+	BOT_RTV_VBLOB = 1011,
+	BOT_RTV_VMICS = 1012,
+	BOT_RTV_VMACS = 1013,
+	BOT_RTV_VSCRPT = 1014,
+	BOT_RTV_VARG = 1015,
 	BOT_RTV_MAX = 1100
 };
 
@@ -9776,6 +9780,14 @@ private:
 	
 };
 
+typedef struct bot_arg
+{
+	sllint loc;
+	std::string arg;
+
+	bot_arg(sllint nl = -1, c_char* narg = 0) { loc = nl; if (narg) { size_t x = bot_cstrlen(narg); if (x && x < (size_t)BOT_STRLEN_MAX) { arg.append(narg); } } }
+}BOT_ARG;
+
 class STool
 {
 public:
@@ -10402,6 +10414,29 @@ public:
 			if (vec_->at(siz).length() + str.length() + strlen(sep) < BOT_STRLEN_MAX)
 			{
 				str.append(vec_->at(siz));
+				str.append(sep);
+			}
+			else
+			{
+				siz = vec_->size();
+			}
+		}
+		return str;
+	}
+	std::string VToStr(std::vector<BOT_ARG>* vec_ = 0, c_char* sep = " ")
+	{
+		if (!vec_ || !sep)
+		{
+			std::string str;
+			return str;
+		}
+		std::string str;
+
+		for (size_t siz = 0; siz < vec_->size(); siz++)
+		{
+			if (vec_->at(siz).arg.length() + str.length() + strlen(sep) < BOT_STRLEN_MAX)
+			{
+				str.append(vec_->at(siz).arg.c_str());
 				str.append(sep);
 			}
 			else
@@ -11287,6 +11322,7 @@ enum vtool_valt
 	VTV_MACS = 39,
 	VTV_FIL = 40,
 	VTV_THR = 41,
+	VTV_ARG = 42,
 	VTV_VBOOL = 1000,
 	VTV_VSINT = 1001,
 	VTV_VSLINT = 1002,
@@ -11324,7 +11360,8 @@ enum vtool_valt
 	VTV_VMACS = 1039,
 	VTV_VFIL = 1040,
 	VTV_VTHR = 1041,
-	VTV_MAX = 1042
+	VTV_VARG = 1042,
+	VTV_MAX = 1200
 };
 
 class VTool
@@ -11785,6 +11822,16 @@ public:
 						}
 						break;
 					}
+					case VTV_ARG:
+					{
+						BOT_ARG* np = va_arg(args, BOT_ARG*);
+
+						if (np)
+						{
+							p_->push_back((sint)atoi(np->arg.c_str()));
+						}
+						break;
+					}
 					case VTV_VSINT:
 					{
 						void* np = va_arg(args, void*);
@@ -11965,6 +12012,24 @@ public:
 						}
 						break;
 					}
+					case VTV_VARG:
+					{
+						void* np = va_arg(args, void*);
+
+						if (np)
+						{
+							std::vector<BOT_ARG>* nvec = reinterpret_cast<std::vector<BOT_ARG>*>(np);
+
+							if (nvec)
+							{
+								for (size_t x = 0; x < nvec->size(); x++)
+								{
+									p_->push_back((sint)atoi(nvec->at(x).arg.c_str()));
+								}
+							}
+						}
+						break;
+					}
 					case VTV_MAX:
 					{
 						done = true;
@@ -11996,7 +12061,323 @@ public:
 
 			if (p_)
 			{
+				bool done = false;
 
+				while (!done)
+				{
+					sint ivalt = va_arg(args, sint);
+
+					switch (ivalt)
+					{
+					case VTV_SINT:
+					{
+						sint val = va_arg(args, sint);
+						p_->push_back(val);
+						break;
+					}
+					case VTV_SLINT:
+					{
+						slint val = va_arg(args, slint);
+						p_->push_back((_char)val);
+						break;
+					}
+					case VTV_SLLINT:
+					{
+						sllint val = va_arg(args, sllint);
+						p_->push_back((_char)val);
+						break;
+					}
+					case VTV_UINT:
+					{
+						uint val = va_arg(args, uint);
+						p_->push_back((_char)val);
+						break;
+					}
+					case VTV_ULINT:
+					{
+						ulint val = va_arg(args, ulint);
+						p_->push_back((_char)val);
+						break;
+					}
+					case VTV_ULLINT:
+					{
+						ullint val = va_arg(args, ullint);
+						p_->push_back((_char)val);
+						break;
+					}
+					case VTV_CHAR:
+					{
+						_char val = va_arg(args, _char);
+						p_->push_back((_char)val);
+						break;
+					}
+					case VTV_UCAR:
+					{
+						u_char val = va_arg(args, u_char);
+						p_->push_back((_char)val);
+						break;
+					}
+					case VTV_CCAR:
+					{
+						c_char* np = va_arg(args, c_char*);
+
+						if (np)
+						{
+							size_t ln = bot_cstrlen(np);
+							for (size_t x = 0; x < ln; x++)
+							{
+								p_->push_back(np[x]);
+							}
+						}
+						break;
+					}
+					case VTV_STR:
+					{
+						std::string* np = va_arg(args, std::string*);
+
+						if (np)
+						{
+							for (size_t x = 0; x < np->length(); x++)
+							{
+								p_->push_back(np->at(x));
+							}
+						}
+						break;
+					}
+					case VTV_ARG:
+					{
+						BOT_ARG* np = va_arg(args, BOT_ARG*);
+
+						if (np)
+						{
+							for (size_t x = 0; x < np->arg.length(); x++)
+							{
+								p_->push_back(np->arg[x]);
+							}
+						}
+						break;
+					}
+					case VTV_VSINT:
+					{
+						void* np = va_arg(args, void*);
+
+						if (np)
+						{
+							std::vector<sint>* nvec = reinterpret_cast<std::vector<sint>*>(np);
+
+							if (nvec)
+							{
+								for (size_t x = 0; x < nvec->size(); x++)
+								{
+									p_->push_back(nvec->at(x));
+								}
+							}
+						}
+						break;
+					}
+					case VTV_VSLINT:
+					{
+						void* np = va_arg(args, void*);
+
+						if (np)
+						{
+							std::vector<slint>* nvec = reinterpret_cast<std::vector<slint>*>(np);
+
+							if (nvec)
+							{
+								for (size_t x = 0; x < nvec->size(); x++)
+								{
+									p_->push_back((_char)nvec->at(x));
+								}
+							}
+						}
+						break;
+					}
+					case VTV_VSLLINT:
+					{
+						void* np = va_arg(args, void*);
+
+						if (np)
+						{
+							std::vector<sllint>* nvec = reinterpret_cast<std::vector<sllint>*>(np);
+
+							if (nvec)
+							{
+								for (size_t x = 0; x < nvec->size(); x++)
+								{
+									p_->push_back((_char)nvec->at(x));
+								}
+							}
+						}
+						break;
+					}
+					case VTV_VUINT:
+					{
+						void* np = va_arg(args, void*);
+
+						if (np)
+						{
+							std::vector<uint>* nvec = reinterpret_cast<std::vector<uint>*>(np);
+
+							if (nvec)
+							{
+								for (size_t x = 0; x < nvec->size(); x++)
+								{
+									p_->push_back(nvec->at(x));
+								}
+							}
+						}
+						break;
+					}
+					case VTV_VULINT:
+					{
+						void* np = va_arg(args, void*);
+
+						if (np)
+						{
+							std::vector<ulint>* nvec = reinterpret_cast<std::vector<ulint>*>(np);
+
+							if (nvec)
+							{
+								for (size_t x = 0; x < nvec->size(); x++)
+								{
+									p_->push_back((_char)nvec->at(x));
+								}
+							}
+						}
+						break;
+					}
+					case VTV_VULLINT:
+					{
+						void* np = va_arg(args, void*);
+
+						if (np)
+						{
+							std::vector<ullint>* nvec = reinterpret_cast<std::vector<ullint>*>(np);
+
+							if (nvec)
+							{
+								for (size_t x = 0; x < nvec->size(); x++)
+								{
+									p_->push_back((_char)nvec->at(x));
+								}
+							}
+						}
+						break;
+					}
+					case VTV_VCHAR:
+					{
+						void* np = va_arg(args, void*);
+
+						if (np)
+						{
+							std::vector<_char>* nvec = reinterpret_cast<std::vector<_char>*>(np);
+
+							if (nvec)
+							{
+								for (size_t x = 0; x < nvec->size(); x++)
+								{
+									p_->push_back(nvec->at(x));
+								}
+							}
+						}
+						break;
+					}
+					case VTV_VUCAR:
+					{
+						sllint np = va_arg(args, sllint);
+
+						if (np)
+						{
+							std::vector<u_char>* nvec = reinterpret_cast<std::vector<u_char>*>(np);
+
+							if (nvec)
+							{
+								for (size_t x = 0; x < nvec->size(); x++)
+								{
+									p_->push_back(nvec->at(x));
+								}
+							}
+						}
+						break;
+					}
+					case VTV_VCCAR:
+					{
+						void* np = va_arg(args, void*);
+
+						if (np)
+						{
+							std::vector<c_char*>* nvec = reinterpret_cast<std::vector<c_char*>*>(np);
+
+							if (nvec)
+							{
+								for (size_t x = 0; x < nvec->size(); x++)
+								{
+									size_t ln = bot_cstrlen(nvec->at(x));
+
+									for (size_t y = 0; y < ln; y++)
+									{
+										p_->push_back(nvec->at(x)[y]);
+									}
+								}
+							}
+						}
+						break;
+					}
+					case VTV_VSTR:
+					{
+						void* np = va_arg(args, void*);
+
+						if (np)
+						{
+							std::vector<std::string>* nvec = reinterpret_cast<std::vector<std::string>*>(np);
+
+							if (nvec)
+							{
+								for (size_t x = 0; x < nvec->size(); x++)
+								{
+									for (size_t y = 0; y < nvec->at(x).length(); y++)
+									{
+										p_->push_back(nvec->at(x)[y]);
+									}
+								}
+							}
+						}
+						break;
+					}
+					case VTV_VARG:
+					{
+						void* np = va_arg(args, void*);
+
+						if (np)
+						{
+							std::vector<BOT_ARG>* nvec = reinterpret_cast<std::vector<BOT_ARG>*>(np);
+
+							if (nvec)
+							{
+								for (size_t x = 0; x < nvec->size(); x++)
+								{
+									for (size_t y = 0; y < nvec->at(x).arg.length(); y++)
+									{
+										p_->push_back(nvec->at(x).arg[y]);
+									}
+								}
+							}
+						}
+						break;
+					}
+					case VTV_MAX:
+					{
+						done = true;
+						break;
+					}
+					default:
+					{
+						done = true;
+						break;
+					}
+					}
+				}
 			}
 			break;
 		}
@@ -12090,6 +12471,16 @@ public:
 						if (np)
 						{
 							p_->push_back(*np);
+						}
+						break;
+					}
+					case VTV_ARG:
+					{
+						BOT_ARG* np = va_arg(args, BOT_ARG*);
+
+						if (np)
+						{
+							p_->push_back(np->arg);
 						}
 						break;
 					}
@@ -12273,6 +12664,360 @@ public:
 						if (np)
 						{
 							std::vector<std::string>* nvec = reinterpret_cast<std::vector<std::string>*>(np);
+
+							if (nvec)
+							{
+								for (size_t x = 0; x < nvec->size(); x++)
+								{
+									p_->push_back(nvec->at(x));
+								}
+							}
+						}
+						break;
+					}
+					case VTV_VARG:
+					{
+						void* np = va_arg(args, void*);
+
+						if (np)
+						{
+							std::vector<BOT_ARG>* nvec = reinterpret_cast<std::vector<BOT_ARG>*>(np);
+
+							if (nvec)
+							{
+								for (size_t x = 0; x < nvec->size(); x++)
+								{
+									p_->push_back(nvec->at(x).arg);
+								}
+							}
+						}
+						break;
+					}
+					case VTV_MAX:
+					{
+						done = true;
+						break;
+					}
+					default:
+					{
+						done = true;
+						break;
+					}
+					}
+				}
+			}
+			break;
+		}
+		case VTV_VARG:
+		{
+			std::vector<BOT_ARG>* p_ = reinterpret_cast<std::vector<BOT_ARG>*>(vec_);
+			BOT_ARG a(-1);
+
+			if (p_)
+			{
+				bool done = false;
+
+				while (!done)
+				{
+					sint ivalt = va_arg(args, sint);
+
+					switch (ivalt)
+					{
+					case VTV_SINT:
+					{
+						sint val = va_arg(args, sint);
+						a.arg.append(stool->ITOA(val).c_str());
+						p_->push_back(a);
+						break;
+					}
+					case VTV_SLINT:
+					{
+						slint val = va_arg(args, slint);
+						a.arg.append(stool->LITOA(val).c_str());
+						p_->push_back(a);
+						break;
+					}
+					case VTV_SLLINT:
+					{
+						sllint val = va_arg(args, sllint);
+						a.arg.append(stool->LLITOA(val).c_str());
+						p_->push_back(a);
+						break;
+					}
+					case VTV_UINT:
+					{
+						uint val = va_arg(args, uint);
+						a.arg.append(stool->ITOA(val).c_str());
+						p_->push_back(a);
+						break;
+					}
+					case VTV_ULINT:
+					{
+						ulint val = va_arg(args, ulint);
+						a.arg.append(stool->LITOA(val).c_str());
+						p_->push_back(a);
+						break;
+					}
+					case VTV_ULLINT:
+					{
+						ullint val = va_arg(args, ullint);
+						a.arg.append(stool->LLITOA(val).c_str());
+						p_->push_back(a);
+						break;
+					}
+					case VTV_CHAR:
+					{
+						_char val = va_arg(args, _char);
+						a.arg.push_back(val);
+						p_->push_back(a);
+						break;
+					}
+					case VTV_UCAR:
+					{
+						u_char val = va_arg(args, u_char);
+						a.arg.push_back(val);
+						p_->push_back(a);
+						break;
+					}
+					case VTV_CCAR:
+					{
+						c_char* np = va_arg(args, c_char*);
+
+						if (np)
+						{
+							a.arg.append(np);
+							p_->push_back(a);
+						}
+						break;
+					}
+					case VTV_STR:
+					{
+						std::string* np = va_arg(args, std::string*);
+
+						if (np)
+						{
+							a.arg.append(np->c_str());
+							p_->push_back(a);
+						}
+						break;
+					}
+					case VTV_ARG:
+					{
+						BOT_ARG* np = va_arg(args, BOT_ARG*);
+
+						if (np)
+						{
+							p_->push_back(*np);
+						}
+						break;
+					}
+					case VTV_VSINT:
+					{
+						void* np = va_arg(args, void*);
+
+						if (np)
+						{
+							std::vector<sint>* nvec = reinterpret_cast<std::vector<sint>*>(np);
+
+							if (nvec)
+							{
+								for (size_t x = 0; x < nvec->size(); x++)
+								{
+									a.arg.append(stool->ITOA(nvec->at(x)).c_str());
+									p_->push_back(a);
+									a.arg.clear();
+								}
+							}
+						}
+						break;
+					}
+					case VTV_VSLINT:
+					{
+						void* np = va_arg(args, void*);
+
+						if (np)
+						{
+							std::vector<slint>* nvec = reinterpret_cast<std::vector<slint>*>(np);
+
+							if (nvec)
+							{
+								for (size_t x = 0; x < nvec->size(); x++)
+								{
+									a.arg.append(stool->LITOA(nvec->at(x)).c_str());
+									p_->push_back(a);
+									a.arg.clear();
+								}
+							}
+						}
+						break;
+					}
+					case VTV_VSLLINT:
+					{
+						void* np = va_arg(args, void*);
+
+						if (np)
+						{
+							std::vector<sllint>* nvec = reinterpret_cast<std::vector<sllint>*>(np);
+
+							if (nvec)
+							{
+								for (size_t x = 0; x < nvec->size(); x++)
+								{
+									a.arg.append(stool->LLITOA(nvec->at(x)).c_str());
+									p_->push_back(a);
+									a.arg.clear();
+								}
+							}
+						}
+						break;
+					}
+					case VTV_VUINT:
+					{
+						void* np = va_arg(args, void*);
+
+						if (np)
+						{
+							std::vector<uint>* nvec = reinterpret_cast<std::vector<uint>*>(np);
+
+							if (nvec)
+							{
+								for (size_t x = 0; x < nvec->size(); x++)
+								{
+									a.arg.append(stool->ITOA(nvec->at(x)).c_str());
+									p_->push_back(a);
+									a.arg.clear();
+								}
+							}
+						}
+						break;
+					}
+					case VTV_VULINT:
+					{
+						void* np = va_arg(args, void*);
+
+						if (np)
+						{
+							std::vector<ulint>* nvec = reinterpret_cast<std::vector<ulint>*>(np);
+
+							if (nvec)
+							{
+								for (size_t x = 0; x < nvec->size(); x++)
+								{
+									a.arg.append(stool->LITOA(nvec->at(x)).c_str());
+									p_->push_back(a);
+									a.arg.clear();
+								}
+							}
+						}
+						break;
+					}
+					case VTV_VULLINT:
+					{
+						void* np = va_arg(args, void*);
+
+						if (np)
+						{
+							std::vector<ullint>* nvec = reinterpret_cast<std::vector<ullint>*>(np);
+
+							if (nvec)
+							{
+								for (size_t x = 0; x < nvec->size(); x++)
+								{
+									a.arg.append(stool->LLITOA(nvec->at(x)).c_str());
+									p_->push_back(a);
+									a.arg.clear();
+								}
+							}
+						}
+						break;
+					}
+					case VTV_VCHAR:
+					{
+						void* np = va_arg(args, void*);
+
+						if (np)
+						{
+							std::vector<_char>* nvec = reinterpret_cast<std::vector<_char>*>(np);
+
+							if (nvec)
+							{
+								for (size_t x = 0; x < nvec->size(); x++)
+								{
+									a.arg.push_back(nvec->at(x));
+									p_->push_back(a);
+									a.arg.clear();
+								}
+							}
+						}
+						break;
+					}
+					case VTV_VUCAR:
+					{
+						sllint np = va_arg(args, sllint);
+
+						if (np)
+						{
+							std::vector<u_char>* nvec = reinterpret_cast<std::vector<u_char>*>(np);
+
+							if (nvec)
+							{
+								for (size_t x = 0; x < nvec->size(); x++)
+								{
+									a.arg.push_back(nvec->at(x));
+									p_->push_back(a);
+									a.arg.clear();
+								}
+							}
+						}
+						break;
+					}
+					case VTV_VCCAR:
+					{
+						void* np = va_arg(args, void*);
+
+						if (np)
+						{
+							std::vector<c_char*>* nvec = reinterpret_cast<std::vector<c_char*>*>(np);
+
+							if (nvec)
+							{
+								for (size_t x = 0; x < nvec->size(); x++)
+								{
+									a.arg.append(nvec->at(x));
+									p_->push_back(a);
+									a.arg.clear();
+								}
+							}
+						}
+						break;
+					}
+					case VTV_VSTR:
+					{
+						void* np = va_arg(args, void*);
+
+						if (np)
+						{
+							std::vector<std::string>* nvec = reinterpret_cast<std::vector<std::string>*>(np);
+
+							if (nvec)
+							{
+								for (size_t x = 0; x < nvec->size(); x++)
+								{
+									a.arg.append(nvec->at(x).c_str());
+									p_->push_back(a);
+									a.arg.clear();
+								}
+							}
+						}
+						break;
+					}
+					case VTV_VARG:
+					{
+						void* np = va_arg(args, void*);
+
+						if (np)
+						{
+							std::vector<BOT_ARG>* nvec = reinterpret_cast<std::vector<BOT_ARG>*>(np);
 
 							if (nvec)
 							{
@@ -16981,16 +17726,33 @@ typedef struct bot_var_t
 
 }BOT_VAR_T;
 
+typedef struct bot_vvar_t
+{
+	_char* n;
+	std::vector<std::vector<_char>> v;
+	sint t;
+
+	bot_vvar_t()
+	{
+		n = 0;
+		v.clear();
+		t = 0;
+	}
+
+}BOT_VVAR_T;
+
 class bot_vars
 {
 	
 public:
 
 	std::vector<BOT_VAR_T> vars;
+	std::vector<BOT_VVAR_T> vvars;
 
 	void Clear()
 	{
 		vars.clear();
+		vvars.clear();
 	}
 
 	void Renew(bot_vars* nval)
@@ -17001,8 +17763,13 @@ public:
 		{
 			vars.push_back(nval->vars[x]);
 		}
-	}
 
+		for (size_t x = 0; x < nval->vvars.size(); x++)
+		{
+			vvars.push_back(nval->vvars[x]);
+		}
+	}
+	/*
 	sint AddVar(c_char* nn = 0, void* nv = 0, sint nt = -1)
 	{
 		if (nn && nt > -1)
@@ -17149,7 +17916,6 @@ public:
 									{
 										vars[y].vl = bot_strlen(val);
 										vars[y].v = (_char*)malloc(vars[y].vl + 1);
-
 									}
 									if (vars[y].v)
 									{
@@ -17290,7 +18056,6 @@ public:
 									{
 										vars[x].vl = bot_strlen(val);
 										vars[x].v = (_char*)malloc(vars[x].vl + 1);
-
 									}
 									if (vars[x].v)
 									{
@@ -17316,6 +18081,1158 @@ public:
 		}
 		return -1;
 	}
+	*/
+	sint AddVar(c_char* nn = 0, void* nv = 0, sint nt = -1, sint vt = -1)
+	{
+		if (nn && nt > -1 && vt > -1)
+		{
+			if (nn[0])
+			{
+				_char trm = '\0';
+				sint y = -1;
+				size_t x = 0;
+
+				while (x < vvars.size())
+				{
+					if (vvars[x].t < 0)
+					{
+						y = (sint)x;
+					}
+					else if (!strcmp(vvars[x].n, nn))
+					{
+						if (nt == vvars[x].t && nv)
+						{
+							switch (nt)
+							{
+							case BOT_RTV_SLLINT:
+							{
+								if (vt == BOT_RTV_SLLINT)
+								{
+									if (!vvars[x].v.empty())
+									{
+										vvars[x].v.clear();
+									}
+									std::vector<_char> nvec;
+									vvars[x].v.push_back(nvec);
+									_char* ov = (_char*)malloc(sizeof(sllint));
+
+									if (ov)
+									{
+										memcpy((void*)ov, nv, sizeof(sllint));
+
+										for (size_t z = 0; z < sizeof(sllint); z++)
+										{
+											vvars[x].v[0].push_back(ov[z]);
+										}
+										free(ov);
+									}
+								}
+								break;
+							}
+							case BOT_RTV_REAL:
+							{
+								if (vt == BOT_RTV_REAL)
+								{
+									if (!vvars[x].v.empty())
+									{
+										vvars[x].v.clear();
+									}
+									std::vector<_char> nvec;
+									vvars[x].v.push_back(nvec);
+									_char* ov = (_char*)malloc(sizeof(float));
+
+									if (ov)
+									{
+										memcpy((void*)ov, nv, sizeof(float));
+
+										for (size_t z = 0; z < sizeof(float); z++)
+										{
+											vvars[x].v[0].push_back(ov[z]);
+										}
+										free(ov);
+									}
+								}
+								break;
+							}
+							case BOT_RTV_STR:
+							{
+								if (vt == BOT_RTV_STR)
+								{
+									if (!vvars[x].v.empty())
+									{
+										vvars[x].v.clear();
+									}
+									std::vector<_char> nvec;
+									vvars[x].v.push_back(nvec);
+									std::string* xv = reinterpret_cast<std::string*>(nv);
+
+									for (size_t z = 0; z < xv->length(); z++)
+									{
+										vvars[x].v[0].push_back(xv->at(z));
+									}
+								}
+								break;
+							}
+							case BOT_RTV_BLOB:
+							{
+								if (vt == BOT_RTV_BLOB)
+								{
+									if (!vvars[x].v.empty())
+									{
+										vvars[x].v.clear();
+									}
+									std::vector<_char> nvec;
+									vvars[x].v.push_back(nvec);
+									_char* xv = reinterpret_cast<_char*>(nv);
+
+									if (xv)
+									{
+										size_t vl = bot_strlen(xv);
+
+										for (size_t z = 0; z < vl; z++)
+										{
+											vvars[x].v[0].push_back(xv[z]);
+										}
+									}
+								}
+								break;
+							}
+							case BOT_RTV_VSLLINT:
+							{
+								switch (vt)
+								{
+								case BOT_RTV_SLLINT:
+								{
+									size_t st = vvars[x].v.size();
+									std::vector<_char> nvec;
+									vvars[x].v.push_back(nvec);
+									_char* ov = (_char*)malloc(sizeof(sllint));
+
+									if (ov)
+									{
+										memcpy((void*)ov, nv, sizeof(sllint));
+
+										for (size_t z = 0; z < sizeof(sllint); z++)
+										{
+											vvars[x].v[st].push_back(ov[z]);
+										}
+										free(ov);
+									}
+									break;
+								}
+								case BOT_RTV_VSLLINT:
+								{
+									if (!vvars[x].v.empty())
+									{
+										vvars[x].v.clear();
+									}
+									std::vector<sllint>* xv = reinterpret_cast<std::vector<sllint>*>(nv);
+									std::vector<_char> nvec;
+									_char* ov = (_char*)malloc(sizeof(sllint));
+
+									if (ov)
+									{
+										for (size_t z = 0; z < xv->size(); z++)
+										{
+											vvars[x].v.push_back(nvec);
+											memcpy((void*)ov, (void*)&xv->at(z), sizeof(sllint));
+
+											for (size_t w = 0; w < sizeof(sllint); w++)
+											{
+												vvars[x].v[z].push_back(ov[w]);
+											}
+										}
+										free(ov);
+									}
+									break;
+								}
+								default:
+								{
+									break;
+								}
+								}
+								break;
+							}
+							case BOT_RTV_VREAL:
+							{
+								switch (vt)
+								{
+								case BOT_RTV_REAL:
+								{
+									size_t st = vvars[x].v.size();
+									std::vector<_char> nvec;
+									vvars[x].v.push_back(nvec);
+									_char* ov = (_char*)malloc(sizeof(float));
+
+									if (ov)
+									{
+										memcpy((void*)ov, nv, sizeof(float));
+
+										for (size_t z = 0; z < sizeof(float); z++)
+										{
+											vvars[x].v[st].push_back(ov[z]);
+										}
+									}
+									break;
+								}
+								case BOT_RTV_VREAL:
+								{
+									if (!vvars[x].v.empty())
+									{
+										vvars[x].v.clear();
+									}
+									std::vector<float>* xv = reinterpret_cast<std::vector<float>*>(nv);
+									std::vector<_char> nvec;
+									_char* ov = (_char*)malloc(sizeof(float));
+
+									if (ov)
+									{
+										for (size_t z = 0; z < xv->size(); z++)
+										{
+											vvars[x].v.push_back(nvec);
+											memcpy((void*)ov, (void*)&xv->at(z), sizeof(float));
+
+											for (size_t w = 0; w < sizeof(float); w++)
+											{
+												vvars[x].v[z].push_back(ov[w]);
+											}
+										}
+										free(ov);
+									}
+									break;
+								}
+								default:
+								{
+									break;
+								}
+								}
+								break;
+							}
+							case BOT_RTV_VSTR:
+							{
+								switch (vt)
+								{
+								case BOT_RTV_STR:
+								{
+									size_t st = vvars[x].v.size();
+									std::vector<_char> nvec;
+									vvars[x].v.push_back(nvec);
+									std::string* xv = reinterpret_cast<std::string*>(nv);
+
+									for (size_t z = 0; z < xv->length(); z++)
+									{
+										vvars[x].v[st].push_back(xv->at(z));
+									}
+									break;
+								}
+								case BOT_RTV_VSTR:
+								{
+									if (!vvars[x].v.empty())
+									{
+										vvars[x].v.clear();
+									}
+									std::vector<std::string>* xv = reinterpret_cast<std::vector<std::string>*>(nv);
+									std::vector<_char> nvec;
+
+									for (size_t z = 0; z < xv->size(); z++)
+									{
+										vvars[x].v.push_back(nvec);
+
+										for (size_t n = 0; n < xv->at(z).length(); n++)
+										{
+											vvars[x].v[z].push_back(xv->at(z)[n]);
+										}
+									}
+									break;
+								}
+								case BOT_RTV_VARG:
+								{
+									if (!vvars[x].v.empty())
+									{
+										vvars[x].v.clear();
+									}
+									std::vector<BOT_ARG>* xv = reinterpret_cast<std::vector<BOT_ARG>*>(nv);
+									std::vector<_char> nvec;
+
+									for (size_t z = 0; z < xv->size(); z++)
+									{
+										vvars[x].v.push_back(nvec);
+
+										for (size_t n = 0; n < xv->at(z).arg.length(); n++)
+										{
+											vvars[x].v[z].push_back(xv->at(z).arg[n]);
+										}
+									}
+									break;
+								}
+								default:
+								{
+									break;
+								}
+								}
+								break;
+							}
+							case BOT_RTV_VBLOB:
+							{
+								switch (vt)
+								{
+								case BOT_RTV_BLOB:
+								{
+									size_t st = vvars[x].v.size();
+									std::vector<_char> nvec;
+									vvars[x].v.push_back(nvec);
+									_char* xv = reinterpret_cast<_char*>(nv);
+
+									if (xv)
+									{
+										size_t vl = bot_strlen(xv);
+
+										for (size_t z = 0; z < vl; z++)
+										{
+											vvars[x].v[st].push_back(xv[z]);
+										}
+									}
+									break;
+								}
+								case BOT_RTV_VSTR:
+								{
+									if (!vvars[x].v.empty())
+									{
+										vvars[x].v.clear();
+									}
+									std::vector<std::string>* xv = reinterpret_cast<std::vector<std::string>*>(nv);
+									std::vector<_char> nvec;
+
+									for (size_t z = 0; z < xv->size(); z++)
+									{
+										vvars[x].v.push_back(nvec);
+
+										for (size_t n = 0; n < xv->at(z).length(); n++)
+										{
+											vvars[x].v[z].push_back(xv->at(z)[n]);
+										}
+									}
+									break;
+								}
+								case BOT_RTV_VARG:
+								{
+									if (!vvars[x].v.empty())
+									{
+										vvars[x].v.clear();
+									}
+									std::vector<BOT_ARG>* xv = reinterpret_cast<std::vector<BOT_ARG>*>(nv);
+									std::vector<_char> nvec;
+
+									for (size_t z = 0; z < xv->size(); z++)
+									{
+										vvars[x].v.push_back(nvec);
+
+										for (size_t n = 0; n < xv->at(z).arg.length(); n++)
+										{
+											vvars[x].v[z].push_back(xv->at(z).arg[n]);
+										}
+									}
+									break;
+								}
+								default:
+								{
+									break;
+								}
+								}
+								break;
+							}
+							default:
+							{
+								break;
+							}
+							}
+						}
+						x = vvars.size();
+					}
+					else {}
+					x++;
+				}
+
+				if (x == vvars.size())
+				{
+					if (y > -1)
+					{
+						vvars[y].t = nt;
+						size_t vl = bot_cstrlen(nn);
+						_char* nvar = (_char*)realloc(vvars[y].n, vl + 1);
+
+						if (nvar)
+						{
+							vvars[y].n = nvar;
+							memcpy((void*)vvars[y].n, (void*)nn, vl);
+							memcpy((void*)&vvars[y].n[vl], (void*)&trm, sizeof(_char));
+						}
+
+						if (!nv)
+						{
+							vl = 0;
+						}
+						else
+						{
+							switch (nt)
+							{
+							case BOT_RTV_SLLINT:
+							{
+								if (vt == BOT_RTV_SLLINT)
+								{
+									if (!vvars[y].v.empty())
+									{
+										vvars[y].v.clear();
+									}
+									std::vector<_char> nvec;
+									vvars[y].v.push_back(nvec);
+									_char* ov = (_char*)malloc(sizeof(sllint));
+
+									if (ov)
+									{
+										memcpy((void*)ov, nv, sizeof(sllint));
+
+										for (size_t z = 0; z < sizeof(sllint); z++)
+										{
+											vvars[y].v[0].push_back(ov[z]);
+										}
+										free(ov);
+									}
+								}
+								break;
+							}
+							case BOT_RTV_REAL:
+							{
+								if (vt == BOT_RTV_REAL)
+								{
+									if (!vvars[y].v.empty())
+									{
+										vvars[y].v.clear();
+									}
+									std::vector<_char> nvec;
+									vvars[y].v.push_back(nvec);
+									_char* ov = (_char*)malloc(sizeof(float));
+
+									if (ov)
+									{
+										memcpy((void*)ov, nv, sizeof(float));
+
+										for (size_t z = 0; z < sizeof(float); z++)
+										{
+											vvars[y].v[0].push_back(ov[z]);
+										}
+										free(ov);
+									}
+								}
+								break;
+							}
+							case BOT_RTV_STR:
+							{
+								if (vt == BOT_RTV_STR)
+								{
+									if (!vvars[y].v.empty())
+									{
+										vvars[y].v.clear();
+									}
+									std::vector<_char> nvec;
+									vvars[y].v.push_back(nvec);
+									std::string* xv = reinterpret_cast<std::string*>(nv);
+
+									if (xv)
+									{
+										for (size_t z = 0; z < xv->length(); z++)
+										{
+											vvars[y].v[0].push_back(xv->at(z));
+										}
+									}
+								}
+								break;
+							}
+							case BOT_RTV_BLOB:
+							{
+								if (vt == BOT_RTV_BLOB)
+								{
+									if (!vvars[y].v.empty())
+									{
+										vvars[y].v.clear();
+									}
+									std::vector<_char> nvec;
+									vvars[y].v.push_back(nvec);
+									_char* xv = reinterpret_cast<_char*>(nv);
+
+									if (xv)
+									{
+										size_t vl = bot_strlen(xv);
+
+										for (size_t z = 0; z < vl; z++)
+										{
+											vvars[y].v[0].push_back(xv[z]);
+										}
+									}
+								}
+								break;
+							}
+							case BOT_RTV_VSLLINT:
+							{
+								switch (vt)
+								{
+								case BOT_RTV_SLLINT:
+								{
+									size_t st = vvars[y].v.size();
+									std::vector<_char> nvec;
+									vvars[y].v.push_back(nvec);
+									sllint* xv = reinterpret_cast<sllint*>(nv);
+
+									if (xv)
+									{
+										_char* ov = (_char*)malloc(sizeof(sllint));
+
+										if (ov)
+										{
+											memcpy((void*)ov, (void*)xv, sizeof(sllint));
+
+											for (size_t z = 0; z < sizeof(sllint); z++)
+											{
+												vvars[y].v[st].push_back(ov[z]);
+											}
+											free(ov);
+										}
+									}
+									break;
+								}
+								case BOT_RTV_VSLLINT:
+								{
+									if (!vvars[y].v.empty())
+									{
+										vvars[y].v.clear();
+									}
+									std::vector<sllint>* xv = reinterpret_cast<std::vector<sllint>*>(nv);
+
+									if (xv)
+									{
+										_char* ov = (_char*)malloc(sizeof(sllint));
+
+										if (ov)
+										{
+											std::vector<_char> nvec;
+
+											for (size_t z = 0; z < xv->size(); z++)
+											{
+												vvars[y].v.push_back(nvec);
+												memcpy((void*)ov, (void*)&xv->at(z), sizeof(sllint));
+
+												for (size_t w = 0; w < sizeof(sllint); w++)
+												{
+													vvars[y].v[z].push_back(ov[w]);
+												}
+											}
+											free(ov);
+										}
+									}
+									break;
+								}
+								default:
+								{
+									break;
+								}
+								}
+								break;
+							}
+							case BOT_RTV_VREAL:
+							{
+								switch (vt)
+								{
+								case BOT_RTV_REAL:
+								{
+									size_t st = vvars[y].v.size();
+									std::vector<_char> nvec;
+									vvars[y].v.push_back(nvec);
+									float* xv = reinterpret_cast<float*>(nv);
+
+									if (xv)
+									{
+										_char* ov = (_char*)malloc(sizeof(float));
+
+										if (ov)
+										{
+											memcpy((void*)ov, (void*)xv, sizeof(float));
+
+											for (size_t z = 0; z < sizeof(float); z++)
+											{
+												vvars[y].v[st].push_back(ov[z]);
+											}
+										}
+									}
+									break;
+								}
+								case BOT_RTV_VREAL:
+								{
+									if (!vvars[y].v.empty())
+									{
+										vvars[y].v.clear();
+									}
+									std::vector<float>* xv = reinterpret_cast<std::vector<float>*>(nv);
+
+									if (xv)
+									{
+										std::vector<_char> nvec;
+										_char* ov = (_char*)malloc(sizeof(float));
+
+										if (ov)
+										{
+											for (size_t z = 0; z < xv->size(); z++)
+											{
+												vvars[y].v.push_back(nvec);
+												memcpy((void*)ov, (void*)&xv->at(z), sizeof(float));
+
+												for (size_t w = 0; w < sizeof(float); w++)
+												{
+													vvars[y].v[z].push_back(ov[w]);
+												}
+											}
+											free(ov);
+										}
+									}
+									break;
+								}
+								default:
+								{
+									break;
+								}
+								}
+								break;
+							}
+							case BOT_RTV_VSTR:
+							{
+								switch (vt)
+								{
+								case BOT_RTV_STR:
+								{
+									size_t st = vvars[y].v.size();
+									std::vector<_char> nvec;
+									vvars[y].v.push_back(nvec);
+									std::string* xv = reinterpret_cast<std::string*>(nv);
+
+									if (xv)
+									{
+										for (size_t z = 0; z < xv->length(); z++)
+										{
+											vvars[y].v[st].push_back(xv->at(z));
+										}
+									}
+									break;
+								}
+								case BOT_RTV_VSTR:
+								{
+									if (!vvars[y].v.empty())
+									{
+										vvars[y].v.clear();
+									}
+									std::vector<std::string>* xv = reinterpret_cast<std::vector<std::string>*>(nv);
+
+									if (xv)
+									{
+										std::vector<_char> nvec;
+
+										for (size_t z = 0; z < xv->size(); z++)
+										{
+											vvars[y].v.push_back(nvec);
+
+											for (size_t n = 0; n < xv->at(z).length(); n++)
+											{
+												vvars[y].v[z].push_back(xv->at(z)[n]);
+											}
+										}
+									}
+									break;
+								}
+								case BOT_RTV_VARG:
+								{
+									if (!vvars[y].v.empty())
+									{
+										vvars[y].v.clear();
+									}
+									std::vector<BOT_ARG>* xv = reinterpret_cast<std::vector<BOT_ARG>*>(nv);
+
+									if (xv)
+									{
+										std::vector<_char> nvec;
+
+										for (size_t z = 0; z < xv->size(); z++)
+										{
+											vvars[y].v.push_back(nvec);
+
+											for (size_t n = 0; n < xv->at(z).arg.length(); n++)
+											{
+												vvars[y].v[z].push_back(xv->at(z).arg[n]);
+											}
+										}
+									}
+									break;
+								}
+								default:
+								{
+									break;
+								}
+								}
+								break;
+							}
+							case BOT_RTV_VBLOB:
+							{
+								switch (vt)
+								{
+								case BOT_RTV_BLOB:
+								{
+									size_t st = vvars[y].v.size();
+									std::vector<_char> nvec;
+									vvars[y].v.push_back(nvec);
+									_char* xv = reinterpret_cast<_char*>(nv);
+
+									if (xv)
+									{
+										size_t vl = bot_strlen(xv);
+
+										for (size_t z = 0; z < vl; z++)
+										{
+											vvars[y].v[st].push_back(xv[z]);
+										}
+									}
+									break;
+								}
+								case BOT_RTV_VSTR:
+								{
+									if (!vvars[y].v.empty())
+									{
+										vvars[y].v.clear();
+									}
+									std::vector<std::string>* xv = reinterpret_cast<std::vector<std::string>*>(nv);
+
+									if (xv)
+									{
+										std::vector<_char> nvec;
+
+										for (size_t z = 0; z < xv->size(); z++)
+										{
+											vvars[y].v.push_back(nvec);
+
+											for (size_t n = 0; n < xv->at(z).length(); n++)
+											{
+												vvars[y].v[z].push_back(xv->at(z)[n]);
+											}
+										}
+									}
+									break;
+								}
+								case BOT_RTV_VARG:
+								{
+									if (!vvars[y].v.empty())
+									{
+										vvars[y].v.clear();
+									}
+									std::vector<BOT_ARG>* xv = reinterpret_cast<std::vector<BOT_ARG>*>(nv);
+
+									if (xv)
+									{
+										std::vector<_char> nvec;
+
+										for (size_t z = 0; z < xv->size(); z++)
+										{
+											vvars[y].v.push_back(nvec);
+
+											for (size_t n = 0; n < xv->at(z).arg.length(); n++)
+											{
+												vvars[y].v[z].push_back(xv->at(z).arg[n]);
+											}
+										}
+									}
+									break;
+								}
+								default:
+								{
+									break;
+								}
+								}
+								break;
+							}
+							default:
+							{
+								break;
+							}
+							}
+						}
+					}
+					else
+					{
+						BOT_VVAR_T nvar;
+						vvars.push_back(nvar);
+						vvars[x].t = nt;
+						size_t vl = bot_cstrlen(nn);
+						vvars[x].n = (_char*)malloc(vl + 1);
+
+						if (vvars[x].n)
+						{
+							memcpy((void*)vvars[x].n, (void*)nn, vl);
+							memcpy((void*)&vvars[x].n[vl], (void*)&trm, sizeof(_char));
+						}
+
+						if (!nv)
+						{
+							vl = 0;
+						}
+						else
+						{
+							switch (nt)
+							{
+							case BOT_RTV_SLLINT:
+							{
+								if (vt == BOT_RTV_SLLINT)
+								{
+									if (!vvars[x].v.empty())
+									{
+										vvars[x].v.clear();
+									}
+									std::vector<_char> nvec;
+									vvars[x].v.push_back(nvec);
+									_char* ov = (_char*)malloc(sizeof(sllint));
+
+									if (ov)
+									{
+										memcpy((void*)ov, nv, sizeof(sllint));
+
+										for (size_t z = 0; z < sizeof(sllint); z++)
+										{
+											vvars[x].v[0].push_back(ov[z]);
+										}
+										free(ov);
+									}
+								}
+								break;
+							}
+							case BOT_RTV_REAL:
+							{
+								if (vt == BOT_RTV_REAL)
+								{
+									if (!vvars[x].v.empty())
+									{
+										vvars[x].v.clear();
+									}
+									std::vector<_char> nvec;
+									vvars[x].v.push_back(nvec);
+									_char* ov = (_char*)malloc(sizeof(float));
+
+									if (ov)
+									{
+										memcpy((void*)ov, nv, sizeof(float));
+
+										for (size_t z = 0; z < sizeof(float); z++)
+										{
+											vvars[x].v[0].push_back(ov[z]);
+										}
+										free(ov);
+									}
+								}
+								break;
+							}
+							case BOT_RTV_STR:
+							{
+								if (vt == BOT_RTV_STR)
+								{
+									if (!vvars[x].v.empty())
+									{
+										vvars[x].v.clear();
+									}
+									std::vector<_char> nvec;
+									vvars[x].v.push_back(nvec);
+									std::string* xv = reinterpret_cast<std::string*>(nv);
+
+									for (size_t z = 0; z < xv->length(); z++)
+									{
+										vvars[x].v[0].push_back(xv->at(z));
+									}
+								}
+								break;
+							}
+							case BOT_RTV_BLOB:
+							{
+								if (vt == BOT_RTV_BLOB)
+								{
+									if (!vvars[x].v.empty())
+									{
+										vvars[x].v.clear();
+									}
+									std::vector<_char> nvec;
+									vvars[x].v.push_back(nvec);
+									_char* xv = reinterpret_cast<_char*>(nv);
+
+									if (xv)
+									{
+										size_t vl = bot_strlen(xv);
+
+										for (size_t z = 0; z < vl; z++)
+										{
+											vvars[x].v[0].push_back(xv[z]);
+										}
+									}
+								}
+								break;
+							}
+							case BOT_RTV_VSLLINT:
+							{
+								switch (vt)
+								{
+								case BOT_RTV_SLLINT:
+								{
+									size_t st = vvars[x].v.size();
+									std::vector<_char> nvec;
+									vvars[x].v.push_back(nvec);
+									_char* ov = (_char*)malloc(sizeof(sllint));
+
+									if (ov)
+									{
+										memcpy((void*)ov, nv, sizeof(sllint));
+
+										for (size_t z = 0; z < sizeof(sllint); z++)
+										{
+											vvars[x].v[st].push_back(ov[z]);
+										}
+										free(ov);
+									}
+									break;
+								}
+								case BOT_RTV_VSLLINT:
+								{
+									if (!vvars[x].v.empty())
+									{
+										vvars[x].v.clear();
+									}
+									std::vector<sllint>* xv = reinterpret_cast<std::vector<sllint>*>(nv);
+									std::vector<_char> nvec;
+									_char* ov = (_char*)malloc(sizeof(sllint));
+
+									if (ov)
+									{
+										for (size_t z = 0; z < xv->size(); z++)
+										{
+											vvars[x].v.push_back(nvec);
+											memcpy((void*)ov, (void*)&xv->at(z), sizeof(sllint));
+
+											for (size_t w = 0; w < sizeof(sllint); w++)
+											{
+												vvars[x].v[z].push_back(ov[w]);
+											}
+										}
+										free(ov);
+									}
+									break;
+								}
+								default:
+								{
+									break;
+								}
+								}
+								break;
+							}
+							case BOT_RTV_VREAL:
+							{
+								switch (vt)
+								{
+								case BOT_RTV_REAL:
+								{
+									size_t st = vvars[x].v.size();
+									std::vector<_char> nvec;
+									vvars[x].v.push_back(nvec);
+									_char* ov = (_char*)malloc(sizeof(float));
+
+									if (ov)
+									{
+										memcpy((void*)ov, nv, sizeof(float));
+
+										for (size_t z = 0; z < sizeof(float); z++)
+										{
+											vvars[x].v[st].push_back(ov[z]);
+										}
+									}
+									break;
+								}
+								case BOT_RTV_VREAL:
+								{
+									if (!vvars[x].v.empty())
+									{
+										vvars[x].v.clear();
+									}
+									std::vector<float>* xv = reinterpret_cast<std::vector<float>*>(nv);
+									std::vector<_char> nvec;
+									_char* ov = (_char*)malloc(sizeof(float));
+
+									if (ov)
+									{
+										for (size_t z = 0; z < xv->size(); z++)
+										{
+											vvars[x].v.push_back(nvec);
+											memcpy((void*)ov, (void*)&xv->at(z), sizeof(float));
+
+											for (size_t w = 0; w < sizeof(float); w++)
+											{
+												vvars[x].v[z].push_back(ov[w]);
+											}
+										}
+										free(ov);
+									}
+									break;
+								}
+								default:
+								{
+									break;
+								}
+								}
+								break;
+							}
+							case BOT_RTV_VSTR:
+							{
+								switch (vt)
+								{
+								case BOT_RTV_STR:
+								{
+									size_t st = vvars[x].v.size();
+									std::vector<_char> nvec;
+									vvars[x].v.push_back(nvec);
+									std::string* xv = reinterpret_cast<std::string*>(nv);
+
+									for (size_t z = 0; z < xv->length(); z++)
+									{
+										vvars[x].v[st].push_back(xv->at(z));
+									}
+									break;
+								}
+								case BOT_RTV_VSTR:
+								{
+									if (!vvars[x].v.empty())
+									{
+										vvars[x].v.clear();
+									}
+									std::vector<std::string>* xv = reinterpret_cast<std::vector<std::string>*>(nv);
+									std::vector<_char> nvec;
+
+									for (size_t z = 0; z < xv->size(); z++)
+									{
+										vvars[x].v.push_back(nvec);
+
+										for (size_t n = 0; n < xv->at(z).length(); n++)
+										{
+											vvars[x].v[z].push_back(xv->at(z)[n]);
+										}
+									}
+									break;
+								}
+								case BOT_RTV_VARG:
+								{
+									if (!vvars[x].v.empty())
+									{
+										vvars[x].v.clear();
+									}
+									std::vector<BOT_ARG>* xv = reinterpret_cast<std::vector<BOT_ARG>*>(nv);
+									std::vector<_char> nvec;
+
+									for (size_t z = 0; z < xv->size(); z++)
+									{
+										vvars[x].v.push_back(nvec);
+
+										for (size_t n = 0; n < xv->at(z).arg.length(); n++)
+										{
+											vvars[x].v[z].push_back(xv->at(z).arg[n]);
+										}
+									}
+									break;
+								}
+								default:
+								{
+									break;
+								}
+								}
+								break;
+							}
+							case BOT_RTV_VBLOB:
+							{
+								switch (vt)
+								{
+								case BOT_RTV_BLOB:
+								{
+									size_t st = vvars[x].v.size();
+									std::vector<_char> nvec;
+									vvars[x].v.push_back(nvec);
+									_char* xv = reinterpret_cast<_char*>(nv);
+
+									if (xv)
+									{
+										size_t vl = bot_strlen(xv);
+
+										for (size_t z = 0; z < vl; z++)
+										{
+											vvars[x].v[st].push_back(xv[z]);
+										}
+									}
+									break;
+								}
+								case BOT_RTV_VSTR:
+								{
+									if (!vvars[x].v.empty())
+									{
+										vvars[x].v.clear();
+									}
+									std::vector<std::string>* xv = reinterpret_cast<std::vector<std::string>*>(nv);
+									std::vector<_char> nvec;
+
+									for (size_t z = 0; z < xv->size(); z++)
+									{
+										vvars[x].v.push_back(nvec);
+
+										for (size_t n = 0; n < xv->at(z).length(); n++)
+										{
+											vvars[x].v[z].push_back(xv->at(z)[n]);
+										}
+									}
+									break;
+								}
+								case BOT_RTV_VARG:
+								{
+									if (!vvars[x].v.empty())
+									{
+										vvars[x].v.clear();
+									}
+									std::vector<BOT_ARG>* xv = reinterpret_cast<std::vector<BOT_ARG>*>(nv);
+									std::vector<_char> nvec;
+
+									for (size_t z = 0; z < xv->size(); z++)
+									{
+										vvars[x].v.push_back(nvec);
+
+										for (size_t n = 0; n < xv->at(z).arg.length(); n++)
+										{
+											vvars[x].v[z].push_back(xv->at(z).arg[n]);
+										}
+									}
+									break;
+								}
+								default:
+								{
+									break;
+								}
+								}
+								break;
+							}
+							default:
+							{
+								break;
+							}
+							}
+						}
+					}
+				}
+				return (sint)x;
+			}
+		}
+		return -1;
+	}
 
 	sint FindVar(c_char* nn = 0)
 	{
@@ -17324,31 +19241,14 @@ public:
 			return -1;
 		}
 
-		for (size_t x = 0; x < vars.size(); x++)
+		for (size_t x = 0; x < vvars.size(); x++)
 		{
-			if (!strcmp(vars[x].n, nn))
+			if (!strcmp(vvars[x].n, nn) && vvars[x].t > -1)
 			{
 				return (sint)x;
 			}
 		}
 		return -1;
-	}
-
-	sint GetVars(std::vector<std::string>* nvec = 0)
-	{
-		if (!nvec)
-		{
-			return -1;
-		}
-
-		sint ret = -1;
-		for (size_t x = 0; x < vars.size(); x++)
-		{
-			std::string s(vars[x].n);
-			nvec->push_back(s);
-			ret++;
-		}
-		return ret;
 	}
 
 	sint RemVar(c_char* nn = 0)
@@ -17404,14 +19304,14 @@ public:
 
 		while (!done)
 		{
-			for (size_t x = 0; x < vars.size(); x++)
+			for (size_t x = 0; x < vvars.size(); x++)
 			{
 				for (size_t y = 0; y < vec.size(); y++)
 				{
-					if (!strcmp(vars[x].n, vec[y].c_str()))
+					if (!strcmp(vvars[x].n, vec[y].c_str()))
 					{
-						vars[x].t = -1;
-						bot_strclr(vars[x].n);
+						vvars[x].t = -1;
+						bot_strclr(vvars[x].n);
 						vec[y].clear();
 						y = vec.size();
 					}
@@ -17431,6 +19331,19 @@ public:
 				free(vars[x].n);
 				free(vars[x].v);
 				vars.pop_back();
+			}
+			else
+			{
+				x = -1;
+			}
+		}
+		for (sint x = (sint)vvars.size() - 1; x > -1; x--)
+		{
+			if (vvars[x].t < 0)
+			{
+				vvars[x].v.clear();
+				free(vvars[x].n);
+				vvars.pop_back();
 			}
 			else
 			{
@@ -17474,6 +19387,10 @@ typedef struct bot_strt_up
 		"INSERT INTO litebot.COMMANDS (" \
 		"CMD, PRIV, CMD_ID ) VALUES (" \
 		"\"SVAR\", 1, 7 );",
+
+		"INSERT INTO litebot.COMMANDS (" \
+		"CMD, PRIV, CMD_ID ) VALUES (" \
+		"\"LVARS\", 1, 8 );",
 
 		"INSERT INTO litebot.COMMANDS (" \
 		"CMD, PRIV, CMD_ID ) VALUES (" \
@@ -17874,7 +19791,7 @@ private:
 
 	// Commands
 
-	sint Command(std::vector<std::string>* vec_ = 0);
+	sint Command(std::vector<BOT_ARG>* vec_ = 0);
 
 	// File Directory
 
@@ -17938,6 +19855,7 @@ private:
 	sint BOTCInput(std::string* np = 0, carr_64* tdata = 0);
 	sint Input(c_char* prp = 0, std::string* np = 0, bool itrp = true);
 	sint BOTConsole(c_char* prp = 0);
+	sint ArgSep(std::vector <BOT_ARG>* ret_ = 0, bool ksep = false, size_t f = 0, size_t t = 0, c_char* val = 0, ...);
 	sint ArgSep(std::vector <std::string>* ret_ = 0, bool ksep = false, size_t f = 0, size_t t = 0, c_char* val = 0, ...);
 
 	// Str Manip
@@ -17945,7 +19863,7 @@ private:
 	std::string CPunc(c_char* i_ = "");
 	std::string UCASE(c_char* str_ = "");
 	std::string LCASE(c_char* str_ = "");
-	std::string LEncStrI(c_char* str_ = "", sint opt = -1);
+	std::string EStr(c_char* str_ = "");
 
 	// SQL statement manip
 

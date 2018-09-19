@@ -158,6 +158,79 @@ sint bot_shasn(c_char* val, sint slen)
 	}
 	return -1;
 }
+bool bot_sish(c_char* val, sint slen)
+{
+	if (!val || !slen || slen >= BOT_STRLEN_MAX)
+	{
+		return false;
+	}
+
+	if (!strcmp(&val[slen - 1], "'"))
+	{
+		if (slen > 3)
+		{
+			if (strcmp(&val[1], "'") || (strcmp(&val[0], "X") || strcmp(&val[0], "x")))
+			{
+				return false;
+			}
+		}
+		else
+		{
+			return false;
+		}
+		slen--;
+	}
+	sint x = 0;
+	c_char* nstr = "0123456789ABCDEF";
+
+	for (slen--; slen > -1; slen--)
+	{
+		x = 0;
+
+		while (x < 10)
+		{
+			if (!memcmp((void*)&val[slen], (void*)&nstr[x], sizeof(_char)))
+			{
+				x = 10;
+			}
+			x++;
+		}
+
+		if (x == 10)
+		{
+			if (slen == 1)
+			{
+				if (!strcmp(&val[slen], "x") || !strcmp(&val[slen], "X"))
+				{
+					slen--;
+					if (!strcmp(&val[slen], "0"))
+					{
+						return true;
+					}
+				}
+				else if (!strcmp(&val[slen], "'"))
+				{
+					slen--;
+					if (!strcmp(&val[slen], "x") || !strcmp(&val[slen], "X"))
+					{
+						return true;
+					}
+				}
+				else {}
+			}
+			else if (!slen)
+			{
+				if (!strcmp(&val[slen], "x") || !strcmp(&val[slen], "X"))
+				{
+					return true;
+				}
+			}
+			else {}
+			return false;
+		}
+	}
+	return true;
+}
 bool bot_sisa(c_char* val, sint slen)
 {
 	if (!val || !slen || slen >= BOT_STRLEN_MAX)
@@ -665,14 +738,14 @@ sint bot_sprintf(_char inchr[], size_t in_siz, c_char* fstr, ...)
 
 	for (size_t siz = 0; siz < strsiz; siz++)
 	{
-		if (!memcmp((void*)&fstr[siz], (void*)&frm, 1))
+		if (!memcmp((void*)&fstr[siz], (void*)&frm, sizeof(_char)))
 		{
 			formspec.push_back(fstr[siz]);
 			bool mustnum = false;
 
 			for (size_t nsiz = 1; siz + nsiz < strsiz; )
 			{
-				if (!memcmp((void*)&fstr[siz + nsiz], (void*)&spec, 1))
+				if (!memcmp((void*)&fstr[siz + nsiz], (void*)&spec, sizeof(_char)))
 				{
 					if (!mustnum)
 					{
@@ -760,7 +833,7 @@ sint bot_sprintf(_char inchr[], size_t in_siz, c_char* fstr, ...)
 						}
 						else
 						{
-							memcpy((void*)&inchr[0], (void*)&term, sizeof(term));
+							memcpy((void*)&inchr[0], (void*)&term, sizeof(_char));
 							return -2;
 						}
 						break;
@@ -772,18 +845,19 @@ sint bot_sprintf(_char inchr[], size_t in_siz, c_char* fstr, ...)
 							formspec.push_back(fstr[siz + nsiz]);
 							nsiz++;
 
-							if (siz + nsiz < strsiz)
+							for (size_t xsiz = siz + nsiz; xsiz < strsiz; xsiz++)
 							{
-								if (!memcmp((void*)&fstr[siz + nsiz], (void*)&spec, sizeof(spec)))
-								{
-									formspec.push_back(fstr[siz + nsiz]);
+								formspec.push_back(fstr[xsiz]);
+								nsiz++;
 
-									for (size_t xsiz = siz + nsiz + 1; xsiz < strsiz; xsiz++)
+								if (!memcmp((void*)&fstr[xsiz], (void*)&frm, sizeof(_char)))
+								{
+									for (xsiz++; xsiz < strsiz; xsiz++)
 									{
 										formspec.push_back(fstr[xsiz]);
 										nsiz++;
 
-										if (!memcmp((void*)&fstr[xsiz], (void*)&spec, sizeof(spec)))
+										if (!memcmp((void*)&fstr[xsiz], (void*)&frm, sizeof(_char)))
 										{
 											locs.push_back(siz);
 											fspecs.push_back(formspec);
@@ -799,14 +873,14 @@ sint bot_sprintf(_char inchr[], size_t in_siz, c_char* fstr, ...)
 						}
 						else
 						{
-							memcpy((void*)&inchr[0], (void*)&term, sizeof(term));
+							memcpy((void*)&inchr[0], (void*)&term, sizeof(_char));
 							return -2;
 						}
 						break;
 					}
 					default:
 					{
-						memcpy((void*)&inchr[0], (void*)&term, sizeof(term));
+						memcpy((void*)&inchr[0], (void*)&term, sizeof(_char));
 						return -3;
 						break;
 					}
@@ -837,7 +911,7 @@ sint bot_sprintf(_char inchr[], size_t in_siz, c_char* fstr, ...)
 
 			while (sloc < locs[siz] && at_inchr < in_siz)
 			{
-				memcpy((void*)&inchr[at_inchr], (void*)&fstr[sloc], sizeof(fstr[sloc]));
+				memcpy((void*)&inchr[at_inchr], (void*)&fstr[sloc], sizeof(_char));
 				at_inchr += sizeof(fstr[sloc]);
 				sloc += sizeof(fstr[sloc]);
 			}
@@ -847,7 +921,7 @@ sint bot_sprintf(_char inchr[], size_t in_siz, c_char* fstr, ...)
 				sint isiz = 0;
 				size_t nsiz = 1;
 
-				if (!memcmp((void*)&fspecs[siz][nsiz], (void*)&spec, sizeof(spec)))
+				if (!memcmp((void*)&fspecs[siz][nsiz], (void*)&spec, sizeof(_char)))
 				{
 					_char fchr[3]{ 0 };
 					nsiz++;
@@ -867,7 +941,7 @@ sint bot_sprintf(_char inchr[], size_t in_siz, c_char* fstr, ...)
 							if (fsiz)
 							{
 								va_end(args);
-								memcpy((void*)&inchr[0], (void*)&term, sizeof(term));
+								memcpy((void*)&inchr[0], (void*)&term, sizeof(_char));
 								c_char* msg = "";
 								sint op = bot_str_err(-5, msg);
 								return -5;
@@ -886,31 +960,31 @@ sint bot_sprintf(_char inchr[], size_t in_siz, c_char* fstr, ...)
 						case '9':
 						case '0':
 						{
-							memcpy((void*)&fchr[fsiz], (void*)&fspecs[siz][nsiz], sizeof(fspecs[siz][nsiz]));
+							memcpy((void*)&fchr[fsiz], (void*)&fspecs[siz][nsiz], sizeof(_char));
 							nsiz++;
 							fsiz++;
 							break;
 						}
 						default:
 						{
-							memcpy((void*)&fchr[fsiz], (void*)&term, sizeof(term));
+							memcpy((void*)&fchr[fsiz], (void*)&term, sizeof(_char));
 							break;
 						}
 						}
 
 						if (fsiz == 3)
 						{
-							memcpy((void*)&fchr[fsiz - 1], (void*)&term, sizeof(term));
+							memcpy((void*)&fchr[fsiz - 1], (void*)&term, sizeof(_char));
 						}
 						else
 						{
-							if (!memcmp((void*)&fchr[fsiz], (void*)&term, sizeof(term)))
+							if (!memcmp((void*)&fchr[fsiz], (void*)&term, sizeof(_char)))
 							{
 								fsiz = 3;
 							}
 						}
 					}
-					if (!memcmp((void*)&fchr[2], (void*)&term, sizeof(term)) || !memcmp((void*)&fchr[1], (void*)&term, sizeof(term)) || !memcmp((void*)&fchr[0], (void*)&term, sizeof(term)))
+					if (!memcmp((void*)&fchr[2], (void*)&term, sizeof(_char)) || !memcmp((void*)&fchr[1], (void*)&term, sizeof(_char)) || !memcmp((void*)&fchr[0], (void*)&term, sizeof(_char)))
 					{
 						isiz = atoi(fchr);
 					}
@@ -921,7 +995,7 @@ sint bot_sprintf(_char inchr[], size_t in_siz, c_char* fstr, ...)
 					}
 				}
 
-				while (!memcmp((void*)&fspecs[siz][nsiz], (void*)&lenchr, sizeof(lenchr)))
+				while (!memcmp((void*)&fspecs[siz][nsiz], (void*)&lenchr, sizeof(_char)))
 				{
 					hlong++;
 					nsiz++;
@@ -930,9 +1004,9 @@ sint bot_sprintf(_char inchr[], size_t in_siz, c_char* fstr, ...)
 				_char zchar = '0';
 				_char zweichar = '2';
 
-				if (!memcmp((void*)&fspecs[siz][nsiz], (void*)&zchar, sizeof(zchar)) && nsiz < fspecs[siz].length())
+				if (!memcmp((void*)&fspecs[siz][nsiz], (void*)&zchar, sizeof(_char)) && nsiz < fspecs[siz].length())
 				{
-					if (!memcmp((void*)&fspecs[siz][nsiz + 1], (void*)&zweichar, sizeof(zweichar)))
+					if (!memcmp((void*)&fspecs[siz][nsiz + 1], (void*)&zweichar, sizeof(_char)))
 					{
 						nsiz += 2;
 					}
@@ -965,7 +1039,7 @@ sint bot_sprintf(_char inchr[], size_t in_siz, c_char* fstr, ...)
 
 					for (sloc = 0; (sint)sloc < xc && at_inchr < in_siz; sloc++)
 					{
-						memcpy((void*)&inchr[at_inchr], (void*)&ci[sloc], sizeof(ci[sloc]));
+						memcpy((void*)&inchr[at_inchr], (void*)&ci[sloc], sizeof(_char));
 						at_inchr++;
 					}
 					break;
@@ -995,7 +1069,7 @@ sint bot_sprintf(_char inchr[], size_t in_siz, c_char* fstr, ...)
 
 					for (sloc = 0; (sint)sloc < xc && at_inchr < in_siz; sloc++)
 					{
-						memcpy((void*)&inchr[at_inchr], (void*)&ci[sloc], sizeof(ci[sloc]));
+						memcpy((void*)&inchr[at_inchr], (void*)&ci[sloc], sizeof(_char));
 						at_inchr++;
 					}
 					break;
@@ -1010,7 +1084,7 @@ sint bot_sprintf(_char inchr[], size_t in_siz, c_char* fstr, ...)
 
 					for (sloc = 0; (sint)sloc < xc && at_inchr < in_siz; sloc++)
 					{
-						memcpy((void*)&inchr[at_inchr], (void*)&ci[sloc], sizeof(ci[sloc]));
+						memcpy((void*)&inchr[at_inchr], (void*)&ci[sloc], sizeof(_char));
 						at_inchr++;
 					}
 					break;
@@ -1035,7 +1109,7 @@ sint bot_sprintf(_char inchr[], size_t in_siz, c_char* fstr, ...)
 
 					for (sloc = 0; (sint)sloc < xc && at_inchr < in_siz; sloc++)
 					{
-						memcpy((void*)&inchr[at_inchr], (void*)&ci[sloc], sizeof(ci[sloc]));
+						memcpy((void*)&inchr[at_inchr], (void*)&ci[sloc], sizeof(_char));
 						at_inchr++;
 					}
 					break;
@@ -1050,7 +1124,7 @@ sint bot_sprintf(_char inchr[], size_t in_siz, c_char* fstr, ...)
 					{
 						if (memcmp(&str[sloc], &cmp, sizeof(cmp)))
 						{
-							memcpy((void*)&inchr[at_inchr], (void*)&str[sloc], sizeof(str[sloc]));
+							memcpy((void*)&inchr[at_inchr], (void*)&str[sloc], sizeof(_char));
 							at_inchr++;
 						}
 						else
@@ -1067,7 +1141,7 @@ sint bot_sprintf(_char inchr[], size_t in_siz, c_char* fstr, ...)
 
 					if (at_inchr < in_siz)
 					{
-						memcpy((void*)&inchr[at_inchr], (void*)&inv, sizeof(inv));
+						memcpy((void*)&inchr[at_inchr], (void*)&inv, sizeof(_char));
 						at_inchr++;
 					}
 					break;
@@ -1085,12 +1159,12 @@ sint bot_sprintf(_char inchr[], size_t in_siz, c_char* fstr, ...)
 					if (usiz <= in_siz)
 					{
 						_char ci[usiz]{ 0 };
-						sint xc = snprintf(ci, sizeof(ci), fspecs[siz].c_str(), (uint)inv_);
-						xc = bot_strchk(ci, sizeof(ci));
+						sint xc = snprintf(ci, usiz, fspecs[siz].c_str(), (uint)inv_);
+						xc = bot_strchk(ci, usiz);
 
 						for (sloc = 0; ((sint)sloc < xc && at_inchr < in_siz); sloc++)
 						{
-							memcpy((void*)&inchr[at_inchr], (void*)&ci[sloc], sizeof(ci[sloc]));
+							memcpy((void*)&inchr[at_inchr], (void*)&ci[sloc], sizeof(_char));
 							at_inchr++;
 						}
 					}
@@ -1099,413 +1173,519 @@ sint bot_sprintf(_char inchr[], size_t in_siz, c_char* fstr, ...)
 				case 'v':
 				{
 					nsiz++;
-					if (nsiz < fspecs[siz].length())
+					carr_21 pspc;
+					carr_21 fspc;
+					carr_21 spc;
+					size_t nct = 0;
+
+					while (nsiz < fspecs[siz].length() && nct < pspc.siz)
 					{
-						if (!memcmp((void*)&fspecs[siz][nsiz], (void*)&spec, sizeof(spec)))
+						if (nsiz < fspecs[siz].length())
 						{
-							_char sep[4]{ 0 };
-							_char fspec[4]{ 0 };
-							size_t nct = 0;
-
-							while (nsiz < fspecs[siz].length() && nct < 3)
+							switch (fspecs[siz][nsiz])
 							{
-								nsiz++;
+							case '%':
+							{
+								nct = pspc.siz;
+								memcpy((void*)&fspc.carr[0], (void*)&fspecs[siz][nsiz], sizeof(_char));
+								break;
+							}
+							default:
+							{
+								memcpy((void*)&pspc.carr[nct], (void*)&fspecs[siz][nsiz], sizeof(_char));
+								break;
+							}
+							}
+						}
+						nct++;
+						nsiz++;
+					}
 
-								if (nsiz < fspecs[siz].length())
+					nct = 1;
+
+					while (nsiz < fspecs[siz].length() && nct < fspc.siz)
+					{
+						if (nsiz < fspecs[siz].length())
+						{
+							switch (fspecs[siz][nsiz])
+							{
+							case '%':
+							{
+								nct = fspc.siz;
+								break;
+							}
+							case 'c':
+							case 's':
+							case 'd':
+							case 'i':
+							case 'u':
+							case 'f':
+							case 'X':
+							{
+								memcpy((void*)&fspc.carr[nct], (void*)&fspecs[siz][nsiz], sizeof(_char));
+								nct = fspc.siz;
+								break;
+							}
+							default:
+							{
+								memcpy((void*)&fspc.carr[nct], (void*)&fspecs[siz][nsiz], sizeof(_char));
+								nct++;
+								break;
+							}
+							}
+						}
+						nsiz++;
+					}
+
+					if (nsiz < fspecs[siz].length() - 1)
+					{
+						for (size_t x = 0; x < spc.siz && nsiz < fspecs[siz].length() - 1; x++)
+						{
+							if (memcmp((void*)&fspecs[siz][nsiz], (void*)&frm, sizeof(_char)))
+							{
+								memcpy((void*)&spc.carr[x], (void*)&fspecs[siz][nsiz], sizeof(_char));
+							}
+							else
+							{
+								nsiz = fspecs[siz].length();
+							}
+							nsiz++;
+						}
+					}
+
+					size_t flen = bot_strlen(fspc.carr);
+
+					if (flen)
+					{
+						flen--;
+						size_t plen = bot_strlen(pspc.carr);
+						size_t slen = strlen(spc.carr);;
+
+						switch (fspc.carr[flen])
+						{
+						case 'c':
+						{
+							std::vector<_char>* inv = va_arg(args, std::vector<_char>*);
+
+							for (size_t x = 0; x < inv->size(); x++)
+							{
+								if (plen)
 								{
-									switch (fspecs[siz][nsiz])
+									for (sloc = 0; sloc < slen && at_inchr < in_siz; sloc++)
 									{
-									case '.':
-									{
-										if (nct)
-										{
-											nct = 3;
-										}
-										break;
+										memcpy((void*)&inchr[at_inchr], (void*)&pspc.carr[sloc], sizeof(_char));
+										at_inchr++;
 									}
-									case 'l':
+								}
+								if (at_inchr < in_siz)
+								{
+									memcpy((void*)&inchr[at_inchr], (void*)&inv->at(x), sizeof(_char));
+									at_inchr++;
+								}
+								if (slen && x < (inv->size() - 1))
+								{
+									for (sloc = 0; sloc < slen && at_inchr < in_siz; sloc++)
 									{
-										hlong++;
-										memcpy((void*)&fspec[nct], (void*)&fspecs[siz][nsiz], sizeof(fspecs[siz][nsiz]));
-										nct++;
-										break;
-									}
-									case 'c':
-									case 'i':
-									case 's':
-									case 'f':
-									case 'd':
-									case 'u':
-									case 'X':
-									{
-										memcpy((void*)&fspec[nct], (void*)&fspecs[siz][nsiz], sizeof(fspecs[siz][nsiz]));
-										nsiz++;
-										nct = 3;
-										break;
-									}
-									default:
-									{
-										memcpy((void*)&fspec[nct], (void*)&fspecs[siz][nsiz], sizeof(fspecs[siz][nsiz]));
-										nsiz++;
-										nct++;
-										break;
-									}
+										memcpy((void*)&inchr[at_inchr], (void*)&spc.carr[sloc], sizeof(_char));
+										at_inchr++;
 									}
 								}
 							}
-							if (nsiz < fspecs[siz].length())
+							break;
+						}
+						case 's':
+						{
+							/*when specifying %v%<type><sep>% <type> = 's' we use a vector of std::string instead of a vector of c_char* */
+							std::vector<std::string>* strv = va_arg(args, std::vector<std::string>*);
+
+							for (size_t x = 0; x < strv->size(); x++)
 							{
-								for (size_t x = 0; x < sizeof(sep) && nsiz < fspecs[siz].length(); x++)
+								if (plen)
 								{
-									if (memcmp((void*)&fspecs[siz][nsiz], (void*)&spec, sizeof(spec)))
+									for (sloc = 0; sloc < slen && at_inchr < in_siz; sloc++)
 									{
-										memcpy((void*)&sep[x], (void*)&fspecs[siz][nsiz], sizeof(fspecs[siz][nsiz]));
+										memcpy((void*)&inchr[at_inchr], (void*)&pspc.carr[sloc], sizeof(_char));
+										at_inchr++;
 									}
-									else
+								}
+								for (sloc = 0; sloc < strv->at(x).length() && at_inchr < in_siz; sloc++)
+								{
+									memcpy((void*)&inchr[at_inchr], (void*)&strv->at(x)[sloc], sizeof(_char));
+									at_inchr++;
+								}
+								if (slen && x < (strv->size() - 1))
+								{
+									for (size_t y = 0; y < slen && at_inchr < in_siz; y++)
 									{
-										nsiz = fspecs[siz].length();
+										memcpy((void*)&inchr[at_inchr], (void*)&spc.carr[y], sizeof(_char));
+										at_inchr++;
 									}
-									nsiz++;
 								}
 							}
+							break;
+						}
+						case 'f':
+						{
+							std::vector<float>* fvec = va_arg(args, std::vector<float>*);
 
-							size_t flen = strlen(fspec);
-
-							if (flen)
+							for (size_t x = 0; x < fvec->size(); x++)
 							{
-								flen--;
-								size_t slen = strlen(sep) - 1;;
-
-								switch (fspec[flen])
+								if (plen)
 								{
-								case 'c':
-								{
-									std::vector<_char>* inv = va_arg(args, std::vector<_char>*);
-
-									for (size_t x = 0; x < inv->size(); x++)
+									for (sloc = 0; sloc < slen && at_inchr < in_siz; sloc++)
 									{
-										if (at_inchr < in_siz)
-										{
-											memcpy((void*)&inchr[at_inchr], (void*)&inv->at(x), sizeof(inv->at(x)));
-											at_inchr++;
-										}
-										if (slen && x < (inv->size() -1))
-										{
-											for (sloc = 0; sloc < strlen(sep) && at_inchr < in_siz; sloc++)
-											{
-												memcpy((void*)&inchr[at_inchr], (void*)&sep[sloc], sizeof(sep[sloc]));
-												at_inchr++;
-											}
-										}
+										memcpy((void*)&inchr[at_inchr], (void*)&pspc.carr[sloc], sizeof(_char));
+										at_inchr++;
 									}
-									break;
 								}
-								case 's':
+								_char ci[64]{ 0 };
+								sint xc = snprintf(ci, 64, fspc.carr, fvec->at(x));
+								xc = bot_strchk(ci, 64);
+
+								for (sloc = 0; (sint)sloc < xc && at_inchr < in_siz; sloc++)
 								{
-									/*when specifying %v.<type><sep>. <type> = 's' we use a vector of std::string instead of a vector of c_char* */
-									std::vector<std::string>* strv = va_arg(args, std::vector<std::string>*);
-
-									for (size_t x = 0; x < strv->size(); x++)
-									{
-										for (sloc = 0; sloc < strv->at(x).length() && at_inchr < in_siz; sloc++)
-										{
-											memcpy((void*)&inchr[at_inchr], (void*)&strv->at(x)[sloc], sizeof(strv->at(x)[sloc]));
-											at_inchr++;
-										}
-										if (slen && x < (strv->size() - 1))
-										{
-											for (size_t y = 0; y < strlen(sep) && at_inchr < in_siz; y++)
-											{
-												memcpy((void*)&inchr[at_inchr], (void*)&sep[y], sizeof(sep[y]));
-												at_inchr++;
-											}
-										}
-									}
-									break;
+									memcpy((void*)&inchr[at_inchr], (void*)&ci[sloc], sizeof(_char));
+									at_inchr++;
 								}
-								case 'f':
+								if (slen && x < (fvec->size() - 1))
 								{
-									std::vector<float>* fvec = va_arg(args, std::vector<float>*);
-
-									for (size_t x = 0; x < fvec->size(); x++)
+									for (size_t y = 0; y < slen && at_inchr < in_siz; y++)
 									{
-										_char ci[64]{ 0 };
-										sint xc = snprintf(ci, 64, fspecs[siz].c_str(), fvec->at(x));
-										xc = bot_strchk(ci, 64);
-
-										for (sloc = 0; (sint)sloc < xc && at_inchr < in_siz; sloc++)
-										{
-											memcpy((void*)&inchr[at_inchr], (void*)&ci[sloc], sizeof(ci[sloc]));
-											at_inchr++;
-										}
-										if (slen && x < (fvec->size() - 1))
-										{
-											for (size_t y = 0; y < strlen(sep) && at_inchr < in_siz; y++)
-											{
-												memcpy((void*)&inchr[at_inchr], (void*)&sep[y], sizeof(sep[y]));
-												at_inchr++;
-											}
-										}
+										memcpy((void*)&inchr[at_inchr], (void*)&spc.carr[y], sizeof(_char));
+										at_inchr++;
 									}
-									break;
-								}
-								case 'd':
-								{
-									if (!hlong)
-									{
-										std::vector<double>* fvec = va_arg(args, std::vector<double>*);
-
-										for (size_t x = 0; x < fvec->size(); x++)
-										{
-											_char ci[64]{ 0 };
-											sint xc = snprintf(ci, 64, fspecs[siz].c_str(), fvec->at(x));
-											xc = bot_strchk(ci, 64);
-
-											for (sloc = 0; (sint)sloc < xc && at_inchr < in_siz; sloc++)
-											{
-												memcpy((void*)&inchr[at_inchr], (void*)&ci[sloc], sizeof(ci[sloc]));
-												at_inchr++;
-											}
-											if (slen && x < (fvec->size() - 1))
-											{
-												for (size_t y = 0; y < strlen(sep) && at_inchr < in_siz; y++)
-												{
-													memcpy((void*)&inchr[at_inchr], (void*)&sep[y], sizeof(sep[y]));
-													at_inchr++;
-												}
-											}
-										}
-									}
-									else if (hlong == 1)
-									{
-										std::vector<long double>* fvec = va_arg(args, std::vector<long double>*);
-
-										for (size_t x = 0; x < fvec->size(); x++)
-										{
-											_char ci[64]{ 0 };
-											sint xc = snprintf(ci, 64, fspecs[siz].c_str(), fvec->at(x));
-											xc = bot_strchk(ci, 64);
-
-											for (sloc = 0; (sint)sloc < xc && at_inchr < in_siz; sloc++)
-											{
-												memcpy((void*)&inchr[at_inchr], (void*)&ci[sloc], sizeof(ci[sloc]));
-												at_inchr++;
-											}
-											if (slen && x < (fvec->size() - 1))
-											{
-												for (size_t y = 0; y < strlen(sep) && at_inchr < in_siz; y++)
-												{
-													memcpy((void*)&inchr[at_inchr], (void*)&sep[y], sizeof(sep[y]));
-													at_inchr++;
-												}
-											}
-										}
-									}
-									else {}
-									break;
-								}
-								case 'i':
-								{
-									if (!hlong)
-									{
-										std::vector<sint>* fvec = va_arg(args, std::vector<sint>*);
-
-										for (size_t x = 0; x < fvec->size(); x++)
-										{
-											_char ci[21]{ 0 };
-											sint xc = snprintf(ci, 21, fspecs[siz].c_str(), fvec->at(x));
-											xc = bot_strchk(ci, 21);
-
-											for (sloc = 0; (sint)sloc < xc && at_inchr < in_siz; sloc++)
-											{
-												memcpy((void*)&inchr[at_inchr], (void*)&ci[sloc], sizeof(ci[sloc]));
-												at_inchr++;
-											}
-											if (slen && x < (fvec->size() - 1))
-											{
-												for (size_t y = 0; y < strlen(sep) && at_inchr < in_siz; y++)
-												{
-													memcpy((void*)&inchr[at_inchr], (void*)&sep[y], sizeof(sep[y]));
-													at_inchr++;
-												}
-											}
-										}
-									}
-									else if (hlong == 1)
-									{
-										std::vector<slint>* fvec = va_arg(args, std::vector<slint>*);
-
-										for (size_t x = 0; x < fvec->size(); x++)
-										{
-											_char ci[21]{ 0 };
-											sint xc = snprintf(ci, 21, fspecs[siz].c_str(), fvec->at(x));
-											xc = bot_strchk(ci, 21);
-
-											for (sloc = 0; (sint)sloc < xc && at_inchr < in_siz; sloc++)
-											{
-												memcpy((void*)&inchr[at_inchr], (void*)&ci[sloc], sizeof(ci[sloc]));
-												at_inchr++;
-											}
-											if (slen && x < (fvec->size() - 1))
-											{
-												for (size_t y = 0; y < strlen(sep) && at_inchr < in_siz; y++)
-												{
-													memcpy((void*)&inchr[at_inchr], (void*)&sep[y], sizeof(sep[y]));
-													at_inchr++;
-												}
-											}
-										}
-									}
-									else if (hlong == 2)
-									{
-										std::vector<sllint>* fvec = va_arg(args, std::vector<sllint>*);
-
-										for (size_t x = 0; x < fvec->size(); x++)
-										{
-											_char ci[21]{ 0 };
-											sint xc = snprintf(ci, 21, fspecs[siz].c_str(), fvec->at(x));
-											xc = bot_strchk(ci, 21);
-
-											for (sloc = 0; (sint)sloc < xc && at_inchr < in_siz; sloc++)
-											{
-												memcpy((void*)&inchr[at_inchr], (void*)&ci[sloc], sizeof(ci[sloc]));
-												at_inchr++;
-											}
-											if (slen && x < (fvec->size() - 1))
-											{
-												for (size_t y = 0; y < strlen(sep) && at_inchr < in_siz; y++)
-												{
-													memcpy((void*)&inchr[at_inchr], (void*)&sep[y], sizeof(sep[y]));
-													at_inchr++;
-												}
-											}
-										}
-									}
-									else {}
-									break;
-								}
-								case 'u':
-								{
-									if (!hlong)
-									{
-										std::vector<uint>* fvec = va_arg(args, std::vector<uint>*);
-
-										for (size_t x = 0; x < fvec->size(); x++)
-										{
-											_char ci[21]{ 0 };
-											sint xc = snprintf(ci, 21, fspecs[siz].c_str(), fvec->at(x));
-											xc = bot_strchk(ci, 21);
-
-											for (sloc = 0; (sint)sloc < xc && at_inchr < in_siz; sloc++)
-											{
-												memcpy((void*)&inchr[at_inchr], (void*)&ci[sloc], sizeof(ci[sloc]));
-												at_inchr++;
-											}
-											if (slen && x < (fvec->size() - 1))
-											{
-												for (size_t y = 0; y < strlen(sep) && at_inchr < in_siz; y++)
-												{
-													memcpy((void*)&inchr[at_inchr], (void*)&sep[y], sizeof(sep[y]));
-													at_inchr++;
-												}
-											}
-										}
-									}
-									else if (hlong == 1)
-									{
-										std::vector<ulint>* fvec = va_arg(args, std::vector<ulint>*);
-
-										for (size_t x = 0; x < fvec->size(); x++)
-										{
-											_char ci[21]{ 0 };
-											sint xc = snprintf(ci, 21, fspecs[siz].c_str(), fvec->at(x));
-											xc = bot_strchk(ci, 21);
-
-											for (sloc = 0; (sint)sloc < xc && at_inchr < in_siz; sloc++)
-											{
-												memcpy((void*)&inchr[at_inchr], (void*)&ci[sloc], sizeof(ci[sloc]));
-												at_inchr++;
-											}
-											if (slen && x < (fvec->size() - 1))
-											{
-												for (size_t y = 0; y < strlen(sep) && at_inchr < in_siz; y++)
-												{
-													memcpy((void*)&inchr[at_inchr], (void*)&sep[y], sizeof(sep[y]));
-													at_inchr++;
-												}
-											}
-										}
-									}
-									else if (hlong == 2)
-									{
-										std::vector<ullint>* fvec = va_arg(args, std::vector<ullint>*);
-
-										for (size_t x = 0; x < fvec->size(); x++)
-										{
-											_char ci[21]{ 0 };
-											sint xc = snprintf(ci, 21, fspecs[siz].c_str(), fvec->at(x));
-											xc = bot_strchk(ci, 21);
-
-											for (sloc = 0; (sint)sloc < xc && at_inchr < in_siz; sloc++)
-											{
-												memcpy((void*)&inchr[at_inchr], (void*)&ci[sloc], sizeof(ci[sloc]));
-												at_inchr++;
-											}
-											if (slen && x < (fvec->size() - 1))
-											{
-												for (size_t y = 0; y < strlen(sep) && at_inchr < in_siz; y++)
-												{
-													memcpy((void*)&inchr[at_inchr], (void*)&sep[y], sizeof(sep[y]));
-													at_inchr++;
-												}
-											}
-										}
-									}
-									else {}
-									break;
-								}
-								case 'X':
-								{
-									std::vector<u_char>* inv = va_arg(args, std::vector<u_char>*);
-
-									for (size_t x = 0; x < inv->size(); x++)
-									{
-										const size_t usiz = (sizeof(inv->at(x)) * 2) + 1;
-
-										if (usiz + at_inchr <= in_siz)
-										{
-											_char ci[usiz]{ 0 };
-											sint xc = snprintf(ci, sizeof(ci), fspecs[siz].c_str(), (uint)inv->at(x));
-											xc = bot_strchk(ci, sizeof(ci));
-
-											for (sloc = 0; ((sint)sloc < xc && at_inchr < in_siz); sloc++)
-											{
-												memcpy((void*)&inchr[at_inchr], (void*)&ci[sloc], sizeof(ci[sloc]));
-												at_inchr++;
-
-												if (slen && x < (inv->size() - 1))
-												{
-													for (size_t y = 0; y < strlen(sep) && at_inchr < in_siz; y++)
-													{
-														memcpy((void*)&inchr[at_inchr], (void*)&sep[y], sizeof(sep[y]));
-														at_inchr++;
-													}
-												}
-											}
-										}
-									}
-									break;
-								}
-								case 'v':
-								{
-									break;
-								}
-								default:
-								{
-									break;
-								}
 								}
 							}
+							break;
+						}
+						case 'd':
+						{
+							if (!hlong)
+							{
+								std::vector<double>* fvec = va_arg(args, std::vector<double>*);
+
+								for (size_t x = 0; x < fvec->size(); x++)
+								{
+									if (plen)
+									{
+										for (sloc = 0; sloc < slen && at_inchr < in_siz; sloc++)
+										{
+											memcpy((void*)&inchr[at_inchr], (void*)&pspc.carr[sloc], sizeof(_char));
+											at_inchr++;
+										}
+									}
+									_char ci[64]{ 0 };
+									sint xc = snprintf(ci, 64, fspc.carr, fvec->at(x));
+									xc = bot_strchk(ci, 64);
+
+									for (sloc = 0; (sint)sloc < xc && at_inchr < in_siz; sloc++)
+									{
+										memcpy((void*)&inchr[at_inchr], (void*)&ci[sloc], sizeof(_char));
+										at_inchr++;
+									}
+									if (slen && x < (fvec->size() - 1))
+									{
+										for (size_t y = 0; y < slen && at_inchr < in_siz; y++)
+										{
+											memcpy((void*)&inchr[at_inchr], (void*)&spc.carr[y], sizeof(_char));
+											at_inchr++;
+										}
+									}
+								}
+							}
+							else if (hlong == 1)
+							{
+								std::vector<long double>* fvec = va_arg(args, std::vector<long double>*);
+
+								for (size_t x = 0; x < fvec->size(); x++)
+								{
+									if (plen)
+									{
+										for (sloc = 0; sloc < slen && at_inchr < in_siz; sloc++)
+										{
+											memcpy((void*)&inchr[at_inchr], (void*)&pspc.carr[sloc], sizeof(_char));
+											at_inchr++;
+										}
+									}
+									_char ci[64]{ 0 };
+									sint xc = snprintf(ci, 64, fspc.carr, fvec->at(x));
+									xc = bot_strchk(ci, 64);
+
+									for (sloc = 0; (sint)sloc < xc && at_inchr < in_siz; sloc++)
+									{
+										memcpy((void*)&inchr[at_inchr], (void*)&ci[sloc], sizeof(_char));
+										at_inchr++;
+									}
+									if (slen && x < (fvec->size() - 1))
+									{
+										for (size_t y = 0; y < slen && at_inchr < in_siz; y++)
+										{
+											memcpy((void*)&inchr[at_inchr], (void*)&spc.carr[y], sizeof(_char));
+											at_inchr++;
+										}
+									}
+								}
+							}
+							else {}
+							break;
+						}
+						case 'i':
+						{
+							if (!hlong)
+							{
+								std::vector<sint>* fvec = va_arg(args, std::vector<sint>*);
+
+								for (size_t x = 0; x < fvec->size(); x++)
+								{
+									if (plen)
+									{
+										for (sloc = 0; sloc < slen && at_inchr < in_siz; sloc++)
+										{
+											memcpy((void*)&inchr[at_inchr], (void*)&pspc.carr[sloc], sizeof(_char));
+											at_inchr++;
+										}
+									}
+									_char ci[21]{ 0 };
+									sint xc = snprintf(ci, 21, fspc.carr, fvec->at(x));
+									xc = bot_strchk(ci, 21);
+
+									for (sloc = 0; (sint)sloc < xc && at_inchr < in_siz; sloc++)
+									{
+										memcpy((void*)&inchr[at_inchr], (void*)&ci[sloc], sizeof(_char));
+										at_inchr++;
+									}
+									if (slen && x < (fvec->size() - 1))
+									{
+										for (size_t y = 0; y < slen && at_inchr < in_siz; y++)
+										{
+											memcpy((void*)&inchr[at_inchr], (void*)&spc.carr[y], sizeof(_char));
+											at_inchr++;
+										}
+									}
+								}
+							}
+							else if (hlong == 1)
+							{
+								std::vector<slint>* fvec = va_arg(args, std::vector<slint>*);
+
+								for (size_t x = 0; x < fvec->size(); x++)
+								{
+									if (plen)
+									{
+										for (sloc = 0; sloc < slen && at_inchr < in_siz; sloc++)
+										{
+											memcpy((void*)&inchr[at_inchr], (void*)&pspc.carr[sloc], sizeof(_char));
+											at_inchr++;
+										}
+									}
+									_char ci[21]{ 0 };
+									sint xc = snprintf(ci, 21, fspc.carr, fvec->at(x));
+									xc = bot_strchk(ci, 21);
+
+									for (sloc = 0; (sint)sloc < xc && at_inchr < in_siz; sloc++)
+									{
+										memcpy((void*)&inchr[at_inchr], (void*)&ci[sloc], sizeof(_char));
+										at_inchr++;
+									}
+									if (slen && x < (fvec->size() - 1))
+									{
+										for (size_t y = 0; y < slen && at_inchr < in_siz; y++)
+										{
+											memcpy((void*)&inchr[at_inchr], (void*)&spc.carr[y], sizeof(_char));
+											at_inchr++;
+										}
+									}
+								}
+							}
+							else if (hlong == 2)
+							{
+								std::vector<sllint>* fvec = va_arg(args, std::vector<sllint>*);
+
+								for (size_t x = 0; x < fvec->size(); x++)
+								{
+									if (plen)
+									{
+										for (sloc = 0; sloc < slen && at_inchr < in_siz; sloc++)
+										{
+											memcpy((void*)&inchr[at_inchr], (void*)&pspc.carr[sloc], sizeof(_char));
+											at_inchr++;
+										}
+									}
+									_char ci[21]{ 0 };
+									sint xc = snprintf(ci, 21, fspc.carr, fvec->at(x));
+									xc = bot_strchk(ci, 21);
+
+									for (sloc = 0; (sint)sloc < xc && at_inchr < in_siz; sloc++)
+									{
+										memcpy((void*)&inchr[at_inchr], (void*)&ci[sloc], sizeof(ci[sloc]));
+										at_inchr++;
+									}
+									if (slen && x < (fvec->size() - 1))
+									{
+										for (size_t y = 0; y < slen && at_inchr < in_siz; y++)
+										{
+											memcpy((void*)&inchr[at_inchr], (void*)&spc.carr[y], sizeof(_char));
+											at_inchr++;
+										}
+									}
+								}
+							}
+							else {}
+							break;
+						}
+						case 'u':
+						{
+							if (!hlong)
+							{
+								std::vector<uint>* fvec = va_arg(args, std::vector<uint>*);
+
+								for (size_t x = 0; x < fvec->size(); x++)
+								{
+									if (plen)
+									{
+										for (sloc = 0; sloc < slen && at_inchr < in_siz; sloc++)
+										{
+											memcpy((void*)&inchr[at_inchr], (void*)&pspc.carr[sloc], sizeof(_char));
+											at_inchr++;
+										}
+									}
+									_char ci[21]{ 0 };
+									sint xc = snprintf(ci, 21, fspc.carr, fvec->at(x));
+									xc = bot_strchk(ci, 21);
+
+									for (sloc = 0; (sint)sloc < xc && at_inchr < in_siz; sloc++)
+									{
+										memcpy((void*)&inchr[at_inchr], (void*)&ci[sloc], sizeof(_char));
+										at_inchr++;
+									}
+									if (slen && x < (fvec->size() - 1))
+									{
+										for (size_t y = 0; y < slen && at_inchr < in_siz; y++)
+										{
+											memcpy((void*)&inchr[at_inchr], (void*)&spc.carr[y], sizeof(_char));
+											at_inchr++;
+										}
+									}
+								}
+							}
+							else if (hlong == 1)
+							{
+								std::vector<ulint>* fvec = va_arg(args, std::vector<ulint>*);
+
+								for (size_t x = 0; x < fvec->size(); x++)
+								{
+									if (plen)
+									{
+										for (sloc = 0; sloc < slen && at_inchr < in_siz; sloc++)
+										{
+											memcpy((void*)&inchr[at_inchr], (void*)&pspc.carr[sloc], sizeof(_char));
+											at_inchr++;
+										}
+									}
+									_char ci[21]{ 0 };
+									sint xc = snprintf(ci, 21, fspc.carr, fvec->at(x));
+									xc = bot_strchk(ci, 21);
+
+									for (sloc = 0; (sint)sloc < xc && at_inchr < in_siz; sloc++)
+									{
+										memcpy((void*)&inchr[at_inchr], (void*)&ci[sloc], sizeof(_char));
+										at_inchr++;
+									}
+									if (slen && x < (fvec->size() - 1))
+									{
+										for (size_t y = 0; y < slen && at_inchr < in_siz; y++)
+										{
+											memcpy((void*)&inchr[at_inchr], (void*)&spc.carr[y], sizeof(_char));
+											at_inchr++;
+										}
+									}
+								}
+							}
+							else if (hlong == 2)
+							{
+								std::vector<ullint>* fvec = va_arg(args, std::vector<ullint>*);
+
+								for (size_t x = 0; x < fvec->size(); x++)
+								{
+									if (plen)
+									{
+										for (sloc = 0; sloc < slen && at_inchr < in_siz; sloc++)
+										{
+											memcpy((void*)&inchr[at_inchr], (void*)&pspc.carr[sloc], sizeof(_char));
+											at_inchr++;
+										}
+									}
+									_char ci[21]{ 0 };
+									sint xc = snprintf(ci, 21, fspc.carr, fvec->at(x));
+									xc = bot_strchk(ci, 21);
+
+									for (sloc = 0; (sint)sloc < xc && at_inchr < in_siz; sloc++)
+									{
+										memcpy((void*)&inchr[at_inchr], (void*)&ci[sloc], sizeof(_char));
+										at_inchr++;
+									}
+									if (slen && x < (fvec->size() - 1))
+									{
+										for (size_t y = 0; y < slen && at_inchr < in_siz; y++)
+										{
+											memcpy((void*)&inchr[at_inchr], (void*)&spc.carr[y], sizeof(_char));
+											at_inchr++;
+										}
+									}
+								}
+							}
+							else {}
+							break;
+						}
+						case 'X':
+						{
+							std::vector<u_char>* inv = va_arg(args, std::vector<u_char>*);
+
+							for (size_t x = 0; x < inv->size(); x++)
+							{
+								if (plen)
+								{
+									for (sloc = 0; sloc < slen && at_inchr < in_siz; sloc++)
+									{
+										memcpy((void*)&inchr[at_inchr], (void*)&pspc.carr[sloc], sizeof(_char));
+										at_inchr++;
+									}
+								}
+
+								const size_t usiz = (sizeof(u_char) * 16) + 1;
+
+								if (usiz + at_inchr <= in_siz)
+								{
+									_char ci[usiz]{ 0 };
+									sint xc = snprintf(ci, usiz, fspc.carr, (uint)inv->at(x));
+									xc = bot_strchk(ci, sizeof(ci));
+
+									for (sloc = 0; ((sint)sloc < xc && at_inchr < in_siz); sloc++)
+									{
+										memcpy((void*)&inchr[at_inchr], (void*)&ci[sloc], sizeof(_char));
+										at_inchr++;
+
+										if (slen && x < (inv->size() - 1))
+										{
+											for (size_t y = 0; y < slen&& at_inchr < in_siz; y++)
+											{
+												memcpy((void*)&inchr[at_inchr], (void*)&spc.carr[y], sizeof(_char));
+												at_inchr++;
+											}
+										}
+									}
+								}
+							}
+							break;
+						}
+						case 'v':
+						{
+							break;
+						}
+						default:
+						{
+							break;
+						}
 						}
 					}
 					break;
@@ -1535,12 +1715,12 @@ sint bot_sprintf(_char inchr[], size_t in_siz, c_char* fstr, ...)
 		}
 		if (at_inchr < in_siz)
 		{
-			memcpy((void*)&inchr[at_inchr], (void*)&term, sizeof(term));
+			memcpy((void*)&inchr[at_inchr], (void*)&term, sizeof(_char));
 			ret = 0;
 		}
 		else
 		{
-			memcpy((void*)&inchr[in_siz - 1], (void*)&term, sizeof(term));
+			memcpy((void*)&inchr[in_siz - 1], (void*)&term, sizeof(_char));
 		}
 	}
 	else
@@ -1549,17 +1729,17 @@ sint bot_sprintf(_char inchr[], size_t in_siz, c_char* fstr, ...)
 
 		while (siz < in_siz && siz < strsiz)
 		{
-			memcpy((void*)&inchr[siz], (void*)&fstr[siz], sizeof(fstr[siz]));
+			memcpy((void*)&inchr[siz], (void*)&fstr[siz], sizeof(_char));
 			siz++;
 		}
 		if (siz < in_siz)
 		{
-			memcpy((void*)&inchr[siz], (void*)&term, sizeof(term));
+			memcpy((void*)&inchr[siz], (void*)&term, sizeof(_char));
 			ret = 0;
 		}
 		else
 		{
-			memcpy((void*)&inchr[in_siz - 1], (void*)&term, sizeof(term));
+			memcpy((void*)&inchr[in_siz - 1], (void*)&term, sizeof(_char));
 		}
 	}
 	return ret;
@@ -1590,14 +1770,14 @@ sint bot_sprintf(c_char inchr[], size_t in_siz, c_char* fstr, ...)
 
 	for (size_t siz = 0; siz < strsiz; siz++)
 	{
-		if (!memcmp((void*)&fstr[siz], (void*)&frm, 1))
+		if (!memcmp((void*)&fstr[siz], (void*)&frm, sizeof(_char)))
 		{
 			formspec.push_back(fstr[siz]);
 			bool mustnum = false;
 
 			for (size_t nsiz = 1; siz + nsiz < strsiz; )
 			{
-				if (!memcmp((void*)&fstr[siz + nsiz], (void*)&spec, 1))
+				if (!memcmp((void*)&fstr[siz + nsiz], (void*)&spec, sizeof(_char)))
 				{
 					if (!mustnum)
 					{
@@ -1685,7 +1865,7 @@ sint bot_sprintf(c_char inchr[], size_t in_siz, c_char* fstr, ...)
 						}
 						else
 						{
-							memcpy((void*)&inchr[0], (void*)&term, sizeof(term));
+							memcpy((void*)&inchr[0], (void*)&term, sizeof(_char));
 							return -2;
 						}
 						break;
@@ -1697,18 +1877,19 @@ sint bot_sprintf(c_char inchr[], size_t in_siz, c_char* fstr, ...)
 							formspec.push_back(fstr[siz + nsiz]);
 							nsiz++;
 
-							if (siz + nsiz < strsiz)
+							for (size_t xsiz = siz + nsiz; xsiz < strsiz; xsiz++)
 							{
-								if (!memcmp((void*)&fstr[siz + nsiz], (void*)&spec, sizeof(spec)))
-								{
-									formspec.push_back(fstr[siz + nsiz]);
+								formspec.push_back(fstr[xsiz]);
+								nsiz++;
 
-									for (size_t xsiz = siz + nsiz + 1; xsiz < strsiz; xsiz++)
+								if (!memcmp((void*)&fstr[xsiz], (void*)&frm, sizeof(_char)))
+								{
+									for (xsiz++; xsiz < strsiz; xsiz++)
 									{
 										formspec.push_back(fstr[xsiz]);
 										nsiz++;
 
-										if (!memcmp((void*)&fstr[xsiz], (void*)&spec, sizeof(spec)))
+										if (!memcmp((void*)&fstr[xsiz], (void*)&frm, sizeof(_char)))
 										{
 											locs.push_back(siz);
 											fspecs.push_back(formspec);
@@ -1724,14 +1905,14 @@ sint bot_sprintf(c_char inchr[], size_t in_siz, c_char* fstr, ...)
 						}
 						else
 						{
-							memcpy((void*)&inchr[0], (void*)&term, sizeof(term));
+							memcpy((void*)&inchr[0], (void*)&term, sizeof(_char));
 							return -2;
 						}
 						break;
 					}
 					default:
 					{
-						memcpy((void*)&inchr[0], (void*)&term, sizeof(term));
+						memcpy((void*)&inchr[0], (void*)&term, sizeof(_char));
 						return -3;
 						break;
 					}
@@ -1792,7 +1973,7 @@ sint bot_sprintf(c_char inchr[], size_t in_siz, c_char* fstr, ...)
 							if (fsiz)
 							{
 								va_end(args);
-								memcpy((void*)&inchr[0], (void*)&term, sizeof(term));
+								memcpy((void*)&inchr[0], (void*)&term, sizeof(_char));
 								c_char* msg = "";
 								sint op = bot_str_err(-5, msg);
 								return -5;
@@ -1811,31 +1992,31 @@ sint bot_sprintf(c_char inchr[], size_t in_siz, c_char* fstr, ...)
 						case '9':
 						case '0':
 						{
-							memcpy((void*)&fchr[fsiz], (void*)&fspecs[siz][nsiz], sizeof(fspecs[siz][nsiz]));
+							memcpy((void*)&fchr[fsiz], (void*)&fspecs[siz][nsiz], sizeof(_char));
 							nsiz++;
 							fsiz++;
 							break;
 						}
 						default:
 						{
-							memcpy((void*)&fchr[fsiz], (void*)&term, sizeof(term));
+							memcpy((void*)&fchr[fsiz], (void*)&term, sizeof(_char));
 							break;
 						}
 						}
 
 						if (fsiz == 3)
 						{
-							memcpy((void*)&fchr[fsiz - 1], (void*)&term, sizeof(term));
+							memcpy((void*)&fchr[fsiz - 1], (void*)&term, sizeof(_char));
 						}
 						else
 						{
-							if (!memcmp((void*)&fchr[fsiz], (void*)&term, sizeof(term)))
+							if (!memcmp((void*)&fchr[fsiz], (void*)&term, sizeof(_char)))
 							{
 								fsiz = 3;
 							}
 						}
 					}
-					if (!memcmp((void*)&fchr[2], (void*)&term, sizeof(term)) || !memcmp((void*)&fchr[1], (void*)&term, sizeof(term)) || !memcmp((void*)&fchr[0], (void*)&term, sizeof(term)))
+					if (!memcmp((void*)&fchr[2], (void*)&term, sizeof(_char)) || !memcmp((void*)&fchr[1], (void*)&term, sizeof(_char)) || !memcmp((void*)&fchr[0], (void*)&term, sizeof(_char)))
 					{
 						isiz = atoi(fchr);
 					}
@@ -1846,7 +2027,7 @@ sint bot_sprintf(c_char inchr[], size_t in_siz, c_char* fstr, ...)
 					}
 				}
 
-				while (!memcmp((void*)&fspecs[siz][nsiz], (void*)&lenchr, sizeof(lenchr)))
+				while (!memcmp((void*)&fspecs[siz][nsiz], (void*)&lenchr, sizeof(_char)))
 				{
 					hlong++;
 					nsiz++;
@@ -1855,9 +2036,9 @@ sint bot_sprintf(c_char inchr[], size_t in_siz, c_char* fstr, ...)
 				_char zchar = '0';
 				_char zweichar = '2';
 
-				if (!memcmp((void*)&fspecs[siz][nsiz], (void*)&zchar, sizeof(zchar)) && nsiz < fspecs[siz].length())
+				if (!memcmp((void*)&fspecs[siz][nsiz], (void*)&zchar, sizeof(_char)) && nsiz < fspecs[siz].length())
 				{
-					if (!memcmp((void*)&fspecs[siz][nsiz + 1], (void*)&zweichar, sizeof(zweichar)))
+					if (!memcmp((void*)&fspecs[siz][nsiz + 1], (void*)&zweichar, sizeof(_char)))
 					{
 						nsiz += 2;
 					}
@@ -2005,17 +2186,17 @@ sint bot_sprintf(c_char inchr[], size_t in_siz, c_char* fstr, ...)
 					sint sinv_ = va_arg(args, sint);
 					u_char inv_ = (u_char)sinv_;
 #endif
-					const size_t usiz = (sizeof(inv_) * 2) + 1;
+					const size_t usiz = (sizeof(u_char) * 2) + 1;
 
 					if (usiz <= in_siz)
 					{
 						_char ci[usiz]{ 0 };
-						sint xc = snprintf(ci, sizeof(ci), fspecs[siz].c_str(), (uint)inv_);
-						xc = bot_strchk(ci, sizeof(ci));
+						sint xc = snprintf(ci, usiz, fspecs[siz].c_str(), (uint)inv_);
+						xc = bot_strchk(ci, usiz);
 
 						for (sloc = 0; ((sint)sloc < xc && at_inchr < in_siz); sloc++)
 						{
-							memcpy((void*)&inchr[at_inchr], (void*)&ci[sloc], sizeof(ci[sloc]));
+							memcpy((void*)&inchr[at_inchr], (void*)&ci[sloc], sizeof(_char));
 							at_inchr++;
 						}
 					}
@@ -2024,413 +2205,518 @@ sint bot_sprintf(c_char inchr[], size_t in_siz, c_char* fstr, ...)
 				case 'v':
 				{
 					nsiz++;
-					if (nsiz < fspecs[siz].length())
+					carr_21 pspc;
+					carr_21 fspc;
+					carr_21 spc;
+					size_t nct = 0;
+
+					while (nsiz < fspecs[siz].length() && nct < pspc.siz)
 					{
-						if (!memcmp((void*)&fspecs[siz][nsiz], (void*)&spec, sizeof(spec)))
+						if (nsiz < fspecs[siz].length())
 						{
-							_char sep[4]{ 0 };
-							_char fspec[4]{ 0 };
-							size_t nct = 0;
-
-							while (nsiz < fspecs[siz].length() && nct < 3)
+							switch (fspecs[siz][nsiz])
 							{
-								nsiz++;
+							case '%':
+							{
+								nct = pspc.siz;
+								memcpy((void*)&fspc.carr[0], (void*)&fspecs[siz][nsiz], sizeof(_char));
+								break;
+							}
+							default:
+							{
+								memcpy((void*)&pspc.carr[nct], (void*)&fspecs[siz][nsiz], sizeof(_char));
+								break;
+							}
+							}
+						}
+						nct++;
+						nsiz++;
+					}
 
-								if (nsiz < fspecs[siz].length())
+					nct = 1;
+
+					while (nsiz < fspecs[siz].length() && nct < fspc.siz)
+					{
+						if (nsiz < fspecs[siz].length())
+						{
+							switch (fspecs[siz][nsiz])
+							{
+							case '%':
+							{
+								nct = fspc.siz;
+								break;
+							}
+							case 'c':
+							case 's':
+							case 'd':
+							case 'i':
+							case 'u':
+							case 'f':
+							case 'X':
+							{
+								memcpy((void*)&fspc.carr[nct], (void*)&fspecs[siz][nsiz], sizeof(_char));
+								nct = fspc.siz;
+								break;
+							}
+							default:
+							{
+								memcpy((void*)&fspc.carr[nct], (void*)&fspecs[siz][nsiz], sizeof(_char));
+								nct++;
+								break;
+							}
+							}
+						}
+						nsiz++;
+					}
+
+					if (nsiz < fspecs[siz].length() - 1)
+					{
+						for (size_t x = 0; x < spc.siz && nsiz < fspecs[siz].length() - 1; x++)
+						{
+							if (memcmp((void*)&fspecs[siz][nsiz], (void*)&frm, sizeof(_char)))
+							{
+								memcpy((void*)&spc.carr[x], (void*)&fspecs[siz][nsiz], sizeof(_char));
+							}
+							else
+							{
+								nsiz = fspecs[siz].length();
+							}
+							nsiz++;
+						}
+					}
+
+					size_t flen = bot_strlen(fspc.carr);
+
+					if (flen)
+					{
+						flen--;
+						size_t plen = bot_strlen(pspc.carr);
+						size_t slen = bot_strlen(spc.carr);
+
+						switch (fspc.carr[flen])
+						{
+						case 'c':
+						{
+							std::vector<_char>* inv = va_arg(args, std::vector<_char>*);
+
+							for (size_t x = 0; x < inv->size(); x++)
+							{
+								if (plen)
 								{
-									switch (fspecs[siz][nsiz])
+									for (sloc = 0; sloc < plen && at_inchr < in_siz; sloc++)
 									{
-									case '.':
-									{
-										if (nct)
-										{
-											nct = 3;
-										}
-										break;
+										memcpy((void*)&inchr[at_inchr], (void*)&pspc.carr[sloc], sizeof(_char));
+										at_inchr++;
 									}
-									case 'l':
+								}
+								if (at_inchr < in_siz)
+								{
+									memcpy((void*)&inchr[at_inchr], (void*)&inv->at(x), sizeof(_char));
+									at_inchr++;
+								}
+								if (slen && x < (inv->size() - 1))
+								{
+									for (sloc = 0; sloc < slen && at_inchr < in_siz; sloc++)
 									{
-										hlong++;
-										memcpy((void*)&fspec[nct], (void*)&fspecs[siz][nsiz], sizeof(fspecs[siz][nsiz]));
-										nct++;
-										break;
-									}
-									case 'c':
-									case 'i':
-									case 's':
-									case 'f':
-									case 'd':
-									case 'u':
-									case 'X':
-									{
-										memcpy((void*)&fspec[nct], (void*)&fspecs[siz][nsiz], sizeof(fspecs[siz][nsiz]));
-										nsiz++;
-										nct = 3;
-										break;
-									}
-									default:
-									{
-										memcpy((void*)&fspec[nct], (void*)&fspecs[siz][nsiz], sizeof(fspecs[siz][nsiz]));
-										nsiz++;
-										nct++;
-										break;
-									}
+										memcpy((void*)&inchr[at_inchr], (void*)&spc.carr[sloc], sizeof(_char));
+										at_inchr++;
 									}
 								}
 							}
-							if (nsiz < fspecs[siz].length())
+							break;
+						}
+						case 's':
+						{
+							/*when specifying %v%<type><sep>% <type> = 's' we use a vector of std::string instead of a vector of c_char* */
+							std::vector<std::string>* strv = va_arg(args, std::vector<std::string>*);
+
+							for (size_t x = 0; x < strv->size(); x++)
 							{
-								for (size_t x = 0; x < sizeof(sep) && nsiz < fspecs[siz].length(); x++)
+								if (plen)
 								{
-									if (memcmp((void*)&fspecs[siz][nsiz], (void*)&spec, sizeof(spec)))
+									for (sloc = 0; sloc < plen && at_inchr < in_siz; sloc++)
 									{
-										memcpy((void*)&sep[x], (void*)&fspecs[siz][nsiz], sizeof(fspecs[siz][nsiz]));
+										memcpy((void*)&inchr[at_inchr], (void*)&pspc.carr[sloc], sizeof(_char));
+										at_inchr++;
 									}
-									else
+								}
+								for (sloc = 0; sloc < strv->at(x).length() && at_inchr < in_siz; sloc++)
+								{
+									memcpy((void*)&inchr[at_inchr], (void*)&strv->at(x)[sloc], sizeof(strv->at(x)[sloc]));
+									at_inchr++;
+								}
+								if (slen && x < (strv->size() - 1))
+								{
+									for (sloc = 0; sloc < slen && at_inchr < in_siz; sloc++)
 									{
-										nsiz = fspecs[siz].length();
+										memcpy((void*)&inchr[at_inchr], (void*)&spc.carr[sloc], sizeof(_char));
+										at_inchr++;
 									}
-									nsiz++;
 								}
 							}
+							break;
+						}
+						case 'f':
+						{
+							std::vector<float>* fvec = va_arg(args, std::vector<float>*);
 
-							size_t flen = strlen(fspec);
-
-							if (flen)
+							for (size_t x = 0; x < fvec->size(); x++)
 							{
-								flen--;
-								size_t slen = strlen(sep) - 1;;
-
-								switch (fspec[flen])
+								if (plen)
 								{
-								case 'c':
-								{
-									std::vector<_char>* inv = va_arg(args, std::vector<_char>*);
-
-									for (size_t x = 0; x < inv->size(); x++)
+									for (sloc = 0; sloc < plen && at_inchr < in_siz; sloc++)
 									{
-										if (at_inchr < in_siz)
-										{
-											memcpy((void*)&inchr[at_inchr], (void*)&inv->at(x), sizeof(inv->at(x)));
-											at_inchr++;
-										}
-										if (slen && x < (inv->size() - 1))
-										{
-											for (sloc = 0; sloc < strlen(sep) && at_inchr < in_siz; sloc++)
-											{
-												memcpy((void*)&inchr[at_inchr], (void*)&sep[sloc], sizeof(sep[sloc]));
-												at_inchr++;
-											}
-										}
+										memcpy((void*)&inchr[at_inchr], (void*)&pspc.carr[sloc], sizeof(_char));
+										at_inchr++;
 									}
-									break;
 								}
-								case 's':
+								_char ci[64]{ 0 };
+								sint xc = snprintf(ci, 64, fspc.carr, fvec->at(x));
+								xc = bot_strchk(ci, 64);
+
+								for (sloc = 0; (sint)sloc < xc && at_inchr < in_siz; sloc++)
 								{
-									/*when specifying %v.<type><sep>. <type> = 's' we use a vector of std::string instead of a vector of c_char* */
-									std::vector<std::string>* strv = va_arg(args, std::vector<std::string>*);
-
-									for (size_t x = 0; x < strv->size(); x++)
-									{
-										for (sloc = 0; sloc < strv->at(x).length() && at_inchr < in_siz; sloc++)
-										{
-											memcpy((void*)&inchr[at_inchr], (void*)&strv->at(x)[sloc], sizeof(strv->at(x)[sloc]));
-											at_inchr++;
-										}
-										if (slen && x < (strv->size() - 1))
-										{
-											for (size_t y = 0; y < strlen(sep) && at_inchr < in_siz; y++)
-											{
-												memcpy((void*)&inchr[at_inchr], (void*)&sep[y], sizeof(sep[y]));
-												at_inchr++;
-											}
-										}
-									}
-									break;
+									memcpy((void*)&inchr[at_inchr], (void*)&ci[sloc], sizeof(ci[sloc]));
+									at_inchr++;
 								}
-								case 'f':
+								if (slen && x < (fvec->size() - 1))
 								{
-									std::vector<float>* fvec = va_arg(args, std::vector<float>*);
-
-									for (size_t x = 0; x < fvec->size(); x++)
+									for (sloc = 0; sloc < slen && at_inchr < in_siz; sloc++)
 									{
-										_char ci[64]{ 0 };
-										sint xc = snprintf(ci, 64, fspecs[siz].c_str(), fvec->at(x));
-										xc = bot_strchk(ci, 64);
-
-										for (sloc = 0; (sint)sloc < xc && at_inchr < in_siz; sloc++)
-										{
-											memcpy((void*)&inchr[at_inchr], (void*)&ci[sloc], sizeof(ci[sloc]));
-											at_inchr++;
-										}
-										if (slen && x < (fvec->size() - 1))
-										{
-											for (size_t y = 0; y < strlen(sep) && at_inchr < in_siz; y++)
-											{
-												memcpy((void*)&inchr[at_inchr], (void*)&sep[y], sizeof(sep[y]));
-												at_inchr++;
-											}
-										}
+										memcpy((void*)&inchr[at_inchr], (void*)&spc.carr[sloc], sizeof(_char));
+										at_inchr++;
 									}
-									break;
-								}
-								case 'd':
-								{
-									if (!hlong)
-									{
-										std::vector<double>* fvec = va_arg(args, std::vector<double>*);
-
-										for (size_t x = 0; x < fvec->size(); x++)
-										{
-											_char ci[64]{ 0 };
-											sint xc = snprintf(ci, 64, fspecs[siz].c_str(), fvec->at(x));
-											xc = bot_strchk(ci, 64);
-
-											for (sloc = 0; (sint)sloc < xc && at_inchr < in_siz; sloc++)
-											{
-												memcpy((void*)&inchr[at_inchr], (void*)&ci[sloc], sizeof(ci[sloc]));
-												at_inchr++;
-											}
-											if (slen && x < (fvec->size() - 1))
-											{
-												for (size_t y = 0; y < strlen(sep) && at_inchr < in_siz; y++)
-												{
-													memcpy((void*)&inchr[at_inchr], (void*)&sep[y], sizeof(sep[y]));
-													at_inchr++;
-												}
-											}
-										}
-									}
-									else if (hlong == 1)
-									{
-										std::vector<long double>* fvec = va_arg(args, std::vector<long double>*);
-
-										for (size_t x = 0; x < fvec->size(); x++)
-										{
-											_char ci[64]{ 0 };
-											sint xc = snprintf(ci, 64, fspecs[siz].c_str(), fvec->at(x));
-											xc = bot_strchk(ci, 64);
-
-											for (sloc = 0; (sint)sloc < xc && at_inchr < in_siz; sloc++)
-											{
-												memcpy((void*)&inchr[at_inchr], (void*)&ci[sloc], sizeof(ci[sloc]));
-												at_inchr++;
-											}
-											if (slen && x < (fvec->size() - 1))
-											{
-												for (size_t y = 0; y < strlen(sep) && at_inchr < in_siz; y++)
-												{
-													memcpy((void*)&inchr[at_inchr], (void*)&sep[y], sizeof(sep[y]));
-													at_inchr++;
-												}
-											}
-										}
-									}
-									else {}
-									break;
-								}
-								case 'i':
-								{
-									if (!hlong)
-									{
-										std::vector<sint>* fvec = va_arg(args, std::vector<sint>*);
-
-										for (size_t x = 0; x < fvec->size(); x++)
-										{
-											_char ci[21]{ 0 };
-											sint xc = snprintf(ci, 21, fspecs[siz].c_str(), fvec->at(x));
-											xc = bot_strchk(ci, 21);
-
-											for (sloc = 0; (sint)sloc < xc && at_inchr < in_siz; sloc++)
-											{
-												memcpy((void*)&inchr[at_inchr], (void*)&ci[sloc], sizeof(ci[sloc]));
-												at_inchr++;
-											}
-											if (slen && x < (fvec->size() - 1))
-											{
-												for (size_t y = 0; y < strlen(sep) && at_inchr < in_siz; y++)
-												{
-													memcpy((void*)&inchr[at_inchr], (void*)&sep[y], sizeof(sep[y]));
-													at_inchr++;
-												}
-											}
-										}
-									}
-									else if (hlong == 1)
-									{
-										std::vector<slint>* fvec = va_arg(args, std::vector<slint>*);
-
-										for (size_t x = 0; x < fvec->size(); x++)
-										{
-											_char ci[21]{ 0 };
-											sint xc = snprintf(ci, 21, fspecs[siz].c_str(), fvec->at(x));
-											xc = bot_strchk(ci, 21);
-
-											for (sloc = 0; (sint)sloc < xc && at_inchr < in_siz; sloc++)
-											{
-												memcpy((void*)&inchr[at_inchr], (void*)&ci[sloc], sizeof(ci[sloc]));
-												at_inchr++;
-											}
-											if (slen && x < (fvec->size() - 1))
-											{
-												for (size_t y = 0; y < strlen(sep) && at_inchr < in_siz; y++)
-												{
-													memcpy((void*)&inchr[at_inchr], (void*)&sep[y], sizeof(sep[y]));
-													at_inchr++;
-												}
-											}
-										}
-									}
-									else if (hlong == 2)
-									{
-										std::vector<sllint>* fvec = va_arg(args, std::vector<sllint>*);
-
-										for (size_t x = 0; x < fvec->size(); x++)
-										{
-											_char ci[21]{ 0 };
-											sint xc = snprintf(ci, 21, fspecs[siz].c_str(), fvec->at(x));
-											xc = bot_strchk(ci, 21);
-
-											for (sloc = 0; (sint)sloc < xc && at_inchr < in_siz; sloc++)
-											{
-												memcpy((void*)&inchr[at_inchr], (void*)&ci[sloc], sizeof(ci[sloc]));
-												at_inchr++;
-											}
-											if (slen && x < (fvec->size() - 1))
-											{
-												for (size_t y = 0; y < strlen(sep) && at_inchr < in_siz; y++)
-												{
-													memcpy((void*)&inchr[at_inchr], (void*)&sep[y], sizeof(sep[y]));
-													at_inchr++;
-												}
-											}
-										}
-									}
-									else {}
-									break;
-								}
-								case 'u':
-								{
-									if (!hlong)
-									{
-										std::vector<uint>* fvec = va_arg(args, std::vector<uint>*);
-
-										for (size_t x = 0; x < fvec->size(); x++)
-										{
-											_char ci[21]{ 0 };
-											sint xc = snprintf(ci, 21, fspecs[siz].c_str(), fvec->at(x));
-											xc = bot_strchk(ci, 21);
-
-											for (sloc = 0; (sint)sloc < xc && at_inchr < in_siz; sloc++)
-											{
-												memcpy((void*)&inchr[at_inchr], (void*)&ci[sloc], sizeof(ci[sloc]));
-												at_inchr++;
-											}
-											if (slen && x < (fvec->size() - 1))
-											{
-												for (size_t y = 0; y < strlen(sep) && at_inchr < in_siz; y++)
-												{
-													memcpy((void*)&inchr[at_inchr], (void*)&sep[y], sizeof(sep[y]));
-													at_inchr++;
-												}
-											}
-										}
-									}
-									else if (hlong == 1)
-									{
-										std::vector<ulint>* fvec = va_arg(args, std::vector<ulint>*);
-
-										for (size_t x = 0; x < fvec->size(); x++)
-										{
-											_char ci[21]{ 0 };
-											sint xc = snprintf(ci, 21, fspecs[siz].c_str(), fvec->at(x));
-											xc = bot_strchk(ci, 21);
-
-											for (sloc = 0; (sint)sloc < xc && at_inchr < in_siz; sloc++)
-											{
-												memcpy((void*)&inchr[at_inchr], (void*)&ci[sloc], sizeof(ci[sloc]));
-												at_inchr++;
-											}
-											if (slen && x < (fvec->size() - 1))
-											{
-												for (size_t y = 0; y < strlen(sep) && at_inchr < in_siz; y++)
-												{
-													memcpy((void*)&inchr[at_inchr], (void*)&sep[y], sizeof(sep[y]));
-													at_inchr++;
-												}
-											}
-										}
-									}
-									else if (hlong == 2)
-									{
-										std::vector<ullint>* fvec = va_arg(args, std::vector<ullint>*);
-
-										for (size_t x = 0; x < fvec->size(); x++)
-										{
-											_char ci[21]{ 0 };
-											sint xc = snprintf(ci, 21, fspecs[siz].c_str(), fvec->at(x));
-											xc = bot_strchk(ci, 21);
-
-											for (sloc = 0; (sint)sloc < xc && at_inchr < in_siz; sloc++)
-											{
-												memcpy((void*)&inchr[at_inchr], (void*)&ci[sloc], sizeof(ci[sloc]));
-												at_inchr++;
-											}
-											if (slen && x < (fvec->size() - 1))
-											{
-												for (size_t y = 0; y < strlen(sep) && at_inchr < in_siz; y++)
-												{
-													memcpy((void*)&inchr[at_inchr], (void*)&sep[y], sizeof(sep[y]));
-													at_inchr++;
-												}
-											}
-										}
-									}
-									else {}
-									break;
-								}
-								case 'X':
-								{
-									std::vector<u_char>* inv = va_arg(args, std::vector<u_char>*);
-
-									for (size_t x = 0; x < inv->size(); x++)
-									{
-										const size_t usiz = (sizeof(inv->at(x)) * 2) + 1;
-
-										if (usiz + at_inchr <= in_siz)
-										{
-											_char ci[usiz]{ 0 };
-											sint xc = snprintf(ci, sizeof(ci), fspecs[siz].c_str(), (uint)inv->at(x));
-											xc = bot_strchk(ci, sizeof(ci));
-
-											for (sloc = 0; ((sint)sloc < xc && at_inchr < in_siz); sloc++)
-											{
-												memcpy((void*)&inchr[at_inchr], (void*)&ci[sloc], sizeof(ci[sloc]));
-												at_inchr++;
-
-												if (slen && x < (inv->size() - 1))
-												{
-													for (size_t y = 0; y < strlen(sep) && at_inchr < in_siz; y++)
-													{
-														memcpy((void*)&inchr[at_inchr], (void*)&sep[y], sizeof(sep[y]));
-														at_inchr++;
-													}
-												}
-											}
-										}
-									}
-									break;
-								}
-								case 'v':
-								{
-									break;
-								}
-								default:
-								{
-									break;
-								}
 								}
 							}
+							break;
+						}
+						case 'd':
+						{
+							if (!hlong)
+							{
+								std::vector<double>* fvec = va_arg(args, std::vector<double>*);
+
+								for (size_t x = 0; x < fvec->size(); x++)
+								{
+									if (plen)
+									{
+										for (sloc = 0; sloc < plen && at_inchr < in_siz; sloc++)
+										{
+											memcpy((void*)&inchr[at_inchr], (void*)&pspc.carr[sloc], sizeof(_char));
+											at_inchr++;
+										}
+									}
+									_char ci[64]{ 0 };
+									sint xc = snprintf(ci, 64, fspc.carr, fvec->at(x));
+									xc = bot_strchk(ci, 64);
+
+									for (sloc = 0; (sint)sloc < xc && at_inchr < in_siz; sloc++)
+									{
+										memcpy((void*)&inchr[at_inchr], (void*)&ci[sloc], sizeof(ci[sloc]));
+										at_inchr++;
+									}
+									if (slen && x < (fvec->size() - 1))
+									{
+										for (sloc = 0; sloc < slen && at_inchr < in_siz; sloc++)
+										{
+											memcpy((void*)&inchr[at_inchr], (void*)&spc.carr[sloc], sizeof(_char));
+											at_inchr++;
+										}
+									}
+								}
+							}
+							else if (hlong == 1)
+							{
+								std::vector<long double>* fvec = va_arg(args, std::vector<long double>*);
+
+								for (size_t x = 0; x < fvec->size(); x++)
+								{
+									if (plen)
+									{
+										for (sloc = 0; sloc < plen && at_inchr < in_siz; sloc++)
+										{
+											memcpy((void*)&inchr[at_inchr], (void*)&pspc.carr[sloc], sizeof(_char));
+											at_inchr++;
+										}
+									}
+									_char ci[64]{ 0 };
+									sint xc = snprintf(ci, 64, fspc.carr, fvec->at(x));
+									xc = bot_strchk(ci, 64);
+
+									for (sloc = 0; (sint)sloc < xc && at_inchr < in_siz; sloc++)
+									{
+										memcpy((void*)&inchr[at_inchr], (void*)&ci[sloc], sizeof(ci[sloc]));
+										at_inchr++;
+									}
+									if (slen && x < (fvec->size() - 1))
+									{
+										for (sloc = 0; sloc < slen && at_inchr < in_siz; sloc++)
+										{
+											memcpy((void*)&inchr[at_inchr], (void*)&spc.carr[sloc], sizeof(_char));
+											at_inchr++;
+										}
+									}
+								}
+							}
+							else {}
+							break;
+						}
+						case 'i':
+						{
+							if (!hlong)
+							{
+								std::vector<sint>* fvec = va_arg(args, std::vector<sint>*);
+
+								for (size_t x = 0; x < fvec->size(); x++)
+								{
+									if (plen)
+									{
+										for (sloc = 0; sloc < plen && at_inchr < in_siz; sloc++)
+										{
+											memcpy((void*)&inchr[at_inchr], (void*)&pspc.carr[sloc], sizeof(_char));
+											at_inchr++;
+										}
+									}
+									_char ci[21]{ 0 };
+									sint xc = snprintf(ci, 21, fspc.carr, fvec->at(x));
+									xc = bot_strchk(ci, 21);
+
+									for (sloc = 0; (sint)sloc < xc && at_inchr < in_siz; sloc++)
+									{
+										memcpy((void*)&inchr[at_inchr], (void*)&ci[sloc], sizeof(ci[sloc]));
+										at_inchr++;
+									}
+									if (slen && x < (fvec->size() - 1))
+									{
+										for (sloc = 0; sloc < slen && at_inchr < in_siz; sloc++)
+										{
+											memcpy((void*)&inchr[at_inchr], (void*)&spc.carr[sloc], sizeof(_char));
+											at_inchr++;
+										}
+									}
+								}
+							}
+							else if (hlong == 1)
+							{
+								std::vector<slint>* fvec = va_arg(args, std::vector<slint>*);
+
+								for (size_t x = 0; x < fvec->size(); x++)
+								{
+									if (plen)
+									{
+										for (sloc = 0; sloc < plen && at_inchr < in_siz; sloc++)
+										{
+											memcpy((void*)&inchr[at_inchr], (void*)&pspc.carr[sloc], sizeof(_char));
+											at_inchr++;
+										}
+									}
+									_char ci[21]{ 0 };
+									sint xc = snprintf(ci, 21, fspc.carr, fvec->at(x));
+									xc = bot_strchk(ci, 21);
+
+									for (sloc = 0; (sint)sloc < xc && at_inchr < in_siz; sloc++)
+									{
+										memcpy((void*)&inchr[at_inchr], (void*)&ci[sloc], sizeof(ci[sloc]));
+										at_inchr++;
+									}
+									if (slen && x < (fvec->size() - 1))
+									{
+										for (sloc = 0; sloc < slen && at_inchr < in_siz; sloc++)
+										{
+											memcpy((void*)&inchr[at_inchr], (void*)&spc.carr[sloc], sizeof(_char));
+											at_inchr++;
+										}
+									}
+								}
+							}
+							else if (hlong == 2)
+							{
+								std::vector<sllint>* fvec = va_arg(args, std::vector<sllint>*);
+
+								for (size_t x = 0; x < fvec->size(); x++)
+								{
+									if (plen)
+									{
+										for (sloc = 0; sloc < plen && at_inchr < in_siz; sloc++)
+										{
+											memcpy((void*)&inchr[at_inchr], (void*)&pspc.carr[sloc], sizeof(_char));
+											at_inchr++;
+										}
+									}
+									_char ci[21]{ 0 };
+									sint xc = snprintf(ci, 21, fspc.carr, fvec->at(x));
+									xc = bot_strchk(ci, 21);
+
+									for (sloc = 0; (sint)sloc < xc && at_inchr < in_siz; sloc++)
+									{
+										memcpy((void*)&inchr[at_inchr], (void*)&ci[sloc], sizeof(ci[sloc]));
+										at_inchr++;
+									}
+									if (slen && x < (fvec->size() - 1))
+									{
+										for (sloc = 0; sloc < slen && at_inchr < in_siz; sloc++)
+										{
+											memcpy((void*)&inchr[at_inchr], (void*)&spc.carr[sloc], sizeof(_char));
+											at_inchr++;
+										}
+									}
+								}
+							}
+							else {}
+							break;
+						}
+						case 'u':
+						{
+							if (!hlong)
+							{
+								std::vector<uint>* fvec = va_arg(args, std::vector<uint>*);
+
+								for (size_t x = 0; x < fvec->size(); x++)
+								{
+									if (plen)
+									{
+										for (sloc = 0; sloc < plen && at_inchr < in_siz; sloc++)
+										{
+											memcpy((void*)&inchr[at_inchr], (void*)&pspc.carr[sloc], sizeof(_char));
+											at_inchr++;
+										}
+									}
+									_char ci[21]{ 0 };
+									sint xc = snprintf(ci, 21, fspc.carr, fvec->at(x));
+									xc = bot_strchk(ci, 21);
+
+									for (sloc = 0; (sint)sloc < xc && at_inchr < in_siz; sloc++)
+									{
+										memcpy((void*)&inchr[at_inchr], (void*)&ci[sloc], sizeof(ci[sloc]));
+										at_inchr++;
+									}
+									if (slen && x < (fvec->size() - 1))
+									{
+										for (sloc = 0; sloc < slen && at_inchr < in_siz; sloc++)
+										{
+											memcpy((void*)&inchr[at_inchr], (void*)&spc.carr[sloc], sizeof(_char));
+											at_inchr++;
+										}
+									}
+								}
+							}
+							else if (hlong == 1)
+							{
+								std::vector<ulint>* fvec = va_arg(args, std::vector<ulint>*);
+
+								for (size_t x = 0; x < fvec->size(); x++)
+								{
+									if (plen)
+									{
+										for (sloc = 0; sloc < plen && at_inchr < in_siz; sloc++)
+										{
+											memcpy((void*)&inchr[at_inchr], (void*)&pspc.carr[sloc], sizeof(_char));
+											at_inchr++;
+										}
+									}
+									_char ci[21]{ 0 };
+									sint xc = snprintf(ci, 21, fspc.carr, fvec->at(x));
+									xc = bot_strchk(ci, 21);
+
+									for (sloc = 0; (sint)sloc < xc && at_inchr < in_siz; sloc++)
+									{
+										memcpy((void*)&inchr[at_inchr], (void*)&ci[sloc], sizeof(ci[sloc]));
+										at_inchr++;
+									}
+									if (slen && x < (fvec->size() - 1))
+									{
+										for (sloc = 0; sloc < slen && at_inchr < in_siz; sloc++)
+										{
+											memcpy((void*)&inchr[at_inchr], (void*)&spc.carr[sloc], sizeof(_char));
+											at_inchr++;
+										}
+									}
+								}
+							}
+							else if (hlong == 2)
+							{
+								std::vector<ullint>* fvec = va_arg(args, std::vector<ullint>*);
+
+								for (size_t x = 0; x < fvec->size(); x++)
+								{
+									if (plen)
+									{
+										for (sloc = 0; sloc < plen && at_inchr < in_siz; sloc++)
+										{
+											memcpy((void*)&inchr[at_inchr], (void*)&pspc.carr[sloc], sizeof(_char));
+											at_inchr++;
+										}
+									}
+									_char ci[21]{ 0 };
+									sint xc = snprintf(ci, 21, fspc.carr, fvec->at(x));
+									xc = bot_strchk(ci, 21);
+
+									for (sloc = 0; (sint)sloc < xc && at_inchr < in_siz; sloc++)
+									{
+										memcpy((void*)&inchr[at_inchr], (void*)&ci[sloc], sizeof(ci[sloc]));
+										at_inchr++;
+									}
+									if (slen && x < (fvec->size() - 1))
+									{
+										for (sloc = 0; sloc < slen && at_inchr < in_siz; sloc++)
+										{
+											memcpy((void*)&inchr[at_inchr], (void*)&spc.carr[sloc], sizeof(_char));
+											at_inchr++;
+										}
+									}
+								}
+							}
+							else {}
+							break;
+						}
+						case 'X':
+						{
+							std::vector<u_char>* inv = va_arg(args, std::vector<u_char>*);
+
+							for (size_t x = 0; x < inv->size(); x++)
+							{
+								if (plen)
+								{
+									for (sloc = 0; sloc < plen && at_inchr < in_siz; sloc++)
+									{
+										memcpy((void*)&inchr[at_inchr], (void*)&pspc.carr[sloc], sizeof(_char));
+										at_inchr++;
+									}
+								}
+
+								const size_t usiz = (sizeof(u_char) * 2) + 1;
+
+								if (usiz + at_inchr <= in_siz)
+								{
+									_char ci[usiz]{ 0 };
+									sint xc = snprintf(ci, usiz, fspc.carr, (uint)inv->at(x));
+									xc = bot_strchk(ci, usiz);
+
+									for (sloc = 0; ((sint)sloc < xc && at_inchr < in_siz); sloc++)
+									{
+										memcpy((void*)&inchr[at_inchr], (void*)&ci[sloc], sizeof(_char));
+										at_inchr++;
+									}
+									if (slen && x < (inv->size() - 1))
+									{
+										for (sloc = 0; sloc < slen && at_inchr < in_siz; sloc++)
+										{
+											memcpy((void*)&inchr[at_inchr], (void*)&spc.carr[sloc], sizeof(_char));
+											at_inchr++;
+										}
+									}
+								}
+							}
+							break;
+						}
+						case 'v':
+						{
+							break;
+						}
+						default:
+						{
+							break;
+						}
 						}
 					}
 					break;
@@ -2460,12 +2746,12 @@ sint bot_sprintf(c_char inchr[], size_t in_siz, c_char* fstr, ...)
 		}
 		if (at_inchr < in_siz)
 		{
-			memcpy((void*)&inchr[at_inchr], (void*)&term, sizeof(term));
+			memcpy((void*)&inchr[at_inchr], (void*)&term, sizeof(_char));
 			ret = 0;
 		}
 		else
 		{
-			memcpy((void*)&inchr[in_siz - 1], (void*)&term, sizeof(term));
+			memcpy((void*)&inchr[in_siz - 1], (void*)&term, sizeof(_char));
 		}
 	}
 	else
@@ -2474,17 +2760,17 @@ sint bot_sprintf(c_char inchr[], size_t in_siz, c_char* fstr, ...)
 
 		while (siz < in_siz && siz < strsiz)
 		{
-			memcpy((void*)&inchr[siz], (void*)&fstr[siz], sizeof(fstr[siz]));
+			memcpy((void*)&inchr[siz], (void*)&fstr[siz], sizeof(_char));
 			siz++;
 		}
 		if (siz < in_siz)
 		{
-			memcpy((void*)&inchr[siz], (void*)&term, sizeof(term));
+			memcpy((void*)&inchr[siz], (void*)&term, sizeof(_char));
 			ret = 0;
 		}
 		else
 		{
-			memcpy((void*)&inchr[in_siz - 1], (void*)&term, sizeof(term));
+			memcpy((void*)&inchr[in_siz - 1], (void*)&term, sizeof(_char));
 		}
 	}
 	return ret;
@@ -2512,14 +2798,14 @@ sint bot_sprintfs(std::string* str_, bool clear_str, c_char* fstr, ...)
 
 	for (size_t siz = 0; siz < strsiz; siz++)
 	{
-		if (!memcmp((void*)&fstr[siz], (void*)&frm, 1))
+		if (!memcmp((void*)&fstr[siz], (void*)&frm, sizeof(_char)))
 		{
 			formspec.push_back(fstr[siz]);
 			bool mustnum = false;
 
 			for (size_t nsiz = 1; siz + nsiz < strsiz; )
 			{
-				if (!memcmp((void*)&fstr[siz + nsiz], (void*)&spec, 1))
+				if (!memcmp((void*)&fstr[siz + nsiz], (void*)&spec, sizeof(_char)))
 				{
 					if (!mustnum)
 					{
@@ -2618,18 +2904,19 @@ sint bot_sprintfs(std::string* str_, bool clear_str, c_char* fstr, ...)
 							formspec.push_back(fstr[siz + nsiz]);
 							nsiz++;
 
-							if (siz + nsiz < strsiz)
+							for (size_t xsiz = siz + nsiz; xsiz < strsiz; xsiz++)
 							{
-								if (!memcmp((void*)&fstr[siz + nsiz], (void*)&spec, sizeof(spec)))
-								{
-									formspec.push_back(fstr[siz + nsiz]);
+								formspec.push_back(fstr[xsiz]);
+								nsiz++;
 
-									for (size_t xsiz = siz + nsiz + 1; xsiz < strsiz; xsiz++)
+								if (!memcmp((void*)&fstr[xsiz], (void*)&frm, sizeof(_char)))
+								{
+									for (xsiz++; xsiz < strsiz; xsiz++)
 									{
 										formspec.push_back(fstr[xsiz]);
 										nsiz++;
 
-										if (!memcmp((void*)&fstr[xsiz], (void*)&spec, sizeof(spec)))
+										if (!memcmp((void*)&fstr[xsiz], (void*)&frm, sizeof(_char)))
 										{
 											locs.push_back(siz);
 											fspecs.push_back(formspec);
@@ -2689,7 +2976,7 @@ sint bot_sprintfs(std::string* str_, bool clear_str, c_char* fstr, ...)
 				sint isiz = 0;
 				size_t nsiz = 1;
 
-				if (!memcmp((void*)&fspecs[siz][nsiz], (void*)&spec, sizeof(spec)))
+				if (!memcmp((void*)&fspecs[siz][nsiz], (void*)&spec, sizeof(_char)))
 				{
 					_char fchr[3]{ 0 };
 					nsiz++;
@@ -2728,31 +3015,31 @@ sint bot_sprintfs(std::string* str_, bool clear_str, c_char* fstr, ...)
 						case '9':
 						case '0':
 						{
-							memcpy((void*)&fchr[fsiz], (void*)&fspecs[siz][nsiz], sizeof(fspecs[siz][nsiz]));
+							memcpy((void*)&fchr[fsiz], (void*)&fspecs[siz][nsiz], sizeof(_char));
 							nsiz++;
 							fsiz++;
 							break;
 						}
 						default:
 						{
-							memcpy((void*)&fchr[fsiz], (void*)&term, sizeof(term));
+							memcpy((void*)&fchr[fsiz], (void*)&term, sizeof(_char));
 							break;
 						}
 						}
 
 						if (fsiz == 3)
 						{
-							memcpy((void*)&fchr[fsiz - 1], (void*)&term, sizeof(term));
+							memcpy((void*)&fchr[fsiz - 1], (void*)&term, sizeof(_char));
 						}
 						else
 						{
-							if (!memcmp((void*)&fchr[fsiz], (void*)&term, sizeof(term)))
+							if (!memcmp((void*)&fchr[fsiz], (void*)&term, sizeof(_char)))
 							{
 								fsiz = 3;
 							}
 						}
 					}
-					if (!memcmp((void*)&fchr[2], (void*)&term, sizeof(term)) || !memcmp((void*)&fchr[1], (void*)&term, sizeof(term)) || !memcmp((void*)&fchr[0], (void*)&term, sizeof(term)))
+					if (!memcmp((void*)&fchr[2], (void*)&term, sizeof(_char)) || !memcmp((void*)&fchr[1], (void*)&term, sizeof(_char)) || !memcmp((void*)&fchr[0], (void*)&term, sizeof(_char)))
 					{
 						isiz = atoi(fchr);
 					}
@@ -2763,7 +3050,7 @@ sint bot_sprintfs(std::string* str_, bool clear_str, c_char* fstr, ...)
 					}
 				}
 
-				while (!memcmp((void*)&fspecs[siz][nsiz], (void*)&lenchr, sizeof(lenchr)))
+				while (!memcmp((void*)&fspecs[siz][nsiz], (void*)&lenchr, sizeof(_char)))
 				{
 					hlong++;
 					nsiz++;
@@ -2772,9 +3059,9 @@ sint bot_sprintfs(std::string* str_, bool clear_str, c_char* fstr, ...)
 				_char zchar = '0';
 				_char zweichar = '2';
 
-				if (!memcmp((void*)&fspecs[siz][nsiz], (void*)&zchar, sizeof(zchar)) && nsiz < fspecs[siz].length())
+				if (!memcmp((void*)&fspecs[siz][nsiz], (void*)&zchar, sizeof(_char)) && nsiz < fspecs[siz].length())
 				{
-					if (!memcmp((void*)&fspecs[siz][nsiz + 1], (void*)&zchar, sizeof(zweichar)))
+					if (!memcmp((void*)&fspecs[siz][nsiz + 1], (void*)&zweichar, sizeof(_char)))
 					{
 						nsiz += 2;
 					}
@@ -2908,8 +3195,8 @@ sint bot_sprintfs(std::string* str_, bool clear_str, c_char* fstr, ...)
 					if ((usiz + str_->length()) <= (size_t)BOT_STRLEN_MAX)
 					{
 						_char ci[usiz]{ 0 };
-						sint xc = snprintf(ci, sizeof(ci), fspecs[siz].c_str(), (uint)inv_);
-						xc = bot_strchk(ci, sizeof(ci));
+						sint xc = snprintf(ci, usiz, fspecs[siz].c_str(), (uint)inv_);
+						xc = bot_strchk(ci, usiz);
 						str_->append(ci);
 					}
 					break;
@@ -2917,387 +3204,388 @@ sint bot_sprintfs(std::string* str_, bool clear_str, c_char* fstr, ...)
 				case 'v':
 				{
 					nsiz++;
-					if (nsiz < fspecs[siz].length())
+					carr_21 pspc;
+					carr_21 fspc;
+					carr_21 spc;
+					size_t nct = 0;
+
+					while (nsiz < fspecs[siz].length() && nct < pspc.siz)
 					{
-						if (!memcmp((void*)&fspecs[siz][nsiz], (void*)&spec, sizeof(spec)))
+						if (nsiz < fspecs[siz].length())
 						{
-							_char sep[4]{ 0 };
-							_char fspec[4]{ 0 };
-							size_t nct = 0;
-
-							while (nsiz < fspecs[siz].length() && nct < 3)
+							switch (fspecs[siz][nsiz])
 							{
-								nsiz++;
+							case '%':
+							{
+								nct = pspc.siz;
+								memcpy((void*)&fspc.carr[0], (void*)&fspecs[siz][nsiz], sizeof(_char));
+								break;
+							}
+							default:
+							{
+								memcpy((void*)&pspc.carr[nct], (void*)&fspecs[siz][nsiz], sizeof(_char));
+								break;
+							}
+							}
+						}
+						nct++;
+						nsiz++;
+					}
 
-								if (nsiz < fspecs[siz].length())
+					nct = 1;
+
+					while (nsiz < fspecs[siz].length() && nct < fspc.siz)
+					{
+						if (nsiz < fspecs[siz].length())
+						{
+							switch (fspecs[siz][nsiz])
+							{
+							case '%':
+							{
+								nct = fspc.siz;
+								break;
+							}
+							case 'c':
+							case 's':
+							case 'd':
+							case 'i':
+							case 'u':
+							case 'f':
+							case 'X':
+							{
+								memcpy((void*)&fspc.carr[nct], (void*)&fspecs[siz][nsiz], sizeof(_char));
+								nct = fspc.siz;
+								break;
+							}
+							default:
+							{
+								memcpy((void*)&fspc.carr[nct], (void*)&fspecs[siz][nsiz], sizeof(_char));
+								nct++;
+								break;
+							}
+							}
+						}
+						nsiz++;
+					}
+
+					if (nsiz < fspecs[siz].length() - 1)
+					{
+						for (size_t x = 0; x < spc.siz && nsiz < fspecs[siz].length() - 1; x++)
+						{
+							if (memcmp((void*)&fspecs[siz][nsiz], (void*)&frm, sizeof(_char)))
+							{
+								memcpy((void*)&spc.carr[x], (void*)&fspecs[siz][nsiz], sizeof(_char));
+							}
+							else
+							{
+								nsiz = fspecs[siz].length();
+							}
+							nsiz++;
+						}
+					}
+
+					size_t flen = bot_strlen(fspc.carr);
+
+					if (flen)
+					{
+						flen--;
+						size_t plen = bot_strlen(pspc.carr);
+						size_t slen = bot_strlen(spc.carr);
+
+						switch (fspc.carr[flen])
+						{
+						case 'c':
+						{
+							std::vector<_char>* inv = va_arg(args, std::vector<_char>*);
+
+							for (size_t x = 0; x < inv->size() && str_->length() < (size_t)BOT_STRLEN_MAX; x++)
+							{
+								if (plen)
 								{
-									switch (fspecs[siz][nsiz])
+									str_->append(pspc.carr);
+								}
+
+								str_->push_back(inv->at(x));
+
+								if (slen && x < (inv->size() - 1))
+								{
+									str_->append(spc.carr);
+								}
+							}
+							break;
+						}
+						case 's':
+						{
+							/*when specifying %v%<type><sep>% <type> = 's' we use a vector of std::string instead of a vector of c_char* */
+							std::vector<std::string>* strv = va_arg(args, std::vector<std::string>*);
+
+							for (size_t x = 0; x < strv->size() && str_->length() < (size_t)BOT_STRLEN_MAX; x++)
+							{
+								if (plen)
+								{
+									str_->append(pspc.carr);
+								}
+
+								str_->append(strv->at(x).c_str());
+
+								if (slen && x < (strv->size() - 1))
+								{
+									str_->append(spc.carr);
+								}
+							}
+							break;
+						}
+						case 'f':
+						{
+							std::vector<float>* fvec = va_arg(args, std::vector<float>*);
+
+							for (size_t x = 0; x < fvec->size(); x++)
+							{
+								if (plen)
+								{
+									str_->append(pspc.carr);
+								}
+
+								_char ci[64]{ 0 };
+								sint xc = snprintf(ci, 64, fspc.carr, fvec->at(x));
+								xc = bot_strchk(ci, 64);
+
+								str_->append(ci);
+
+								if (slen && x < (fvec->size() - 1))
+								{
+									str_->append(spc.carr);
+								}
+							}
+							break;
+						}
+						case 'd':
+						{
+							if (!hlong)
+							{
+								std::vector<double>* fvec = va_arg(args, std::vector<double>*);
+
+								for (size_t x = 0; x < fvec->size(); x++)
+								{
+									if (plen)
 									{
-									case '.':
-									{
-										if (nct)
-										{
-											nct = 3;
-										}
-										break;
+										str_->append(pspc.carr);
 									}
-									case 'l':
+
+									_char ci[64]{ 0 };
+									sint xc = snprintf(ci, 64, fspc.carr, fvec->at(x));
+									xc = bot_strchk(ci, 64);
+									str_->append(ci);
+
+									if (slen && x < (fvec->size() - 1))
 									{
-										hlong++;
-										memcpy((void*)&fspec[nct], (void*)&fspecs[siz][nsiz], sizeof(fspecs[siz][nsiz]));
-										nct++;
-										break;
-									}
-									case 'c':
-									case 'i':
-									case 's':
-									case 'f':
-									case 'd':
-									case 'u':
-									case 'X':
-									{
-										memcpy((void*)&fspec[nct], (void*)&fspecs[siz][nsiz], sizeof(fspecs[siz][nsiz]));
-										nsiz++;
-										nct = 3;
-										break;
-									}
-									default:
-									{
-										memcpy((void*)&fspec[nct], (void*)&fspecs[siz][nsiz], sizeof(fspecs[siz][nsiz]));
-										nsiz++;
-										nct++;
-										break;
-									}
+										str_->append(spc.carr);
 									}
 								}
 							}
-							if (nsiz < fspecs[siz].length())
+							else if (hlong == 1)
 							{
-								for (size_t x = 0; x < sizeof(sep) && nsiz < fspecs[siz].length(); x++)
+								std::vector<long double>* fvec = va_arg(args, std::vector<long double>*);
+
+								for (size_t x = 0; x < fvec->size(); x++)
 								{
-									if (memcmp((void*)&fspecs[siz][nsiz], (void*)&spec, sizeof(spec)))
+									if (plen)
 									{
-										memcpy((void*)&sep[x], (void*)&fspecs[siz][nsiz], sizeof(fspecs[siz][nsiz]));
+										str_->append(pspc.carr);
 									}
-									else
+
+									_char ci[64]{ 0 };
+									sint xc = snprintf(ci, 64, fspc.carr, fvec->at(x));
+									xc = bot_strchk(ci, 64);
+									str_->append(ci);
+
+									if (slen && x < (fvec->size() - 1))
 									{
-										nsiz = fspecs[siz].length();
+										str_->append(spc.carr);
 									}
-									nsiz++;
 								}
 							}
-
-							size_t flen = strlen(fspec);
-
-							if (flen)
+							else {}
+							break;
+						}
+						case 'i':
+						{
+							if (!hlong)
 							{
-								flen--;
-								size_t slen = strlen(sep) - 1;;
+								std::vector<sint>* fvec = va_arg(args, std::vector<sint>*);
 
-								switch (fspec[flen])
+								for (size_t x = 0; x < fvec->size(); x++)
 								{
-								case 'c':
-								{
-									std::vector<_char>* inv = va_arg(args, std::vector<_char>*);
-
-									for (size_t x = 0; x < inv->size() && str_->length() < (size_t)BOT_STRLEN_MAX; x++)
+									if (plen)
 									{
-										str_->push_back(inv->at(x));
-
-										if (slen && x < (inv->size() - 1))
-										{
-											for (sloc = 0; sloc < strlen(sep) && str_->length() < (size_t)BOT_STRLEN_MAX; sloc++)
-											{
-												str_->push_back(sep[sloc]);
-											}
-										}
+										str_->append(pspc.carr);
 									}
-									break;
-								}
-								case 's':
-								{
-									/*when specifying %v.<type><sep>. <type> = 's' we use a vector of std::string instead of a vector of c_char* */
-									std::vector<std::string>* strv = va_arg(args, std::vector<std::string>*);
 
-									for (size_t x = 0; x < strv->size() && str_->length() < (size_t)BOT_STRLEN_MAX; x++)
+									_char ci[21]{ 0 };
+									sint xc = snprintf(ci, 21, fspc.carr, fvec->at(x));
+									xc = bot_strchk(ci, 21);
+									str_->append(ci);
+
+									if (slen && x < (fvec->size() - 1))
 									{
-										for (sloc = 0; sloc < strv->at(x).length(); sloc++)
-										{
-											str_->push_back(strv->at(x)[sloc]);
-										}
-										if (slen && x < (strv->size() - 1))
-										{
-											for (size_t y = 0; y < strlen(sep) && str_->length() < (size_t)BOT_STRLEN_MAX; y++)
-											{
-												str_->push_back(sep[y]);
-											}
-										}
+										str_->append(spc.carr);
 									}
-									break;
-								}
-								case 'f':
-								{
-									std::vector<float>* fvec = va_arg(args, std::vector<float>*);
-
-									for (size_t x = 0; x < fvec->size(); x++)
-									{
-										_char ci[64]{ 0 };
-										sint xc = snprintf(ci, 64, fspecs[siz].c_str(), fvec->at(x));
-										xc = bot_strchk(ci, 64);
-
-										for (sloc = 0; (sint)sloc < xc && str_->length() < (size_t)BOT_STRLEN_MAX; sloc++)
-										{
-											str_->push_back(ci[sloc]);
-										}
-										if (slen && x < (fvec->size() - 1))
-										{
-											for (size_t y = 0; y < strlen(sep) && str_->length() < (size_t)BOT_STRLEN_MAX; y++)
-											{
-												str_->push_back(sep[y]);
-											}
-										}
-									}
-									break;
-								}
-								case 'd':
-								{
-									if (!hlong)
-									{
-										std::vector<double>* fvec = va_arg(args, std::vector<double>*);
-
-										for (size_t x = 0; x < fvec->size(); x++)
-										{
-											_char ci[64]{ 0 };
-											sint xc = snprintf(ci, 64, fspecs[siz].c_str(), fvec->at(x));
-											xc = bot_strchk(ci, 64);
-
-											for (sloc = 0; (sint)sloc < xc && str_->length() < (size_t)BOT_STRLEN_MAX; sloc++)
-											{
-												str_->push_back(ci[sloc]);
-											}
-											if (slen && x < (fvec->size() - 1))
-											{
-												for (size_t y = 0; y < strlen(sep) && str_->length() < (size_t)BOT_STRLEN_MAX; y++)
-												{
-													str_->push_back(sep[y]);
-												}
-											}
-										}
-									}
-									else if (hlong == 1)
-									{
-										std::vector<long double>* fvec = va_arg(args, std::vector<long double>*);
-
-										for (size_t x = 0; x < fvec->size(); x++)
-										{
-											_char ci[64]{ 0 };
-											sint xc = snprintf(ci, 64, fspecs[siz].c_str(), fvec->at(x));
-											xc = bot_strchk(ci, 64);
-
-											for (sloc = 0; (sint)sloc < xc && str_->length() < (size_t)BOT_STRLEN_MAX; sloc++)
-											{
-												str_->push_back(ci[sloc]);
-											}
-											if (slen && x < (fvec->size() - 1))
-											{
-												for (size_t y = 0; y < strlen(sep) && str_->length() < (size_t)BOT_STRLEN_MAX; y++)
-												{
-													str_->push_back(sep[y]);
-												}
-											}
-										}
-									}
-									else {}
-									break;
-								}
-								case 'i':
-								{
-									if (!hlong)
-									{
-										std::vector<sint>* fvec = va_arg(args, std::vector<sint>*);
-
-										for (size_t x = 0; x < fvec->size(); x++)
-										{
-											_char ci[21]{ 0 };
-											sint xc = snprintf(ci, 21, fspecs[siz].c_str(), fvec->at(x));
-											xc = bot_strchk(ci, 21);
-
-											for (sloc = 0; (sint)sloc < xc && str_->length() < (size_t)BOT_STRLEN_MAX; sloc++)
-											{
-												str_->push_back(ci[sloc]);
-											}
-											if (slen && x < (fvec->size() - 1))
-											{
-												for (size_t y = 0; y < strlen(sep) && str_->length() < (size_t)BOT_STRLEN_MAX; y++)
-												{
-													str_->push_back(sep[y]);
-												}
-											}
-										}
-									}
-									else if (hlong == 1)
-									{
-										std::vector<slint>* fvec = va_arg(args, std::vector<slint>*);
-
-										for (size_t x = 0; x < fvec->size(); x++)
-										{
-											_char ci[21]{ 0 };
-											sint xc = snprintf(ci, 21, fspecs[siz].c_str(), fvec->at(x));
-											xc = bot_strchk(ci, 21);
-
-											for (sloc = 0; (sint)sloc < xc && str_->length() < (size_t)BOT_STRLEN_MAX; sloc++)
-											{
-												str_->push_back(ci[sloc]);
-											}
-											if (slen && x < (fvec->size() - 1))
-											{
-												for (size_t y = 0; y < strlen(sep) && str_->length() < (size_t)BOT_STRLEN_MAX; y++)
-												{
-													str_->push_back(sep[y]);
-												}
-											}
-										}
-									}
-									else if (hlong == 2)
-									{
-										std::vector<sllint>* fvec = va_arg(args, std::vector<sllint>*);
-
-										for (size_t x = 0; x < fvec->size(); x++)
-										{
-											_char ci[21]{ 0 };
-											sint xc = snprintf(ci, 21, fspecs[siz].c_str(), fvec->at(x));
-											xc = bot_strchk(ci, 21);
-
-											for (sloc = 0; (sint)sloc < xc && str_->length() < (size_t)BOT_STRLEN_MAX; sloc++)
-											{
-												str_->push_back(ci[sloc]);
-											}
-											if (slen && x < (fvec->size() - 1))
-											{
-												for (size_t y = 0; y < strlen(sep) && str_->length() < (size_t)BOT_STRLEN_MAX; y++)
-												{
-													str_->push_back(sep[y]);
-												}
-											}
-										}
-									}
-									else {}
-									break;
-								}
-								case 'u':
-								{
-									if (!hlong)
-									{
-										std::vector<uint>* fvec = va_arg(args, std::vector<uint>*);
-
-										for (size_t x = 0; x < fvec->size(); x++)
-										{
-											_char ci[21]{ 0 };
-											sint xc = snprintf(ci, 21, fspecs[siz].c_str(), fvec->at(x));
-											xc = bot_strchk(ci, 21);
-
-											for (sloc = 0; (sint)sloc < xc && str_->length() < (size_t)BOT_STRLEN_MAX; sloc++)
-											{
-												str_->push_back(ci[sloc]);
-											}
-											if (slen && x < (fvec->size() - 1))
-											{
-												for (size_t y = 0; y < strlen(sep) && str_->length() < (size_t)BOT_STRLEN_MAX; y++)
-												{
-													str_->push_back(sep[y]);
-												}
-											}
-										}
-									}
-									else if (hlong == 1)
-									{
-										std::vector<ulint>* fvec = va_arg(args, std::vector<ulint>*);
-
-										for (size_t x = 0; x < fvec->size(); x++)
-										{
-											_char ci[21]{ 0 };
-											sint xc = snprintf(ci, 21, fspecs[siz].c_str(), fvec->at(x));
-											xc = bot_strchk(ci, 21);
-
-											for (sloc = 0; (sint)sloc < xc && str_->length() < (size_t)BOT_STRLEN_MAX; sloc++)
-											{
-												str_->push_back(ci[sloc]);
-											}
-											if (slen && x < (fvec->size() - 1))
-											{
-												for (size_t y = 0; y < strlen(sep) && str_->length() < (size_t)BOT_STRLEN_MAX; y++)
-												{
-													str_->push_back(sep[y]);
-												}
-											}
-										}
-									}
-									else if (hlong == 2)
-									{
-										std::vector<ullint>* fvec = va_arg(args, std::vector<ullint>*);
-
-										for (size_t x = 0; x < fvec->size(); x++)
-										{
-											_char ci[21]{ 0 };
-											sint xc = snprintf(ci, 21, fspecs[siz].c_str(), fvec->at(x));
-											xc = bot_strchk(ci, 21);
-
-											for (sloc = 0; (sint)sloc < xc && str_->length() < (size_t)BOT_STRLEN_MAX; sloc++)
-											{
-												str_->push_back(ci[sloc]);
-											}
-											if (slen && x < (fvec->size() - 1))
-											{
-												for (size_t y = 0; y < strlen(sep) && str_->length() < (size_t)BOT_STRLEN_MAX; y++)
-												{
-													str_->push_back(sep[y]);
-												}
-											}
-										}
-									}
-									else {}
-									break;
-								}
-								case 'X':
-								{
-									std::vector<u_char>* inv = va_arg(args, std::vector<u_char>*);
-
-									for (size_t x = 0; x < inv->size(); x++)
-									{
-										const size_t usiz = (sizeof(inv->at(x)) * 2) + 1;
-
-										if (usiz + str_->length() < (size_t)BOT_STRLEN_MAX)
-										{
-											_char ci[usiz]{ 0 };
-											sint xc = snprintf(ci, sizeof(ci), fspecs[siz].c_str(), (size_t)inv->at(x));
-											xc = bot_strchk(ci, sizeof(ci));
-
-											for (sloc = 0; ((sint)sloc < xc && str_->length() < (size_t)BOT_STRLEN_MAX); sloc++)
-											{
-												str_->push_back(ci[sloc]);
-
-												if (slen && x < (inv->size() - 1))
-												{
-													for (size_t y = 0; y < strlen(sep) && str_->length() < (size_t)BOT_STRLEN_MAX; y++)
-													{
-														str_->push_back(sep[y]);
-													}
-												}
-											}
-										}
-									}
-									break;
-								}
-								case 'v':
-								{
-									break;
-								}
-								default:
-								{
-									break;
-								}
 								}
 							}
+							else if (hlong == 1)
+							{
+								std::vector<slint>* fvec = va_arg(args, std::vector<slint>*);
+
+								for (size_t x = 0; x < fvec->size(); x++)
+								{
+									if (plen)
+									{
+										str_->append(pspc.carr);
+									}
+
+									_char ci[21]{ 0 };
+									sint xc = snprintf(ci, 21, fspc.carr, fvec->at(x));
+									xc = bot_strchk(ci, 21);
+									str_->append(ci);
+
+									if (slen && x < (fvec->size() - 1))
+									{
+										str_->append(spc.carr);
+									}
+								}
+							}
+							else if (hlong == 2)
+							{
+								std::vector<sllint>* fvec = va_arg(args, std::vector<sllint>*);
+
+								for (size_t x = 0; x < fvec->size(); x++)
+								{
+									if (plen)
+									{
+										str_->append(pspc.carr);
+									}
+
+									_char ci[21]{ 0 };
+									sint xc = snprintf(ci, 21, fspc.carr, fvec->at(x));
+									xc = bot_strchk(ci, 21);
+									str_->append(ci);
+
+									if (slen && x < (fvec->size() - 1))
+									{
+										str_->append(spc.carr);
+									}
+								}
+							}
+							else {}
+							break;
+						}
+						case 'u':
+						{
+							if (!hlong)
+							{
+								std::vector<uint>* fvec = va_arg(args, std::vector<uint>*);
+
+								for (size_t x = 0; x < fvec->size(); x++)
+								{
+									if (plen)
+									{
+										str_->append(pspc.carr);
+									}
+
+									_char ci[21]{ 0 };
+									sint xc = snprintf(ci, 21, fspc.carr, fvec->at(x));
+									xc = bot_strchk(ci, 21);
+									str_->append(ci);
+
+									if (slen && x < (fvec->size() - 1))
+									{
+										str_->append(spc.carr);
+									}
+								}
+							}
+							else if (hlong == 1)
+							{
+								std::vector<ulint>* fvec = va_arg(args, std::vector<ulint>*);
+
+								for (size_t x = 0; x < fvec->size(); x++)
+								{
+									if (plen)
+									{
+										str_->append(pspc.carr);
+									}
+
+									_char ci[21]{ 0 };
+									sint xc = snprintf(ci, 21, fspc.carr, fvec->at(x));
+									xc = bot_strchk(ci, 21);
+									str_->append(ci);
+
+									if (slen && x < (fvec->size() - 1))
+									{
+										str_->append(spc.carr);
+									}
+								}
+							}
+							else if (hlong == 2)
+							{
+								std::vector<ullint>* fvec = va_arg(args, std::vector<ullint>*);
+
+								for (size_t x = 0; x < fvec->size(); x++)
+								{
+									if (plen)
+									{
+										str_->append(pspc.carr);
+									}
+
+									_char ci[21]{ 0 };
+									sint xc = snprintf(ci, 21, fspc.carr, fvec->at(x));
+									xc = bot_strchk(ci, 21);
+									str_->append(ci);
+
+									if (slen && x < (fvec->size() - 1))
+									{
+										str_->append(spc.carr);
+									}
+								}
+							}
+							else {}
+							break;
+						}
+						case 'X':
+						{
+							std::vector<u_char>* inv = va_arg(args, std::vector<u_char>*);
+
+							for (size_t x = 0; x < inv->size(); x++)
+							{
+								if (plen)
+								{
+									str_->append(pspc.carr);
+								}
+
+								const size_t usiz = (sizeof(u_char) * 16) + 1;
+
+								if (usiz + str_->length() < (size_t)BOT_STRLEN_MAX)
+								{
+									_char ci[usiz]{ 0 };
+									sint xc = snprintf(ci, usiz, fspc.carr, (uint)inv->at(x));
+									xc = bot_strchk(ci, usiz);
+									str_->append(ci);
+
+									if (slen && x < (inv->size() - 1))
+									{
+										str_->append(spc.carr);
+									}
+								}
+							}
+							break;
+						}
+						case 'v':
+						{
+							break;
+						}
+						default:
+						{
+							break;
+						}
 						}
 					}
 					break;
@@ -3372,6 +3660,55 @@ sllint bot_findin(_char val[], size_t offs, size_t lim, _char inv[])
 	}
 
 	size_t ilen = bot_strlen(inv);
+	size_t vlen = bot_strlen(val);
+
+	if (ilen < vlen || offs > ilen)
+	{
+		return -1;
+	};
+
+	if (lim && ilen > lim)
+	{
+		ilen = lim;
+	}
+
+	size_t x = 0;
+
+	for (x = offs; x < ilen; x++)
+	{
+		_char n = '\0';
+		size_t y = 0;
+
+		if (!memcmp((void*)&val[y], (void*)&inv[x], sizeof(_char)))
+		{
+			y++;
+
+			while (y < vlen)
+			{
+				if (memcmp((void*)&val[y], (void*)&inv[x + y], sizeof(_char)))
+				{
+					y = vlen;
+				}
+				y++;
+			}
+
+			if (y == vlen)
+			{
+				return sllint(x);
+			}
+		}
+	}
+	return -1;
+}
+
+sllint bot_findin(_char val[], size_t offs, size_t lim, c_char* inv)
+{
+	if (!inv || !val || offs < 0)
+	{
+		return -1;
+	}
+
+	size_t ilen = bot_cstrlen(inv);
 	size_t vlen = bot_strlen(val);
 
 	if (ilen < vlen || offs > ilen)
@@ -7156,12 +7493,12 @@ sint machine::LogPut(c_char* msg_, sint option)
 }
 
 // Commands
-sint machine::Command(std::vector<std::string>* vec_)
+sint machine::Command(std::vector<BOT_ARG>* vec_)
 {
 	if (debug_lvl >= 1000 && debug_m)
 	{
 		carr_64 outp;
-		sint op = bot_sprintf(outp.carr, outp.siz, "::Command(std::vector<std::string>* vec_(%i))", (sint)vec_);
+		sint op = bot_sprintf(outp.carr, outp.siz, "::Command(std::vector<BOT_ARG>* vec_(%i))", (sint)vec_);
 		op = Output(outp.carr, 2);
 	}
 	if (!vec_)
@@ -7169,12 +7506,19 @@ sint machine::Command(std::vector<std::string>* vec_)
 		return -1;
 	}
 
-	if (vec_->size() < 1)
+	if (vec_->empty())
 	{
 		return -1;
 	}
 
-	BOTCOMMAND Command(UCASE(vec_->at(0).c_str()).c_str());
+	BOTCOMMAND Command(UCASE(vec_->at(0).arg.c_str()).c_str());
+
+	if (!strcmp(Command.cmd.substr(0, 2).c_str(), "/#"))
+	{
+		std::string inv(Command.cmd.substr(2, vec_->at(0).arg.length() - 2).c_str());
+		Command.cmd.clear();
+		Command.cmd.append(inv.c_str());
+	}
 	sint xc = GetCommand(&Command);
 
 	if (Command.cmd_id < 0)
@@ -7203,12 +7547,12 @@ sint machine::Command(std::vector<std::string>* vec_)
 	{
 		if (vec_->size() > 2)
 		{
-			if (strlen(vec_->at(1).c_str()))
+			if (strlen(vec_->at(1).arg.c_str()))
 			{
 				BOT_CLIENT ProcClient;
-				ProcClient.login_name.append(UCASE(vec_->at(1).c_str()).c_str());
+				ProcClient.login_name.append(UCASE(vec_->at(1).arg.c_str()).c_str());
 				sint rc = SetPCliMem(BOT_C_LOGIN_NAME, (void*)ProcClient.login_name.c_str());
-				rc = GetLogin(vec_->at(2).c_str());
+				rc = GetLogin(vec_->at(2).arg.c_str());
 
 				if (GetClientLoggedIn())
 				{
@@ -7253,15 +7597,15 @@ sint machine::Command(std::vector<std::string>* vec_)
 			for (uint y = 1; y < vec_->size() && y < 21; y++)
 			{
 				std::string astr, bstr;
-				bool sisn = bot_sisn(vec_->at(y).c_str(), (sint)vec_->at(y).length());
+				bool sisn = bot_sisn(vec_->at(y).arg.c_str(), (sint)vec_->at(y).arg.length());
 				
 				if (sisn)
 				{
-					astr.append(vec_->at(y).c_str());
+					astr.append(vec_->at(y).arg.c_str());
 				}
 				else
 				{
-					astr.append(UCASE(vec_->at(y).c_str()).c_str());
+					astr.append(UCASE(vec_->at(y).arg.c_str()).c_str());
 				}
 				
 				for (uint x = 0; x < vec.size(); x++)
@@ -7376,6 +7720,13 @@ sint machine::Command(std::vector<std::string>* vec_)
 								"\nAdd a command to the db", ncar.carr);
 							break;
 						}
+						case 1001:
+						{
+							oc = bot_sprintf(xcar.carr, xcar.siz, "%s" \
+								"\na: command name" \
+								"\nRemove a command from the db", ncar.carr);
+							break;
+						}
 						default:
 						{
 							break;
@@ -7421,18 +7772,18 @@ sint machine::Command(std::vector<std::string>* vec_)
 		}
 		else if (vec_->size() == 2)
 		{
-			if (bot_sisn(vec_->at(1).c_str(), (sint)vec_->at(1).length()))
+			if (bot_sisn(vec_->at(1).arg.c_str(), (sint)vec_->at(1).arg.length()))
 			{
-				xc = SetDBG(atoi(vec_->at(1).c_str()), -1);
+				xc = SetDBG(atoi(vec_->at(1).arg.c_str()), -1);
 			}
-			else if (!strcmp(&vec_->at(1)[0], "l"))
+			else if (!strcmp(&vec_->at(1).arg[0], "l"))
 			{
 				xc = GetDBG(&debug_lvl, &debug_m);;
 				carr_64 ncar;
 				xc = bot_sprintf(ncar.carr, ncar.siz, "debug level:%i", debug_lvl);
 				xc = Output(true, ncar.carr, 2, 0);
 			}
-			else if (!strcmp(&vec_->at(1)[0], "m"))
+			else if (!strcmp(&vec_->at(1).arg[0], "m"))
 			{
 				xc = GetDBG(&debug_lvl, &debug_m);;
 				carr_64 ncar;
@@ -7443,17 +7794,17 @@ sint machine::Command(std::vector<std::string>* vec_)
 		}
 		else if (vec_->size() == 3)
 		{
-			if (!strcmp(&vec_->at(1)[0], "l") && bot_sisn(vec_->at(2).c_str(), (sint)vec_->at(2).length()))
+			if (!strcmp(&vec_->at(1).arg[0], "l") && bot_sisn(vec_->at(2).arg.c_str(), (sint)vec_->at(2).arg.length()))
 			{
-				xc = SetDBG(atoi(vec_->at(2).c_str()), -1);
+				xc = SetDBG(atoi(vec_->at(2).arg.c_str()), -1);
 			}
-			else if (!strcmp(&vec_->at(1)[0], "m") && bot_sisn(vec_->at(2).c_str(), (sint)vec_->at(2).length()))
+			else if (!strcmp(&vec_->at(1).arg[0], "m") && bot_sisn(vec_->at(2).arg.c_str(), (sint)vec_->at(2).arg.length()))
 			{
-				xc = SetDBG(-1, atoi(vec_->at(2).c_str()));
+				xc = SetDBG(-1, atoi(vec_->at(2).arg.c_str()));
 			}
-			else if (bot_sisn(vec_->at(1).c_str(), (sint)vec_->at(1).length()) && bot_sisn(vec_->at(2).c_str(), (sint)vec_->at(2).length()))
+			else if (bot_sisn(vec_->at(1).arg.c_str(), (sint)vec_->at(1).arg.length()) && bot_sisn(vec_->at(2).arg.c_str(), (sint)vec_->at(2).arg.length()))
 			{
-				xc = SetDBG(atoi(vec_->at(1).c_str()), atoi(vec_->at(2).c_str()));
+				xc = SetDBG(atoi(vec_->at(1).arg.c_str()), atoi(vec_->at(2).arg.c_str()));
 			}
 			else {}
 		}
@@ -7477,76 +7828,219 @@ sint machine::Command(std::vector<std::string>* vec_)
 		}
 		if (vec_->size() > 2)
 		{
-			if (vec_->at(1).length() > 512)
+			if (vec_->at(1).arg.length() > 512)
 			{
 				return -1;
 			}
-			if (!strcmp(UCASE(vec_->at(1).c_str()).c_str(), "INT"))
+			if (!strcmp(UCASE(vec_->at(1).arg.c_str()).c_str(), "INT"))
 			{
 				if (vec_->size() > 3)
 				{
-					sllint var = (sllint)_atoi64(vec_->at(3).c_str());
-					xc = mv.AddVar(vec_->at(2).c_str(), &var, BOT_RTV_SLLINT);
+					sllint var = (sllint)_atoi64(vec_->at(3).arg.c_str());
+					xc = mv.AddVar(vec_->at(2).arg.c_str(), &var, BOT_RTV_SLLINT, BOT_RTV_SLLINT);
 				}
 				else
 				{
-					xc = mv.AddVar(vec_->at(2).c_str(), 0, BOT_RTV_SLLINT);
+					xc = mv.AddVar(vec_->at(2).arg.c_str(), 0, BOT_RTV_SLLINT, BOT_RTV_SLLINT);
 				}
 			}
-			else if (!strcmp(UCASE(vec_->at(1).c_str()).c_str(), "REAL"))
+			else if (!strcmp(UCASE(vec_->at(1).arg.c_str()).c_str(), "REAL"))
 			{
 				if (vec_->size() > 3)
 				{
-					float var = (float)atof(vec_->at(3).c_str());
-					xc = mv.AddVar(vec_->at(2).c_str(), &var, BOT_RTV_REAL);
+					float var = (float)atof(vec_->at(3).arg.c_str());
+					xc = mv.AddVar(vec_->at(2).arg.c_str(), &var, BOT_RTV_REAL, BOT_RTV_REAL);
 				}
 				else
 				{
-					xc = mv.AddVar(vec_->at(2).c_str(), 0, BOT_RTV_REAL);
+					xc = mv.AddVar(vec_->at(2).arg.c_str(), 0, BOT_RTV_REAL, BOT_RTV_REAL);
 				}
 			}
-			else if (!strcmp(UCASE(vec_->at(1).c_str()).c_str(), "TEXT"))
+			else if (!strcmp(UCASE(vec_->at(1).arg.c_str()).c_str(), "TEXT"))
 			{
 				if (vec_->size() > 3)
 				{
-					std::string var(vec_->at(3).c_str());
-					xc = mv.AddVar(vec_->at(2).c_str(), &var, BOT_RTV_STR);
+					std::string var(vec_->at(3).arg.c_str());
+					xc = mv.AddVar(vec_->at(2).arg.c_str(), &var, BOT_RTV_STR, BOT_RTV_STR);
 				}
 				else
 				{
-					xc = mv.AddVar(vec_->at(2).c_str(), 0, BOT_RTV_STR);
+					xc = mv.AddVar(vec_->at(2).arg.c_str(), 0, BOT_RTV_STR, BOT_RTV_STR);
 				}
 			}
-			else if (!strcmp(UCASE(vec_->at(1).c_str()).c_str(), "BLOB"))
+			else if (!strcmp(UCASE(vec_->at(1).arg.c_str()).c_str(), "BLOB"))
 			{
 				if (vec_->size() > 3)
 				{
-					_char* var = (_char*)malloc(vec_->at(3).length() + 1);
+					_char* var = (_char*)malloc(vec_->at(3).arg.length() + 1);
 
 					if (var)
 					{
 						_char trm = '\0';
-						memcpy((void*)var, (void*)vec_->at(3).c_str(), vec_->at(3).length());
-						memcpy((void*)&var[vec_->at(3).length()], (void*)&trm, sizeof(_char));
-						xc = mv.AddVar(vec_->at(2).c_str(), var, BOT_RTV_CHARP);
+						memcpy((void*)var, (void*)vec_->at(3).arg.c_str(), vec_->at(3).arg.length());
+						memcpy((void*)&var[vec_->at(3).arg.length()], (void*)&trm, sizeof(_char));
+						xc = mv.AddVar(vec_->at(2).arg.c_str(), var, BOT_RTV_BLOB, BOT_RTV_BLOB);
 						free(var);
 					}
 				}
 				else
 				{
-					xc = mv.AddVar(vec_->at(2).c_str(), 0, BOT_RTV_CHARP);
+					xc = mv.AddVar(vec_->at(2).arg.c_str(), 0, BOT_RTV_BLOB, BOT_RTV_BLOB);
+				}
+			}
+			else if (!strcmp(UCASE(vec_->at(1).arg.c_str()).c_str(), "VINT"))
+			{
+				if (vec_->size() > 3)
+				{
+					std::vector<sllint> var;
+					std::vector<BOT_ARG> args;
+					std::vector<std::string> seps;
+					xc = vtool.CombV(&seps, VTV_VSTR, VTV_VCHAR, &msy.nrts_sep, VTV_VCHAR, &msy.nrts_ord, VTV_VCHAR, &msy.nrts_ord_, VTV_MAX);
+
+					for (size_t z = 3; z < vec_->size(); z++)
+					{
+						if (bot_sisn(vec_->at(z).arg.c_str(), vec_->at(z).arg.length()))
+						{
+							var.push_back((sllint)_atoi64(vec_->at(z).arg.c_str()));
+						}
+						else
+						{
+							xc = ArgSep(&args, false, 0, vec_->at(z).arg.length(), vec_->at(z).arg.c_str(), BOT_RTV_VSTR, &seps);
+
+							if (xc > -1)
+							{
+								for (size_t w = 0; w < args.size(); w++)
+								{
+									var.push_back((sllint)_atoi64(args[w].arg.c_str()));
+								}
+							}
+							args.clear();
+						}
+					}
+					xc = mv.AddVar(vec_->at(2).arg.c_str(), &var, BOT_RTV_VSLLINT, BOT_RTV_VSLLINT);
+				}
+				else
+				{
+					xc = mv.AddVar(vec_->at(2).arg.c_str(), 0, BOT_RTV_VSLLINT, BOT_RTV_SLLINT);
+				}
+			}
+			else if (!strcmp(UCASE(vec_->at(1).arg.c_str()).c_str(), "VREAL"))
+			{
+				if (vec_->size() > 3)
+				{
+					std::vector<float> var;
+					std::vector<BOT_ARG> args;
+					std::vector<std::string> seps;
+					xc = vtool.CombV(&seps, VTV_VSTR, VTV_VCHAR, &msy.nrts_sep, VTV_VCHAR, &msy.nrts_ord, VTV_VCHAR, &msy.nrts_ord_, VTV_MAX);
+
+					for (size_t z = 3; z < vec_->size(); z++)
+					{
+						if (bot_sisn(vec_->at(z).arg.c_str(), vec_->at(z).arg.length()))
+						{
+							var.push_back((float)atof(vec_->at(z).arg.c_str()));
+						}
+						else
+						{
+							xc = ArgSep(&args, false, 0, vec_->at(z).arg.length(), vec_->at(z).arg.c_str(), BOT_RTV_VSTR, &seps);
+
+							if (xc > -1)
+							{
+								for (size_t w = 0; w < args.size(); w++)
+								{
+									var.push_back((float)atof(args[w].arg.c_str()));
+								}
+							}
+							args.clear();
+						}
+					}
+					xc = mv.AddVar(vec_->at(2).arg.c_str(), &var, BOT_RTV_VREAL, BOT_RTV_VREAL);
+				}
+				else
+				{
+					xc = mv.AddVar(vec_->at(2).arg.c_str(), 0, BOT_RTV_VREAL, BOT_RTV_REAL);
+				}
+			}
+			else if (!strcmp(UCASE(vec_->at(1).arg.c_str()).c_str(), "VTEXT"))
+			{
+				if (vec_->size() > 3)
+				{
+					std::vector<BOT_ARG> args;
+					std::vector<std::string> seps;
+					xc = vtool.CombV(&seps, VTV_VSTR, VTV_VCHAR, &msy.nrts_sep, VTV_VCHAR, &msy.nrts_lit, VTV_VCHAR, &msy.nrts_ord, VTV_VCHAR, &msy.nrts_ord_, VTV_MAX);
+
+					for (size_t z = 3; z < vec_->size(); z++)
+					{
+						xc = ArgSep(&args, false, 0, vec_->at(z).arg.length(), vec_->at(z).arg.c_str(), BOT_RTV_VSTR, &seps);
+
+						if (xc > -1)
+						{
+							if (args.size() == 1)
+							{
+								xc = mv.AddVar(vec_->at(2).arg.c_str(), &args[0].arg, BOT_RTV_VSTR, BOT_RTV_STR);
+							}
+							else
+							{
+								xc = mv.AddVar(vec_->at(2).arg.c_str(), &args, BOT_RTV_VSTR, BOT_RTV_VARG);
+							}
+						}
+						args.clear();
+					}
+				}
+				else
+				{
+					xc = mv.AddVar(vec_->at(2).arg.c_str(), 0, BOT_RTV_VREAL, BOT_RTV_REAL);
+				}
+			}
+			else if (!strcmp(UCASE(vec_->at(1).arg.c_str()).c_str(), "VBLOB"))
+			{
+				if (vec_->size() > 3)
+				{
+					std::vector<BOT_ARG> args;
+					std::vector<std::string> seps;
+					xc = vtool.CombV(&seps, VTV_VSTR, VTV_VCHAR, &msy.nrts_sep, VTV_VCHAR, &msy.nrts_lit, VTV_VCHAR, &msy.nrts_ord, VTV_VCHAR, &msy.nrts_ord_, VTV_MAX);
+
+					for (size_t z = 3; z < vec_->size(); z++)
+					{
+						xc = ArgSep(&args, false, 0, vec_->at(z).arg.length(), vec_->at(z).arg.c_str(), BOT_RTV_VSTR, &seps);
+
+						if (xc > -1)
+						{
+							if (args.size() == 1)
+							{
+								_char* var = (_char*)malloc(args[0].arg.length() + 1);
+
+								if (var)
+								{
+									_char trm = '\0';
+									memcpy((void*)var, (void*)args[0].arg.c_str(), args[0].arg.length());
+									memcpy((void*)&var[args[0].arg.length()], (void*)&trm, sizeof(_char));
+									xc = mv.AddVar(vec_->at(2).arg.c_str(), var, BOT_RTV_VBLOB, BOT_RTV_BLOB);
+									free(var);
+								}
+							}
+							else
+							{
+								xc = mv.AddVar(vec_->at(2).arg.c_str(), &args, BOT_RTV_VBLOB, BOT_RTV_VARG);
+							}
+						}
+						args.clear();
+					}
+				}
+				else
+				{
+					xc = mv.AddVar(vec_->at(2).arg.c_str(), 0, BOT_RTV_VREAL, BOT_RTV_REAL);
 				}
 			}
 			else {}
 		}
 		else
 		{
-			carr_128 xcar;
+			carr_168 xcar;
 			sint oc = bot_sprintf(xcar.carr, xcar.siz,
 				"\n1: type" \
 				"\n2: name" \
 				"\n(optional)3: value" \
-				"\nInitialize a variable of type: INT, REAL, TEXT, BLOB");
+				"\nInitialize a variable of type: INT, REAL, TEXT, BLOB, VINT, VREAL, VTEXT, VBLOB");
 			oc = Output(true, xcar.carr, 2, 0);
 		}
 		break;
@@ -7559,74 +8053,469 @@ sint machine::Command(std::vector<std::string>* vec_)
 		}
 		if (vec_->size() > 1)
 		{
-			xc = mv.FindVar(vec_->at(1).c_str());
+			xc = mv.FindVar(vec_->at(1).arg.c_str());
 			
 			if (xc > -1)
 			{
-				if (mv.vars[xc].v)
+				switch (mv.vvars[xc].t)
 				{
-					switch (mv.vars[xc].t)
-					{
-					case BOT_RTV_SLLINT:
-					{
-						sllint nv;
-						memcpy((void*)&nv, (void*)mv.vars[xc].v, sizeof(sllint));
-						carr_768 xcar;
-						xc = bot_sprintf(xcar.carr, xcar.siz, "%s = %lli", mv.vars[xc].n, nv);
-						xc = Output(true, xcar.carr, 2, 0);
-						break;
-					}
-					case BOT_RTV_REAL:
-					{
-						float nv;
-						memcpy((void*)&nv, (void*)mv.vars[xc].v, sizeof(float));
-						carr_768 xcar;
-						xc = bot_sprintf(xcar.carr, xcar.siz, "%s = %.9f", mv.vars[xc].n, nv);
-						xc = Output(true, xcar.carr, 2, 0);
-						break;
-					}
-					case BOT_RTV_STR:
-					{
-						std::string nv;
+				case BOT_RTV_SLLINT:
+				{
+					std::string xcar("INT ");
+					xcar.append(mv.vvars[xc].n);
 
-						for (size_t x = 0; x < mv.vars[xc].vl; x++)
+					if (!mv.vvars[xc].v.empty())
+					{
+						if (!mv.vvars[xc].v[0].empty())
 						{
-							nv.push_back((_char)mv.vars[xc].v[x]);
-						}
+							_char* nv = (_char*)malloc(sizeof(sllint));
 
-						std::string xcar;
-						xc = bot_sprintfs(&xcar, false, "%s = %s", mv.vars[xc].n, nv.c_str());
-						xc = Output(true, xcar.c_str(), 2, 0);
-						break;
+							if (nv)
+							{
+								for (size_t z = 0; z < sizeof(sllint); z++)
+								{
+									memcpy((void*)&nv[z], (void*)&mv.vvars[xc].v[0][z], sizeof(_char));
+								}
+
+								sllint val;
+								memcpy((void*)&val, (void*)nv, sizeof(sllint));
+								sint xp = bot_sprintfs(&xcar, false, " = %lli", val);
+								free(nv);
+							}
+						}
 					}
-					case BOT_RTV_CHARP:
+					sint xp = Output(true, xcar.c_str(), 2, 0);
+					break;
+				}
+				case BOT_RTV_REAL:
+				{
+					std::string xcar("REAL ");
+					xcar.append(mv.vvars[xc].n);
+
+					if (!mv.vvars[xc].v.empty())
 					{
-						_char* nv = (_char*)malloc(mv.vars[xc].vl + 1);
+						if (!mv.vvars[xc].v[0].empty())
+						{
+							_char* nv = (_char*)malloc(sizeof(float));
+
+							if (nv)
+							{
+								for (size_t z = 0; z < sizeof(float); z++)
+								{
+									memcpy((void*)&nv[z], (void*)&mv.vvars[xc].v[0][z], sizeof(_char));
+								}
+
+								float val;
+								memcpy((void*)&val, (void*)nv, sizeof(float));
+								sint xp = bot_sprintfs(&xcar, false, " = %.9f", val);
+								free(nv);
+							}
+						}
+					}
+					sint xp = Output(true, xcar.c_str(), 2, 0);
+					break;
+				}
+				case BOT_RTV_STR:
+				{
+					std::string xcar("TEXT ");
+					xcar.append(mv.vvars[xc].n);
+
+					if (!mv.vvars[xc].v.empty())
+					{
+						if (!mv.vvars[xc].v[0].empty())
+						{
+							xcar.append(" = ");
+
+							for (size_t z = 0; z < mv.vvars[xc].v[0].size(); z++)
+							{
+								xcar.push_back(mv.vvars[xc].v[0][z]);
+							}
+						}
+					}
+					sint xp = Output(true, xcar.c_str(), 2, 0);
+					break;
+				}
+				case BOT_RTV_BLOB:
+				{
+					std::string xcar("BLOB ");
+					xcar.append(mv.vvars[xc].n);
+
+					if (!mv.vvars[xc].v.empty())
+					{
+						if (!mv.vvars[xc].v[0].empty())
+						{
+							xcar.append(" = ");
+
+							for (size_t z = 0; z < mv.vvars[xc].v[0].size(); z++)
+							{
+								sint xp = bot_sprintfs(&xcar, false, "0x%02X ", mv.vvars[xc].v[0][z]);
+							}
+							xcar.pop_back();
+						}
+					}
+					sint xp = Output(true, xcar.c_str(), 2, 0);
+					break;
+				}
+				case BOT_RTV_VSLLINT:
+				{
+					std::string xcar("VINT ");
+					xcar.append(mv.vvars[xc].n);
+
+					if (!mv.vvars[xc].v.empty())
+					{
+						_char* np = (_char*)malloc(sizeof(sllint));
+
+						if (np)
+						{
+							xcar.append("\n{\n\t");
+
+							for (size_t z = 0; z < mv.vvars[xc].v.size(); z++)
+							{
+								sint xp = bot_sprintfs(&xcar, false, "[%u] ", z);
+
+								for (size_t w = 0; w < mv.vvars[xc].v[z].size(); w++)
+								{
+									memcpy((void*)&np[w], (void*)&mv.vvars[xc].v[z][w], sizeof(_char));
+								}
+
+								sllint val;
+								memcpy((void*)&val, (void*)np, sizeof(sllint));
+								xp = bot_sprintfs(&xcar, false, "%lli,\n\t", val);
+							}
+							free(np);
+							xcar.pop_back();
+							xcar.pop_back();
+							xcar.pop_back();
+							xcar.append("\n}");
+						}
+					}
+					sint xp = Output(true, xcar.c_str(), 2, 0);
+					break;
+				}
+				case BOT_RTV_VREAL:
+				{
+					std::string xcar("VREAL ");
+					xcar.append(mv.vvars[xc].n);
+
+					if (!mv.vvars[xc].v.empty())
+					{
+						xcar.append("\n{\n\t");
+						_char* nv = (_char*)malloc(sizeof(float));
 
 						if (nv)
 						{
-							std::string xcar;
-
-							for (size_t x = 0; x < mv.vars[xc].vl; x++)
+							for (size_t z = 0; z < mv.vvars[xc].v.size(); z++)
 							{
-								memcpy((void*)&nv[x], (void*)&mv.vars[xc].v[x], sizeof(_char));
-								_char ci[24]{ 0 };
-								sint xp = bot_sprintf(ci, sizeof(ci), "0x%02X ", nv[x]);
-								xcar.append(ci);
+								sint xp = bot_sprintfs(&xcar, false, "[%u] ", z);
+
+								for (size_t w = 0; w < sizeof(float); w++)
+								{
+									memcpy((void*)&nv[w], (void*)&mv.vvars[xc].v[z][w], sizeof(_char));
+								}
+								float val;
+								memcpy((void*)&val, (void*)nv, sizeof(float));
+								xp = bot_sprintfs(&xcar, false, "%.9f,\n\t", val);
 							}
-							_char trm = '\0';
-							memcpy((void*)&nv[mv.vars[xc].vl], (void*)&trm, sizeof(_char));
-							xc = Output(true, xcar.c_str(), 2, 0);
+							free(nv);
+							xcar.pop_back();
+							xcar.pop_back();
+							xcar.pop_back();
+							xcar.append("\n}");
 						}
-						free(nv);
-						break;
 					}
-					default:
-					{
-						break;
-					}
-					}
+					sint xp = Output(true, xcar.c_str(), 2, 0);
+					break;
 				}
+				case BOT_RTV_VSTR:
+				{
+					std::string xcar("VTEXT ");
+					xcar.append(mv.vvars[xc].n);
+
+					if (!mv.vvars[xc].v.empty())
+					{
+						xcar.append("\n{\n\t");
+						for (size_t z = 0; z < mv.vvars[xc].v.size(); z++)
+						{
+							sint xp = bot_sprintfs(&xcar, false, "[%u] ", z);
+
+							for (size_t w = 0; w < mv.vvars[xc].v[z].size(); w++)
+							{
+								xcar.push_back(mv.vvars[xc].v[z][w]);
+							}
+							xcar.append(",\n\t");
+						}
+						xcar.pop_back();
+						xcar.pop_back();
+						xcar.pop_back();
+						xcar.append("\n}");
+					}
+					sint xp = Output(true, xcar.c_str(), 2, 0);
+					break;
+				}
+				case BOT_RTV_VBLOB:
+				{
+					std::string xcar("VBLOB ");
+					xcar.append(mv.vvars[xc].n);
+
+					if (!mv.vvars[xc].v.empty())
+					{
+						xcar.append("\n{\n\t");
+						for (size_t z = 0; z < mv.vvars[xc].v.size(); z++)
+						{
+							sint xp = bot_sprintfs(&xcar, false, "[%u] %v0x%02X %,\n\t", z, &mv.vvars[xc].v[z]);
+						}
+						xcar.pop_back();
+						xcar.pop_back();
+						xcar.pop_back();
+						xcar.append("\n}");
+					}
+					sint xp = Output(true, xcar.c_str(), 2, 0);
+					break;
+				}
+				default:
+				{
+					break;
+				}
+				}
+			}
+		}
+		else
+		{
+			carr_24 xcar;
+			sint oc = bot_sprintf(xcar.carr, xcar.siz,
+				"\n1: name" \
+				"\nShow variable");
+			oc = Output(true, xcar.carr, 2, 0);
+		}
+		break;
+	}
+	case 8:
+	{
+		if (debug_lvl >= 1000 && debug_m)
+		{
+			sint oc = Output("Found BOTCOMMAND id 8", 2);
+		}
+		if (!vec_->empty())
+		{
+			for (size_t x = 0; x < mv.vvars.size(); x++)
+			{
+				std::string str;
+
+				switch (mv.vvars[x].t)
+				{
+				case BOT_RTV_SLLINT:
+				{
+					str.append("INT ");
+
+					if (mv.vvars[x].n)
+					{
+						str.append(mv.vvars[x].n);
+					}
+					if (!mv.vvars[x].v.empty())
+					{
+						_char* nv = (_char*)malloc(sizeof(sllint));
+
+						if (nv)
+						{
+							for (size_t z = 0; z < sizeof(sllint); z++)
+							{
+								memcpy((void*)&nv[z], (void*)&mv.vvars[x].v[0][z], sizeof(_char));
+							}
+							sllint val;
+							memcpy((void*)&val, (void*)nv, sizeof(sllint));
+							xc = bot_sprintfs(&str, false, " = %lli", val);
+							free(nv);
+						}
+					}
+					break;
+				}
+				case BOT_RTV_REAL:
+				{
+					str.append("REAL ");
+
+					if (mv.vvars[x].n)
+					{
+						str.append(mv.vvars[x].n);
+					}
+					if (!mv.vvars[x].v.empty())
+					{
+						_char* nv = (_char*)malloc(sizeof(float));
+
+						if (nv)
+						{
+							for (size_t z = 0; z < sizeof(float); z++)
+							{
+								memcpy((void*)&nv[z], (void*)&mv.vvars[x].v[0][z], sizeof(_char));
+							}
+							float val;
+							memcpy((void*)&val, (void*)nv, sizeof(float));
+							xc = bot_sprintfs(&str, false, " = %.9f", val);
+							free(nv);
+						}
+					}
+					break;
+				}
+				case BOT_RTV_STR:
+				{
+					str.append("TEXT ");
+
+					if (mv.vvars[x].n)
+					{
+						str.append(mv.vvars[x].n);
+					}
+					if (!mv.vvars[x].v.empty())
+					{
+						str.append(" = ");
+
+						for (size_t y = 0; y < mv.vvars[x].v[0].size(); y++)
+						{
+							str.push_back(mv.vvars[x].v[0][y]);
+						}
+					}
+					break;
+				}
+				case BOT_RTV_BLOB:
+				{
+					str.append("BLOB ");
+
+					if (mv.vvars[x].n)
+					{
+						str.append(mv.vvars[x].n);
+					}
+					if (!mv.vvars[x].v.empty())
+					{
+						str.append(" = ");
+
+						for (size_t y = 0; y < mv.vvars[x].v[0].size(); y++)
+						{
+							xc = bot_sprintfs(&str, false, "0x%02X ", mv.vvars[x].v[0][y]);
+						}
+						str.pop_back();
+					}
+					break;
+				}
+				case BOT_RTV_VSLLINT:
+				{
+					str.append("VINT ");
+
+					if (mv.vvars[x].n)
+					{
+						str.append(mv.vvars[x].n);
+					}
+					_char* nv = (_char*)malloc(sizeof(sllint));
+
+					if (nv)
+					{
+						if (!mv.vvars[x].v.empty())
+						{
+							str.append("\n{\n\t");
+							for (size_t y = 0; y < mv.vvars[x].v.size(); y++)
+							{
+								xc = bot_sprintfs(&str, false, "[%u] ", y);
+								for (size_t z = 0; z < sizeof(sllint); z++)
+								{
+									memcpy((void*)&nv[z], (void*)&mv.vvars[x].v[y][z], sizeof(_char));
+								}
+								sllint val;
+								memcpy((void*)&val, (void*)nv, sizeof(sllint));
+								xc = bot_sprintfs(&str, false, "%lli,\n\t", val);
+							}
+							free(nv);
+							str.pop_back();
+							str.pop_back();
+							str.pop_back();
+							str.append("\n}");
+						}
+					}
+					break;
+				}
+				case BOT_RTV_VREAL:
+				{
+					str.append("VREAL ");
+
+					if (mv.vvars[x].n)
+					{
+						str.append(mv.vvars[x].n);
+					}
+					_char* nv = (_char*)malloc(sizeof(float));
+
+					if (nv)
+					{
+						if (!mv.vvars[x].v.empty())
+						{
+							str.append("\n{\n\t");
+							for (size_t y = 0; y < mv.vvars[x].v.size(); y++)
+							{
+								xc = bot_sprintfs(&str, false, "[%u] ", y);
+								for (size_t z = 0; z < sizeof(float); z++)
+								{
+									memcpy((void*)&nv[z], (void*)&mv.vvars[x].v[y][z], sizeof(_char));
+								}
+								float val;
+								memcpy((void*)&val, (void*)nv, sizeof(float));
+								xc = bot_sprintfs(&str, false, "%.9f,\n\t", val);
+							}
+							free(nv);
+							str.pop_back();
+							str.pop_back();
+							str.pop_back();
+							str.append("\n}");
+						}
+					}
+					break;
+				}
+				case BOT_RTV_VSTR:
+				{
+					str.append("VTEXT ");
+
+					if (mv.vvars[x].n)
+					{
+						str.append(mv.vvars[x].n);
+					}
+
+					if (!mv.vvars[x].v.empty())
+					{
+						str.append("\n{\n\t");
+						for (size_t y = 0; y < mv.vvars[x].v.size(); y++)
+						{
+							xc = bot_sprintfs(&str, false, "[%u] %v%c%,\n\t", y, &mv.vvars[x].v[y]);
+						}
+						str.pop_back();
+						str.pop_back();
+						str.pop_back();
+						str.append("\n}");
+					}
+					break;
+				}
+				case BOT_RTV_VBLOB:
+				{
+					str.append("VBLOB ");
+
+					if (mv.vvars[x].n)
+					{
+						str.append(mv.vvars[x].n);
+					}
+
+					if (!mv.vvars[x].v.empty())
+					{
+						str.append("\n{\n\t");
+						for (size_t y = 0; y < mv.vvars[x].v.size(); y++)
+						{
+							xc = bot_sprintfs(&str, false, "[%u] %v0x%02X %,\n\t", y, &mv.vvars[x].v[y]);
+						}
+						str.pop_back();
+						str.pop_back();
+						str.pop_back();
+						str.append("\n}");
+					}
+					break;
+				}
+				default:
+				{
+					break;
+				}
+				}
+				xc = Output(true, str.c_str(), 2, 0);
 			}
 		}
 		else
@@ -7659,7 +8548,7 @@ sint machine::Command(std::vector<std::string>* vec_)
 		}
 		if (vec_->size() == 6)
 		{
-			BOT_FILE_M scp(vec_->at(3).c_str(), vec_->at(4).c_str(), vec_->at(5).c_str(), BOT_FILE_APND, BOT_F_CON);
+			BOT_FILE_M scp(vec_->at(3).arg.c_str(), vec_->at(4).arg.c_str(), vec_->at(5).arg.c_str(), BOT_FILE_APND, BOT_F_CON);
 			sint ox = -1;
 			sint rc = BOTOpenFile(&scp, &ox);
 
@@ -7670,9 +8559,9 @@ sint machine::Command(std::vector<std::string>* vec_)
 
 			bot_script ns;
 			BOT_STMT qt(false, 0, "scripts", "SCRIPTS", 1, &ns);
-			rc = qt.AddCol("NAME", LEncStrI(vec_->at(3).c_str(), -1).c_str());
-			rc = qt.AddCol("TYPE", LEncStrI(vec_->at(4).c_str(), -1).c_str());
-			rc = qt.AddCol("DEST", LEncStrI(vec_->at(5).c_str(), -1).c_str());
+			rc = qt.AddCol("NAME", EStr(vec_->at(3).arg.c_str()).c_str());
+			rc = qt.AddCol("TYPE", EStr(vec_->at(4).arg.c_str()).c_str());
+			rc = qt.AddCol("DEST", EStr(vec_->at(5).arg.c_str()).c_str());
 			rc = Query(&qt, BOT_RTV_SCRPT);
 
 			if (rc > -1)
@@ -7683,69 +8572,69 @@ sint machine::Command(std::vector<std::string>* vec_)
 			std::vector<BOT_STMT> tvec;
 			BOT_STMT t(false, 2, "scripts", "SCRIPTS", 1);
 
-			if (vec_->at(1).length() < 10)
+			if (vec_->at(1).arg.length() < 10)
 			{
-				uint v = (uint)atoi(vec_->at(1).c_str());
+				uint v = (uint)atoi(vec_->at(1).arg.c_str());
 				const uint y = (sizeof(v) * 2) + 4;
 				_char nuchar[y]{ 0 };
-				sint rc = bot_sprintf(nuchar, y, "X'%02X'", vec_->at(1).c_str());
+				sint rc = bot_sprintf(nuchar, y, "X'%02X'", vec_->at(1).arg.c_str());
 				rc = t.AddCol("MODE", nuchar);
 			}
 
-			if (vec_->at(2).length() < 128)
+			if (vec_->at(2).arg.length() < 128)
 			{
 				sint rc = t.AddCol("ENCODING", "X'");
 
-				for (uint z = 0; z < vec_->at(2).length(); z++)
+				for (uint z = 0; z < vec_->at(2).arg.length(); z++)
 				{
-					const uint y = (sizeof(vec_->at(2)[z]) * 2) + 1;
+					const uint y = (sizeof(vec_->at(2).arg[z]) * 2) + 1;
 					_char nuchar[y]{ 0 };
-					rc = bot_sprintf(nuchar, y, "%02X", (u_char)vec_->at(2)[z]);
+					rc = bot_sprintf(nuchar, y, "%02X", (u_char)vec_->at(2).arg[z]);
 					t.cols[rc].append(nuchar);
 				}
 
 				t.cols[rc].append("'");
 			}
 
-			if (vec_->at(3).length() < 512)
+			if (vec_->at(3).arg.length() < 512)
 			{
 				sint rc = t.AddCol("NAME", "X'");
 
-				for (uint z = 0; z < vec_->at(3).length(); z++)
+				for (uint z = 0; z < vec_->at(3).arg.length(); z++)
 				{
-					const uint y = (sizeof(vec_->at(3)[z]) * 2) + 1;
+					const uint y = (sizeof(vec_->at(3).arg[z]) * 2) + 1;
 					_char nuchar[y]{ 0 };
-					rc = bot_sprintf(nuchar, y, "%02X", (u_char)vec_->at(3)[z]);
+					rc = bot_sprintf(nuchar, y, "%02X", (u_char)vec_->at(3).arg[z]);
 					t.cols[rc].append(nuchar);
 				}
 
 				t.cols[rc].append("'");
 			}
 
-			if (vec_->at(4).length() < 256)
+			if (vec_->at(4).arg.length() < 256)
 			{
 				sint rc = t.AddCol("TYPE", "X'");
 
-				for (uint z = 0; z < vec_->at(4).length(); z++)
+				for (uint z = 0; z < vec_->at(4).arg.length(); z++)
 				{
-					const uint y = (sizeof(vec_->at(4)[z]) * 2) + 1;
+					const uint y = (sizeof(vec_->at(4).arg[z]) * 2) + 1;
 					_char nuchar[y]{ 0 };
-					rc = bot_sprintf(nuchar, y, "%02X", (u_char)vec_->at(4)[z]);
+					rc = bot_sprintf(nuchar, y, "%02X", (u_char)vec_->at(4).arg[z]);
 					t.cols[rc].append(nuchar);
 				}
 
 				t.cols[rc].append("'");
 			}
 
-			if (vec_->at(5).length() < 512)
+			if (vec_->at(5).arg.length() < 512)
 			{
 				sint rc = t.AddCol("DEST", "X'");
 
-				for (uint z = 0; z < vec_->at(5).length(); z++)
+				for (uint z = 0; z < vec_->at(5).arg.length(); z++)
 				{
-					const uint y = (sizeof(vec_->at(5)[z]) * 2) + 1;
+					const uint y = (sizeof(vec_->at(5).arg[z]) * 2) + 1;
 					_char nuchar[y]{ 0 };
-					rc = bot_sprintf(nuchar, y, "%02X", (u_char)vec_->at(5)[z]);
+					rc = bot_sprintf(nuchar, y, "%02X", (u_char)vec_->at(5).arg[z]);
 					t.cols[rc].append(nuchar);
 				}
 
@@ -7777,11 +8666,11 @@ sint machine::Command(std::vector<std::string>* vec_)
 		}
 		if (vec_->size() == 2)
 		{
-			if (bot_sisn(vec_->at(1).c_str()))
+			if (bot_sisn(vec_->at(1).arg.c_str()))
 			{
 				bot_script rval;
 				BOT_STMT t(false, 0, "scripts", "SCRIPTS", 1, &rval);
-				sint rc = t.AddCol("ID", LEncStrI(vec_->at(1).c_str(), -1).c_str());
+				sint rc = t.AddCol("ID", EStr(vec_->at(1).arg.c_str()).c_str());
 				rc = Query(&t, BOT_RTV_SCRPT);
 
 				if (rc > -1)
@@ -7794,7 +8683,7 @@ sint machine::Command(std::vector<std::string>* vec_)
 
 				bot_script rval;
 				BOT_STMT t(false, 0, "scripts", "SCRIPTS", 1);
-				sint rc = t.AddCol("DEST", LEncStrI(vec_->at(1).c_str(), -1).c_str());
+				sint rc = t.AddCol("DEST", EStr(vec_->at(1).arg.c_str()).c_str());
 				t.rblk = (void*)&rval;
 				rc = Query(&t, BOT_RTV_SCRPT);
 
@@ -7832,23 +8721,23 @@ sint machine::Command(std::vector<std::string>* vec_)
 		}
 		if (vec_->size() > 3)
 		{
-			if (!bot_sisn(vec_->at(2).c_str(), vec_->at(2).length()))
+			if (!bot_sisn(vec_->at(2).arg.c_str(), vec_->at(2).arg.length()))
 			{
 				carr_128 ncar;
-				sint xp = bot_sprintf(ncar.carr, ncar.siz, "Command ID(%s) invalid", vec_->at(2).c_str());
+				sint xp = bot_sprintf(ncar.carr, ncar.siz, "Command ID(%s) invalid", vec_->at(2).arg.c_str());
 				xp = Output(true, ncar.carr, 2, 0);
 				return -1;
 			}
-			if (!bot_sisn(vec_->at(3).c_str(), vec_->at(3).length()))
+			if (!bot_sisn(vec_->at(3).arg.c_str(), vec_->at(3).arg.length()))
 			{
 				carr_128 ncar;
-				sint xp = bot_sprintf(ncar.carr, ncar.siz, "Command Priv(%s) invalid", vec_->at(3).c_str());
+				sint xp = bot_sprintf(ncar.carr, ncar.siz, "Command Priv(%s) invalid", vec_->at(3).arg.c_str());
 				xp = Output(true, ncar.carr, 2, 0);
 				return -1;
 			}
 			
 			sint ox = GetPCliMem(BOT_C_PRIV, (void*)&xc);
-			ox = (sint)atoi(vec_->at(3).c_str());
+			ox = (sint)atoi(vec_->at(3).arg.c_str());
 
 			if (ox > xc)
 			{
@@ -7858,7 +8747,7 @@ sint machine::Command(std::vector<std::string>* vec_)
 				return -1;
 			}
 
-			ox = (sint)atoi(vec_->at(2).c_str());
+			ox = (sint)atoi(vec_->at(2).arg.c_str());
 
 			if (ox > 999)
 			{
@@ -7879,7 +8768,7 @@ sint machine::Command(std::vector<std::string>* vec_)
 			}
 
 			Cmd.Clear();
-			Cmd.Renew(vec_->at(1).c_str(), ox);
+			Cmd.Renew(vec_->at(1).arg.c_str(), ox);
 			xc = GetCommand(&Cmd);
 
 			if (xc < 0)
@@ -7912,27 +8801,24 @@ sint machine::Command(std::vector<std::string>* vec_)
 						return -1;
 					}
 
-					if (!resp.empty())
+					if (resp.length() > 999)
 					{
-						if (resp.length() > 999)
-						{
-							xc = bot_sprintf(xcar.carr, xcar.siz, "Length exceeds 999 characters");
-						}
-						else if (!strcmp(UCASE(resp.c_str()).c_str(), "EXIT"))
-						{
-							return 0;
-						}
-						else if (resp.length() > 2)
-						{
-							if (na < 21)
-							{
-								na++;
-								nargs.push_back(resp);
-								xc = bot_sprintf(xcar.carr, xcar.siz, "Required arg(%i): [desc] || empty to continue || EXIT to exit", na + 1);
-							}
-						}
-						else {}
+						xc = bot_sprintf(xcar.carr, xcar.siz, "Length exceeds 999 characters");
 					}
+					else if (!strcmp(UCASE(resp.c_str()).c_str(), "EXIT"))
+					{
+						return 0;
+					}
+					else if (!resp.empty())
+					{
+						if (na < 21)
+						{
+							na++;
+							nargs.push_back(resp);
+							xc = bot_sprintf(xcar.carr, xcar.siz, "Required arg(%i): [desc] || empty to continue || EXIT to exit", na + 1);
+						}
+					}
+					else {}
 					resp.clear();
 				}
 
@@ -7949,27 +8835,24 @@ sint machine::Command(std::vector<std::string>* vec_)
 						return -1;
 					}
 
-					if (!resp.empty())
+					if (resp.length() > 999)
 					{
-						if (resp.length() > 999)
-						{
-							xc = bot_sprintf(xcar.carr, xcar.siz, "Length exceeds 999 characters");
-						}
-						else if (!strcmp(UCASE(resp.c_str()).c_str(), "EXIT"))
-						{
-							return 0;
-						}
-						else if (resp.length() > 2)
-						{
-							if (no + na < 41)
-							{
-								no++;
-								nargs.push_back(resp);
-								xc = bot_sprintf(xcar.carr, xcar.siz, "Optional arg(%i): [desc] || empty to continue || EXIT to exit", na + no + 1);
-							}
-						}
-						else {}
+						xc = bot_sprintf(xcar.carr, xcar.siz, "Length exceeds 999 characters");
 					}
+					else if (!strcmp(UCASE(resp.c_str()).c_str(), "EXIT"))
+					{
+						return 0;
+					}
+					else if (!resp.empty())
+					{
+						if (no + na < 41)
+						{
+							no++;
+							nargs.push_back(resp);
+							xc = bot_sprintf(xcar.carr, xcar.siz, "Optional arg(%i): [desc] || empty to continue || EXIT to exit", na + no + 1);
+						}
+					}
+					else {}
 					resp.clear();
 				}
 
@@ -7986,29 +8869,26 @@ sint machine::Command(std::vector<std::string>* vec_)
 						return -1;
 					}
 
-					if (!resp.empty())
+					if (resp.length() > 999)
 					{
-						if (resp.length() > 999)
-						{
-							xc = bot_sprintf(xcar.carr, xcar.siz, "Length exceeds 999 characters");
-						}
-						else if (!strcmp(UCASE(resp.c_str()).c_str(), "EXIT"))
-						{
-							return 0;
-						}
-						else if (resp.length() > 2)
-						{
-							nargs.push_back(resp);
-						}
-						else {}
+						xc = bot_sprintf(xcar.carr, xcar.siz, "Length exceeds 999 characters");
 					}
+					else if (!strcmp(UCASE(resp.c_str()).c_str(), "EXIT"))
+					{
+						return 0;
+					}
+					else if (!resp.empty())
+					{
+						nargs.push_back(resp);
+					}
+					else {}
 					resp.clear();
 				}
 
 				BOT_STMT t(false, 2, "litebot", "COMMANDS", 1);
-				xc = t.AddCol("CMD", UCASE(LEncStrI(vec_->at(1).c_str(), -1).c_str()).c_str());
-				xc = t.AddCol("CMD_ID", vec_->at(2).c_str());
-				xc = t.AddCol("PRIV", vec_->at(3).c_str());
+				xc = t.AddCol("CMD", UCASE(EStr(vec_->at(1).arg.c_str()).c_str()).c_str());
+				xc = t.AddCol("CMD_ID", vec_->at(2).arg.c_str());
+				xc = t.AddCol("PRIV", vec_->at(3).arg.c_str());
 				t.spec = 2;
 				std::vector<BOT_STMT> tvec;
 				xc = vtool.AVTV(&tvec, &t, true, true);
@@ -8049,16 +8929,15 @@ sint machine::Command(std::vector<std::string>* vec_)
 						{
 							BOT_CRS crs(0, lid);
 							xc = hfile.GetCrs(&crs);
-							xc = bot_sprintf(ccar.carr, ccar.siz, "\n\tswitch (Command.cmd_id)\n\t{");
+							xc = bot_sprintf(ccar.carr, ccar.siz, "switch (vec[x].cmd_id)");
 							xc = BOTFindInFile(&hfile, true, crs.t, hfile.fst.e_loc, ccar.carr, bot_strlen(ccar.carr));
 							xc = hfile.GetCrs(&crs);
-							carr_16 lcara("\n\tdefault:\n\t{");
+							carr_16 lcara("case 1000:");
 							xc = BOTFindInFile(&hfile, true, crs.t, hfile.fst.e_loc, lcara.carr, bot_strlen(lcara.carr));
 
 							if (xc > -1)
 							{
-								sint nx = (sint)atoi(vec_->at(2).c_str());
-								xc = bot_sprintf(ccar.carr, ccar.siz, "\tcase %i:", nx);
+								sint nx = (sint)atoi(vec_->at(2).arg.c_str());
 								BOT_CRS lcrsa(0, lid);
 								xc = hfile.GetCrs(&lcrsa);
 								sint ct = 0;
@@ -8072,6 +8951,16 @@ sint machine::Command(std::vector<std::string>* vec_)
 										if (rc > 4)
 										{
 											xc = hfile.GetCrs(&crs);
+
+											if (ct)
+											{
+												xc = BOTFindInFile(&hfile, true, lcrsa.t + 1, hfile.dsiz - 1, lcara.carr, bot_strlen(lcara.carr));
+
+												if (xc > -1)
+												{
+													xc = hfile.GetCrs(&crs);
+												}
+											}
 										}
 										rc++;
 										xc = bot_sprintf(ccar.carr, ccar.siz, "case %i:", rc);
@@ -8113,7 +9002,7 @@ sint machine::Command(std::vector<std::string>* vec_)
 													if (rc > nx)
 													{
 														std::string scar("case ");
-														scar.append(vec_->at(2).c_str());
+														scar.append(vec_->at(2).arg.c_str());
 														scar.append(":\n");
 														scar.append(fstr.c_str());
 														scar.append("{\n");
@@ -8146,7 +9035,7 @@ sint machine::Command(std::vector<std::string>* vec_)
 														else
 														{
 															carr_1024 ocar;
-															xc = bot_sprintf(ocar.carr, ocar.siz, "\tif (vec_->size() > %u)\n%s\t{\n%s\t\tif (debug_lvl >= 1000 && debug_m)\n%s\t\t{\n%s\t\t\tsint oc = Output(\"Found BOTCOMMAND id %s\", 2);\n%s\t\t}\n%s\t\t/*CMD*/\n%s\t}\n%s\telse\n%s\t{\n%s\t\tcarr_4096 xcar;\n%s\t\tsint oc = bot_sprintf(xcar.carr, xcar.siz,", na, fstr.c_str(), fstr.c_str(), fstr.c_str(), fstr.c_str(), vec_->at(2).c_str(), fstr.c_str(), fstr.c_str(), fstr.c_str(), fstr.c_str(), fstr.c_str(), fstr.c_str(), fstr.c_str());
+															xc = bot_sprintf(ocar.carr, ocar.siz, "\tif (vec_->size() > %u)\n%s\t{\n%s\t\tif (debug_lvl >= 1000 && debug_m)\n%s\t\t{\n%s\t\t\tsint oc = Output(\"Found BOTCOMMAND id %s\", 2);\n%s\t\t}\n%s\t\t/*CMD*/\n%s\t}\n%s\telse\n%s\t{\n%s\t\tcarr_4096 xcar;\n%s\t\tsint oc = bot_sprintf(xcar.carr, xcar.siz,", na, fstr.c_str(), fstr.c_str(), fstr.c_str(), fstr.c_str(), vec_->at(2).arg.c_str(), fstr.c_str(), fstr.c_str(), fstr.c_str(), fstr.c_str(), fstr.c_str(), fstr.c_str(), fstr.c_str());
 															scar.append(ocar.carr);
 
 															for (size_t c = 0; c < nargs.size(); c++)
@@ -8210,7 +9099,7 @@ sint machine::Command(std::vector<std::string>* vec_)
 														else
 														{
 															carr_1024 ocar;
-															xc = bot_sprintf(ocar.carr, ocar.siz, "\tif (vec_->size() > %u)\n%s\t{\n%s\t\tif (debug_lvl >= 1000 && debug_m)\n%s\t\t{\n%s\t\tcarr_4096 xcar;\n%s\t\t\tsint oc = Output(\"Found BOTCOMMAND id %s\", 2);\n%s\t\t}\n%s\t\t/*CMD*/\n%s\t}\n%s\telse\n%s\t{\n%s\t\tsint oc = bot_sprintf(xcar.carr, xcar.siz,", nargs.size() - 1, fstr.c_str(), fstr.c_str(), fstr.c_str(), fstr.c_str(), vec_->at(2).c_str(), fstr.c_str(), fstr.c_str(), fstr.c_str(), fstr.c_str(), fstr.c_str(), fstr.c_str(), fstr.c_str());
+															xc = bot_sprintf(ocar.carr, ocar.siz, "\tif (vec_->size() > %u)\n%s\t{\n%s\t\tif (debug_lvl >= 1000 && debug_m)\n%s\t\t{\n%s\t\tcarr_4096 xcar;\n%s\t\t\tsint oc = Output(\"Found BOTCOMMAND id %s\", 2);\n%s\t\t}\n%s\t\t/*CMD*/\n%s\t}\n%s\telse\n%s\t{\n%s\t\tsint oc = bot_sprintf(xcar.carr, xcar.siz,", nargs.size() - 1, fstr.c_str(), fstr.c_str(), fstr.c_str(), fstr.c_str(), vec_->at(2).arg.c_str(), fstr.c_str(), fstr.c_str(), fstr.c_str(), fstr.c_str(), fstr.c_str(), fstr.c_str(), fstr.c_str());
 															scar.append(ocar.carr);
 
 															for (size_t c = 0; c < nargs.size(); c++)
@@ -8288,7 +9177,7 @@ sint machine::Command(std::vector<std::string>* vec_)
 							BOT_CRS crs(0, lid);
 							xc = hfile.GetCrs(&crs);
 							carr_1024 ocar;
-							xc = bot_sprintf(ocar.carr, ocar.siz, "\"INSERT INTO litebot.COMMANDS (\" \\\n\t\t\"CMD, PRIV, CMD_ID) \" \\\n\t\t\"\\\"%s\\\", %s, %s);\",\n\t\t\n\t\t", UCASE(vec_->at(1).c_str()).c_str(), vec_->at(3).c_str(), vec_->at(2).c_str());
+							xc = bot_sprintf(ocar.carr, ocar.siz, "\"INSERT INTO litebot.COMMANDS (\" \\\n\t\t\"CMD, PRIV, CMD_ID) \" \\\n\t\t\"\\\"%s\\\", %s, %s);\",\n\t\t\n\t\t", UCASE(vec_->at(1).arg.c_str()).c_str(), vec_->at(3).arg.c_str(), vec_->at(2).arg.c_str());
 							xc = BOTFileOUT(&hfile, crs.t + 1, true, BOT_RTV_CHARP, ocar.carr, BOT_RTV_MAX);
 						}
 
@@ -8300,7 +9189,7 @@ sint machine::Command(std::vector<std::string>* vec_)
 						}
 					}
 
-					xc = bot_sprintf(xcar.carr, xcar.siz, "Command: \"%s\" ID: %s added", UCASE(vec_->at(1).c_str()).c_str(), vec_->at(2).c_str());
+					xc = bot_sprintf(xcar.carr, xcar.siz, "Command: \"%s\" ID: %s added", UCASE(vec_->at(1).arg.c_str()).c_str(), vec_->at(2).arg.c_str());
 					xc = Output(true, xcar.carr, 2, 0);
 				}
 			}
@@ -8336,9 +9225,9 @@ sint machine::Command(std::vector<std::string>* vec_)
 				t.Renew(false, 4, "litebot", "COMMANDS", 1);
 				t.spec = 0;
 
-				if (bot_sisn(vec_->at(1).c_str(), vec_->at(1).length()))
+				if (bot_sisn(vec_->at(1).arg.c_str(), vec_->at(1).arg.length()))
 				{
-					sint ox = (sint)atoi(vec_->at(1).c_str());
+					sint ox = (sint)atoi(vec_->at(1).arg.c_str());
 
 					if (ox < 1000)
 					{
@@ -8347,7 +9236,7 @@ sint machine::Command(std::vector<std::string>* vec_)
 
 						if (xc > -1 && Cmd.id > -1)
 						{
-							xc = t.AddCond(0, "CMD_ID", "=", vec_->at(2).c_str());
+							xc = t.AddCond(0, "CMD_ID", "=", vec_->at(2).arg.c_str());
 							xc = vtool.AVTV(&stmts, &t, true, true);
 							cmds.push_back(Cmd);
 						}
@@ -8355,12 +9244,12 @@ sint machine::Command(std::vector<std::string>* vec_)
 				}
 				else
 				{
-					Cmd.Renew(vec_->at(1).c_str());
+					Cmd.Renew(vec_->at(1).arg.c_str());
 					xc = GetCommand(&Cmd);
 
 					if (xc > -1 && Cmd.id > -1)
 					{
-						xc = t.AddCond(0, "CMD", "=", UCASE(LEncStrI(vec_->at(1).c_str(), -1).c_str()).c_str());
+						xc = t.AddCond(0, "CMD", "=", UCASE(EStr(vec_->at(1).arg.c_str()).c_str()).c_str());
 						xc = vtool.AVTV(&stmts, &t, true, true);
 						cmds.push_back(Cmd);
 					}
@@ -8575,14 +9464,33 @@ sint machine::ArgSep(std::vector <std::string>* ret_, bool ksep, size_t f, size_
 	{
 		return -1;
 	}
-
-	size_t vl = bot_cstrlen(val);
-
-	if (t > vl - 1 || t < f)
+	else
 	{
-		t = vl - 1;
+		size_t ret = (size_t)bot_cstrchk(val);
+
+		if (!ret || ret > (size_t)BOT_STRLEN_MAX)
+		{
+			std::string a;
+			ret = (size_t)bot_sprintfs(&a, false, "Bad Size: len: %u", ret);
+			ret_->push_back(a);
+			return -1;
+		}
+		if (!t || t > ret - 1 || t < f)
+		{
+			t = ret - 1;
+		}
+
 	}
-	sint ret = bot_cstrchk(val);
+
+	slint lign = -1;
+	slint lit = -1;
+	slint litloc = 0;
+	std::vector<size_t> ord;
+	std::vector<size_t> ordl;
+	std::string rstr;
+	size_t mk = 0;
+	_char ig = '\\';
+	sint ret = -1;
 	sint typ = BOT_RTV_MAX;
 	va_list args;
 	va_start(args, val);
@@ -8593,20 +9501,348 @@ sint machine::ArgSep(std::vector <std::string>* ret_, bool ksep, size_t f, size_
 	case BOT_RTV_SINT:
 	{
 		sint sep = va_arg(args, sint);
+		size_t sl = sizeof(sint);
 
-		ret = -1;
-
-		if (vl && vl < (size_t)BOT_STRLEN_MAX)
+		for (size_t x = f; x < t + 1; x++)
 		{
-			size_t sl = sizeof(sint);
-			slint lign = -1;
-			slint lit = -1;
-			slint litloc = 0;
-			std::vector<size_t> ord;
-			std::vector<size_t> ordl;
-			std::string rstr;
-			size_t mk = 0;
-			sint ig = (sint)'\\';
+			if (lit > -1)
+			{
+				for (size_t xl = 0; xl < msy.nrts_lit.size(); xl++)
+				{
+					if (!memcmp((void*)&msy.nrts_lit[xl], (void*)&val[x], sl))
+					{
+						if (memcmp((void*)&ig, (void*)&val[x - 1], sl))
+						{
+							if (lit == (slint)xl)
+							{
+								if (!memcmp((void*)&sep, (void*)&msy.nrts_lit[xl], sl))
+								{
+									if (ksep)
+									{
+										for (; mk < x + sl; mk++)
+										{
+											rstr.push_back(val[mk]);
+										}
+
+										if (!rstr.empty())
+										{
+											ret_->push_back(rstr);
+											rstr.clear();
+										}
+									}
+									else
+									{
+										for (mk += sl; mk < x; mk++)
+										{
+											rstr.push_back(val[mk]);
+										}
+
+										if (!rstr.empty())
+										{
+											ret_->push_back(rstr);
+											rstr.clear();
+										}
+									}
+									x += (sl - 1);
+									mk = x + 1;
+								}
+								lit = -1;
+								litloc = (slint)x;
+							}
+							xl = msy.nrts_lit.size();
+						}
+						else
+						{
+							if (x > 1)
+							{
+								if (!memcmp((void*)&ig, (void*)&val[x - 2], sl))
+								{
+									if (lit == (slint)xl)
+									{
+										if (!memcmp((void*)&sep, (void*)&msy.nrts_lit[xl], sl))
+										{
+											if (ksep)
+											{
+												for (; mk < x + sl; mk++)
+												{
+													rstr.push_back(val[mk]);
+												}
+
+												if (!rstr.empty())
+												{
+													ret_->push_back(rstr);
+													rstr.clear();
+												}
+											}
+											else
+											{
+												for (mk += sl; mk < x; mk++)
+												{
+													rstr.push_back(val[mk]);
+												}
+
+												if (!rstr.empty())
+												{
+													ret_->push_back(rstr);
+													rstr.clear();
+												}
+											}
+											x += (sl - 1);
+											mk = x + 1;
+										}
+										lit = -1;
+										litloc = (slint)x;
+									}
+									xl = msy.nrts_lit.size();
+								}
+							}
+						}
+					}
+				}
+			}
+			else
+			{
+				if (lign > -1)
+				{
+					for (size_t yl = 0; yl < msy.nrts_lign_.size(); yl++)
+					{
+						if (!memcmp((void*)&msy.nrts_lign_[yl][0], (void*)&val[x], sl))
+						{
+							size_t zl = 0;
+
+							while (zl < msy.nrts_lign_[yl].length() && zl < t)
+							{
+								if (memcmp((void*)&msy.nrts_lign_[yl][zl], (void*)&val[x + zl], sl))
+								{
+									zl = msy.nrts_lign_[yl].length();
+								}
+								zl++;
+							}
+
+							if (zl == msy.nrts_lign_[yl].length())
+							{
+								if (lign == (slint)yl)
+								{
+									lign = -1;
+									yl = msy.nrts_lign_.size();
+								}
+							}
+						}
+					}
+				}
+				if (lign < 0)
+				{
+					for (size_t xl = 0; xl < msy.nrts_lit.size(); xl++)
+					{
+						if (!memcmp((void*)&msy.nrts_lit[xl], (void*)&val[x], sl))
+						{
+							if (!memcmp((void*)&sep, (void*)&msy.nrts_lit[xl], sl))
+							{
+								for (; mk < x; mk++)
+								{
+									rstr.push_back(val[mk]);
+								}
+
+								if (!rstr.empty())
+								{
+									ret_->push_back(rstr);
+									rstr.clear();
+								}
+							}
+							lit = (slint)xl;
+							litloc = (slint)x;
+							xl = msy.nrts_lit.size();
+						}
+					}
+					if (lit < 0)
+					{
+						if (lign < 0)
+						{
+							for (size_t yl = 0; yl < msy.nrts_lign.size(); yl++)
+							{
+								if (!memcmp((void*)&msy.nrts_lign[yl][0], (void*)&val[x], sl))
+								{
+									size_t zl = 0;
+
+									while (zl < msy.nrts_lign[yl].length() && zl < t)
+									{
+										if (memcmp((void*)&msy.nrts_lign[yl][zl], (void*)&val[x + zl], sl))
+										{
+											zl = msy.nrts_lign[yl].length();
+										}
+										zl++;
+									}
+
+									if (zl == msy.nrts_lign[yl].length())
+									{
+										lign = (slint)yl;
+										yl = msy.nrts_lign.size();
+									}
+								}
+							}
+							if (lign < 0)
+							{
+								for (size_t xl = 0; xl < msy.nrts_ord.size(); xl++)
+								{
+									if (!memcmp((void*)&msy.nrts_ord[xl], (void*)&val[x], sl))
+									{
+										if (ord.empty())
+										{
+											if (!memcmp((void*)&sep, (void*)&msy.nrts_ord[xl], sl) || !memcmp((void*)&sep, (void*)&msy.nrts_ord_[xl], sl))
+											{
+												for (; mk < x; mk++)
+												{
+													rstr.push_back(val[mk]);
+												}
+
+												if (!rstr.empty())
+												{
+													ret_->push_back(rstr);
+													rstr.clear();
+												}
+											}
+										}
+										ord.push_back(xl);
+										ordl.push_back(x);
+										xl = msy.nrts_ord.size();
+									}
+								}
+								if (!ord.empty())
+								{
+									for (size_t xl = 0; xl < msy.nrts_ord_.size(); xl++)
+									{
+										if (!memcmp((void*)&msy.nrts_ord_[xl], (void*)&val[x], sl))
+										{
+											if (ord[ord.size() - 1] == xl)
+											{
+												ord.pop_back();
+												ordl.pop_back();
+
+												if (ord.empty())
+												{
+													if (!memcmp((void*)&sep, (void*)&msy.nrts_ord[xl], sl) || !memcmp((void*)&sep, (void*)&msy.nrts_ord_[xl], sl))
+													{
+														if (ksep)
+														{
+															for (; mk < x + sl; mk++)
+															{
+																rstr.push_back(val[mk]);
+															}
+
+															if (!rstr.empty())
+															{
+																ret_->push_back(rstr);
+																rstr.clear();
+															}
+														}
+														else
+														{
+															for (mk += sl; mk < x; mk++)
+															{
+																rstr.push_back(val[mk]);
+															}
+
+															if (!rstr.empty())
+															{
+																ret_->push_back(rstr);
+																rstr.clear();
+															}
+														}
+														x += (sl - 1);
+														mk = x + 1;
+													}
+												}
+											}
+											xl = msy.nrts_ord_.size();
+										}
+									}
+								}
+								else
+								{
+									if (!memcmp((void*)&val[x], (void*)&sep, sl))
+									{
+										if (!x)
+										{
+											if (ksep)
+											{
+												std::string nsep;
+												nsep.push_back(sep);
+												ret_->push_back(nsep);
+											}
+											x += sl - 1;
+											mk = x + 1;
+										}
+										else
+										{
+											if (memcmp((void*)&ig, (void*)&val[x - 1], sl))
+											{
+												for (; mk < x; mk++)
+												{
+													rstr.push_back(val[mk]);
+												}
+												x += (sl - 1);
+												mk = x + 1;
+
+												if (!rstr.empty())
+												{
+													ret_->push_back(rstr);
+													rstr.clear();
+												}
+
+												if (ksep)
+												{
+													std::string nsep;
+													nsep.push_back(sep);
+													ret_->push_back(nsep);
+												}
+											}
+											else
+											{
+												if (x > 1)
+												{
+													if (memcmp((void*)&ig, (void*)&val[x - 2], sl))
+													{
+														for (; mk < x; mk++)
+														{
+															rstr.push_back(val[mk]);
+														}
+														x += (sl - 1);
+														mk = x + 1;
+
+														if (!rstr.empty())
+														{
+															ret_->push_back(rstr);
+															rstr.clear();
+														}
+
+														if (ksep)
+														{
+															std::string nsep;
+															nsep.push_back(sep);
+															ret_->push_back(nsep);
+														}
+													}
+												}
+											}
+										}
+									}
+								}
+							}
+						}
+					}
+				}
+			}
+		}
+		break;
+	}
+	case BOT_RTV_CHAR:
+	{
+		sint ptr = va_arg(args, sint);
+		_char sep = (_char)ptr;
+
+		if (sep)
+		{
+			size_t sl = sizeof(_char);
 
 			for (size_t x = f; x < t + 1; x++)
 			{
@@ -8622,18 +9858,34 @@ sint machine::ArgSep(std::vector <std::string>* ret_, bool ksep, size_t f, size_
 								{
 									if (!memcmp((void*)&sep, (void*)&msy.nrts_lit[xl], sl))
 									{
-										for (; mk < x + sl; mk++)
+										if (ksep)
 										{
-											rstr.push_back(val[mk]);
+											for (; mk < x + sl; mk++)
+											{
+												rstr.push_back(val[mk]);
+											}
+
+											if (!rstr.empty())
+											{
+												ret_->push_back(rstr);
+												rstr.clear();
+											}
+										}
+										else
+										{
+											for (mk += sl; mk < x; mk++)
+											{
+												rstr.push_back(val[mk]);
+											}
+
+											if (!rstr.empty())
+											{
+												ret_->push_back(rstr);
+												rstr.clear();
+											}
 										}
 										x += (sl - 1);
 										mk = x + 1;
-
-										if (!rstr.empty())
-										{
-											ret_->push_back(rstr);
-											rstr.clear();
-										}
 									}
 									lit = -1;
 									litloc = (slint)x;
@@ -8650,18 +9902,34 @@ sint machine::ArgSep(std::vector <std::string>* ret_, bool ksep, size_t f, size_
 										{
 											if (!memcmp((void*)&sep, (void*)&msy.nrts_lit[xl], sl))
 											{
-												for (; mk < x + sl; mk++)
+												if (ksep)
 												{
-													rstr.push_back(val[mk]);
+													for (; mk < x + sl; mk++)
+													{
+														rstr.push_back(val[mk]);
+													}
+
+													if (!rstr.empty())
+													{
+														ret_->push_back(rstr);
+														rstr.clear();
+													}
+												}
+												else
+												{
+													for (mk += sl; mk < x; mk++)
+													{
+														rstr.push_back(val[mk]);
+													}
+
+													if (!rstr.empty())
+													{
+														ret_->push_back(rstr);
+														rstr.clear();
+													}
 												}
 												x += (sl - 1);
 												mk = x + 1;
-
-												if (!rstr.empty())
-												{
-													ret_->push_back(rstr);
-													rstr.clear();
-												}
 											}
 											lit = -1;
 											litloc = (slint)x;
@@ -8681,18 +9949,18 @@ sint machine::ArgSep(std::vector <std::string>* ret_, bool ksep, size_t f, size_
 						{
 							if (!memcmp((void*)&msy.nrts_lign_[yl][0], (void*)&val[x], sl))
 							{
-								size_t zl = 1;
+								size_t zl = 0;
 
-								while (zl < msy.nrts_lign[yl].length() && zl < vl)
+								while (zl < msy.nrts_lign_[yl].length() && zl < t)
 								{
 									if (memcmp((void*)&msy.nrts_lign_[yl][zl], (void*)&val[x + zl], sl))
 									{
-										zl = msy.nrts_lign[yl].length();
+										zl = msy.nrts_lign_[yl].length();
 									}
 									zl++;
 								}
 
-								if (zl == msy.nrts_lign[yl].length())
+								if (zl == msy.nrts_lign_[yl].length())
 								{
 									if (lign == (slint)yl)
 									{
@@ -8735,9 +10003,9 @@ sint machine::ArgSep(std::vector <std::string>* ret_, bool ksep, size_t f, size_
 								{
 									if (!memcmp((void*)&msy.nrts_lign[yl][0], (void*)&val[x], sl))
 									{
-										size_t zl = 1;
+										size_t zl = 0;
 
-										while (zl < msy.nrts_lign[yl].length() && zl < vl)
+										while (zl < msy.nrts_lign[yl].length() && zl < t)
 										{
 											if (memcmp((void*)&msy.nrts_lign[yl][zl], (void*)&val[x + zl], sl))
 											{
@@ -8795,18 +10063,34 @@ sint machine::ArgSep(std::vector <std::string>* ret_, bool ksep, size_t f, size_
 													{
 														if (!memcmp((void*)&sep, (void*)&msy.nrts_ord[xl], sl) || !memcmp((void*)&sep, (void*)&msy.nrts_ord_[xl], sl))
 														{
-															for (; mk < x + sl; mk++)
+															if (ksep)
 															{
-																rstr.push_back(val[mk]);
+																for (; mk < x + sl; mk++)
+																{
+																	rstr.push_back(val[mk]);
+																}
+
+																if (!rstr.empty())
+																{
+																	ret_->push_back(rstr);
+																	rstr.clear();
+																}
+															}
+															else
+															{
+																for (mk += sl; mk < x; mk++)
+																{
+																	rstr.push_back(val[mk]);
+																}
+
+																if (!rstr.empty())
+																{
+																	ret_->push_back(rstr);
+																	rstr.clear();
+																}
 															}
 															x += (sl - 1);
 															mk = x + 1;
-
-															if (!rstr.empty())
-															{
-																ret_->push_back(rstr);
-																rstr.clear();
-															}
 														}
 													}
 												}
@@ -8890,387 +10174,6 @@ sint machine::ArgSep(std::vector <std::string>* ret_, bool ksep, size_t f, size_
 					}
 				}
 			}
-
-			for (; mk < vl; mk++)
-			{
-				rstr.push_back(val[mk]);
-			}
-			if (!rstr.empty())
-			{
-				ret_->push_back(rstr);
-			}
-			if (lit > -1)
-			{
-				carr_64 ncar;
-				ret = bot_sprintf(ncar.carr, ncar.siz, "Open literal '%c' at: %u", msy.nrts_lit[lit], (uint)litloc);
-				std::string rstr(ncar.carr);
-				ret_->push_back(rstr);
-				ret = -1;
-			}
-			else if (!ord.empty())
-			{
-				carr_64 ncar;
-				ret = bot_sprintf(ncar.carr, ncar.siz, "Open bracket '%c' at: %u", msy.nrts_ord[ord[0]], (uint)ordl[0]);
-				std::string rstr(ncar.carr);
-				ret_->push_back(rstr);
-				ret = -1;
-			}
-			else
-			{
-				ret = 0;
-			}
-		}
-		else
-		{
-			carr_64 ncar;
-			ret = bot_sprintf(ncar.carr, ncar.siz, "Bad Size: vl: %u", (uint)vl);
-			std::string rstr(ncar.carr);
-			ret_->push_back(rstr);
-			ret = -1;
-		}
-		break;
-	}
-	case BOT_RTV_CHAR:
-	{
-		sint ptr = va_arg(args, sint);
-		_char sep = (_char)ptr;
-
-		if (sep)
-		{
-			ret = -1;
-
-			if (vl && vl < (size_t)BOT_STRLEN_MAX)
-			{
-				size_t sl = sizeof(_char);
-				slint lign = -1;
-				slint lit = -1;
-				slint litloc = 0;
-				std::vector<size_t> ord;
-				std::vector<size_t> ordl;
-				std::string rstr;
-				size_t mk = 0;
-				_char ig = '\\';
-
-				for (size_t x = f; x < t + 1; x++)
-				{
-					if (lit > -1)
-					{
-						for (size_t xl = 0; xl < msy.nrts_lit.size(); xl++)
-						{
-							if (!memcmp((void*)&msy.nrts_lit[xl], (void*)&val[x], sl))
-							{
-								if (memcmp((void*)&ig, (void*)&val[x - 1], sl))
-								{
-									if (lit == (slint)xl)
-									{
-										if (!memcmp((void*)&sep, (void*)&msy.nrts_lit[xl], sl))
-										{
-											for (; mk < x + sl; mk++)
-											{
-												rstr.push_back(val[mk]);
-											}
-											x += (sl - 1);
-											mk = x + 1;
-
-											if (!rstr.empty())
-											{
-												ret_->push_back(rstr);
-												rstr.clear();
-											}
-										}
-										lit = -1;
-										litloc = (slint)x;
-									}
-									xl = msy.nrts_lit.size();
-								}
-								else
-								{
-									if (x > 1)
-									{
-										if (!memcmp((void*)&ig, (void*)&val[x - 2], sl))
-										{
-											if (lit == (slint)xl)
-											{
-												if (!memcmp((void*)&sep, (void*)&msy.nrts_lit[xl], sl))
-												{
-													for (; mk < x + sl; mk++)
-													{
-														rstr.push_back(val[mk]);
-													}
-													x += (sl - 1);
-													mk = x + 1;
-
-													if (!rstr.empty())
-													{
-														ret_->push_back(rstr);
-														rstr.clear();
-													}
-												}
-												lit = -1;
-												litloc = (slint)x;
-											}
-											xl = msy.nrts_lit.size();
-										}
-									}
-								}
-							}
-						}
-					}
-					else
-					{
-						if (lign > -1)
-						{
-							for (size_t yl = 0; yl < msy.nrts_lign_.size(); yl++)
-							{
-								if (!memcmp((void*)&msy.nrts_lign_[yl][0], (void*)&val[x], sl))
-								{
-									size_t zl = 1;
-
-									while (zl < msy.nrts_lign[yl].length() && zl < vl)
-									{
-										if (memcmp((void*)&msy.nrts_lign_[yl][zl], (void*)&val[x + zl], sl))
-										{
-											zl = msy.nrts_lign[yl].length();
-										}
-										zl++;
-									}
-
-									if (zl == msy.nrts_lign[yl].length())
-									{
-										if (lign == (slint)yl)
-										{
-											lign = -1;
-											yl = msy.nrts_lign_.size();
-										}
-									}
-								}
-							}
-						}
-						if (lign < 0)
-						{
-							for (size_t xl = 0; xl < msy.nrts_lit.size(); xl++)
-							{
-								if (!memcmp((void*)&msy.nrts_lit[xl], (void*)&val[x], sl))
-								{
-									if (!memcmp((void*)&sep, (void*)&msy.nrts_lit[xl], sl))
-									{
-										for (; mk < x; mk++)
-										{
-											rstr.push_back(val[mk]);
-										}
-
-										if (!rstr.empty())
-										{
-											ret_->push_back(rstr);
-											rstr.clear();
-										}
-									}
-									lit = (slint)xl;
-									litloc = (slint)x;
-									xl = msy.nrts_lit.size();
-								}
-							}
-							if (lit < 0)
-							{
-								if (lign < 0)
-								{
-									for (size_t yl = 0; yl < msy.nrts_lign.size(); yl++)
-									{
-										if (!memcmp((void*)&msy.nrts_lign[yl][0], (void*)&val[x], sl))
-										{
-											size_t zl = 1;
-
-											while (zl < msy.nrts_lign[yl].length() && zl < vl)
-											{
-												if (memcmp((void*)&msy.nrts_lign[yl][zl], (void*)&val[x + zl], sl))
-												{
-													zl = msy.nrts_lign[yl].length();
-												}
-												zl++;
-											}
-
-											if (zl == msy.nrts_lign[yl].length())
-											{
-												lign = (slint)yl;
-												yl = msy.nrts_lign.size();
-											}
-										}
-									}
-									if (lign < 0)
-									{
-										for (size_t xl = 0; xl < msy.nrts_ord.size(); xl++)
-										{
-											if (!memcmp((void*)&msy.nrts_ord[xl], (void*)&val[x], sl))
-											{
-												if (ord.empty())
-												{
-													if (!memcmp((void*)&sep, (void*)&msy.nrts_ord[xl], sl) || !memcmp((void*)&sep, (void*)&msy.nrts_ord_[xl], sl))
-													{
-														for (; mk < x; mk++)
-														{
-															rstr.push_back(val[mk]);
-														}
-
-														if (!rstr.empty())
-														{
-															ret_->push_back(rstr);
-															rstr.clear();
-														}
-													}
-												}
-												ord.push_back(xl);
-												ordl.push_back(x);
-												xl = msy.nrts_ord.size();
-											}
-										}
-										if (!ord.empty())
-										{
-											for (size_t xl = 0; xl < msy.nrts_ord_.size(); xl++)
-											{
-												if (!memcmp((void*)&msy.nrts_ord_[xl], (void*)&val[x], sl))
-												{
-													if (ord[ord.size() - 1] == xl)
-													{
-														ord.pop_back();
-														ordl.pop_back();
-
-														if (ord.empty())
-														{
-															if (!memcmp((void*)&sep, (void*)&msy.nrts_ord[xl], sl) || !memcmp((void*)&sep, (void*)&msy.nrts_ord_[xl], sl))
-															{
-																for (; mk < x + sl; mk++)
-																{
-																	rstr.push_back(val[mk]);
-																}
-																x += (sl - 1);
-																mk = x + 1;
-
-																if (!rstr.empty())
-																{
-																	ret_->push_back(rstr);
-																	rstr.clear();
-																}
-															}
-														}
-													}
-													xl = msy.nrts_ord_.size();
-												}
-											}
-										}
-										else
-										{
-											if (!memcmp((void*)&val[x], (void*)&sep, sl))
-											{
-												if (!x)
-												{
-													if (ksep)
-													{
-														std::string nsep;
-														nsep.push_back(sep);
-														ret_->push_back(nsep);
-													}
-													x += sl - 1;
-													mk = x + 1;
-												}
-												else
-												{
-													if (memcmp((void*)&ig, (void*)&val[x - 1], sl))
-													{
-														for (; mk < x; mk++)
-														{
-															rstr.push_back(val[mk]);
-														}
-														x += (sl - 1);
-														mk = x + 1;
-
-														if (!rstr.empty())
-														{
-															ret_->push_back(rstr);
-															rstr.clear();
-														}
-
-														if (ksep)
-														{
-															std::string nsep;
-															nsep.push_back(sep);
-															ret_->push_back(nsep);
-														}
-													}
-													else
-													{
-														if (x > 1)
-														{
-															if (memcmp((void*)&ig, (void*)&val[x - 2], sl))
-															{
-																for (; mk < x; mk++)
-																{
-																	rstr.push_back(val[mk]);
-																}
-																x += (sl - 1);
-																mk = x + 1;
-
-																if (!rstr.empty())
-																{
-																	ret_->push_back(rstr);
-																	rstr.clear();
-																}
-
-																if (ksep)
-																{
-																	std::string nsep;
-																	nsep.push_back(sep);
-																	ret_->push_back(nsep);
-																}
-															}
-														}
-													}
-												}
-											}
-										}
-									}
-								}
-							}
-						}
-					}
-				}
-
-				for (; mk < vl; mk++)
-				{
-					rstr.push_back(val[mk]);
-				}
-				if (!rstr.empty())
-				{
-					ret_->push_back(rstr);
-				}
-				if (lit > -1)
-				{
-					carr_64 ncar;
-					ret = bot_sprintf(ncar.carr, ncar.siz, "Open literal '%c' at: %u", msy.nrts_lit[lit], (uint)litloc);
-					std::string rstr(ncar.carr);
-					ret_->push_back(rstr);
-					ret = -1;
-				}
-				else if (!ord.empty())
-				{
-					carr_64 ncar;
-					ret = bot_sprintf(ncar.carr, ncar.siz, "Open bracket '%c' at: %u", msy.nrts_ord[ord[0]], (uint)ordl[0]);
-					std::string rstr(ncar.carr);
-					ret_->push_back(rstr);
-					ret = -1;
-				}
-				else
-				{
-					ret = 0;
-				}
-			}
-			else
-			{
-				carr_64 ncar;
-				ret = bot_sprintf(ncar.carr, ncar.siz, "Bad Size: vl: %u", (uint)vl);
-				std::string rstr(ncar.carr);
-				ret_->push_back(rstr);
-				ret = -1;
-			}
 		}
 		break;
 	}
@@ -9281,40 +10184,27 @@ sint machine::ArgSep(std::vector <std::string>* ret_, bool ksep, size_t f, size_
 
 		if (sep)
 		{
-			ret = -1;
-
-			if (vl && vl < (size_t)BOT_STRLEN_MAX)
+			size_t sl = bot_strlen(sep);
+			for (size_t x = f; x < t + 1; x++)
 			{
-				size_t sl = bot_strlen(sep);
-				slint lign = -1;
-				slint lit = -1;
-				slint litloc = 0;
-				std::vector<size_t> ord;
-				std::vector<size_t> ordl;
-				std::string rstr;
-				size_t mk = 0;
-				_char ig = '\\';
-
-				for (size_t x = f; x < t + 1; x++)
+				if (lit > -1)
 				{
-					if (lit > -1)
+					for (size_t xl = 0; xl < msy.nrts_lit.size(); xl++)
 					{
-						for (size_t xl = 0; xl < msy.nrts_lit.size(); xl++)
+						if (!memcmp((void*)&msy.nrts_lit[xl], (void*)&val[x], sizeof(_char)))
 						{
-							if (!memcmp((void*)&msy.nrts_lit[xl], (void*)&val[x], sizeof(_char)))
+							if (memcmp((void*)&ig, (void*)&val[x - 1], sizeof(_char)))
 							{
-								if (memcmp((void*)&ig, (void*)&val[x - 1], sizeof(_char)))
+								if (lit == (slint)xl)
 								{
-									if (lit == (slint)xl)
+									if (!strcmp(sep, &msy.nrts_lit[xl]))
 									{
-										if (!strcmp(sep, &msy.nrts_lit[xl]))
+										if (ksep)
 										{
 											for (; mk < x + sl; mk++)
 											{
 												rstr.push_back(val[mk]);
 											}
-											x += (sl - 1);
-											mk = x + 1;
 
 											if (!rstr.empty())
 											{
@@ -9322,27 +10212,43 @@ sint machine::ArgSep(std::vector <std::string>* ret_, bool ksep, size_t f, size_
 												rstr.clear();
 											}
 										}
-										lit = -1;
-										litloc = (slint)x;
-									}
-									xl = msy.nrts_lit.size();
-								}
-								else
-								{
-									if (x > 1)
-									{
-										if (!memcmp((void*)&ig, (void*)&val[x - 2], sizeof(_char)))
+										else
 										{
-											if (lit == (slint)xl)
+											for (mk += sl; mk < x; mk++)
 											{
-												if (!strcmp(sep, &msy.nrts_lit[xl]))
+												rstr.push_back(val[mk]);
+											}
+
+											if (!rstr.empty())
+											{
+												ret_->push_back(rstr);
+												rstr.clear();
+											}
+										}
+										x += (sl - 1);
+										mk = x + 1;
+									}
+									lit = -1;
+									litloc = (slint)x;
+								}
+								xl = msy.nrts_lit.size();
+							}
+							else
+							{
+								if (x > 1)
+								{
+									if (!memcmp((void*)&ig, (void*)&val[x - 2], sizeof(_char)))
+									{
+										if (lit == (slint)xl)
+										{
+											if (!strcmp(sep, &msy.nrts_lit[xl]))
+											{
+												if (ksep)
 												{
 													for (; mk < x + sl; mk++)
 													{
 														rstr.push_back(val[mk]);
 													}
-													x += (sl - 1);
-													mk = x + 1;
 
 													if (!rstr.empty())
 													{
@@ -9350,144 +10256,160 @@ sint machine::ArgSep(std::vector <std::string>* ret_, bool ksep, size_t f, size_
 														rstr.clear();
 													}
 												}
-												lit = -1;
-												litloc = (slint)x;
+												else
+												{
+													for (mk += sl; mk < x; mk++)
+													{
+														rstr.push_back(val[mk]);
+													}
+
+													if (!rstr.empty())
+													{
+														ret_->push_back(rstr);
+														rstr.clear();
+													}
+												}
+												x += (sl - 1);
+												mk = x + 1;
 											}
-											xl = msy.nrts_lit.size();
+											lit = -1;
+											litloc = (slint)x;
 										}
+										xl = msy.nrts_lit.size();
 									}
 								}
 							}
 						}
 					}
-					else
+				}
+				else
+				{
+					if (lign > -1)
 					{
-						if (lign > -1)
+						for (size_t yl = 0; yl < msy.nrts_lign_.size(); yl++)
 						{
-							for (size_t yl = 0; yl < msy.nrts_lign_.size(); yl++)
+							if (!memcmp((void*)&msy.nrts_lign_[yl][0], (void*)&val[x], sizeof(_char)))
 							{
-								if (!memcmp((void*)&msy.nrts_lign_[yl][0], (void*)&val[x], sizeof(_char)))
+								size_t zl = 0;
+
+								while (zl < msy.nrts_lign_[yl].length() && zl < t)
 								{
-									size_t zl = 1;
-
-									while (zl < msy.nrts_lign[yl].length() && zl < vl)
+									if (memcmp((void*)&msy.nrts_lign_[yl][zl], (void*)&val[x + zl], sizeof(_char)))
 									{
-										if (memcmp((void*)&msy.nrts_lign_[yl][zl], (void*)&val[x + zl], sizeof(_char)))
-										{
-											zl = msy.nrts_lign[yl].length();
-										}
-										zl++;
+										zl = msy.nrts_lign_[yl].length();
 									}
+									zl++;
+								}
 
-									if (zl == msy.nrts_lign[yl].length())
+								if (zl == msy.nrts_lign_[yl].length())
+								{
+									if (lign == (slint)yl)
 									{
-										if (lign == (slint)yl)
-										{
-											lign = -1;
-											yl = msy.nrts_lign_.size();
-										}
+										lign = -1;
+										yl = msy.nrts_lign_.size();
 									}
 								}
 							}
 						}
-						if (lign < 0)
+					}
+					if (lign < 0)
+					{
+						for (size_t xl = 0; xl < msy.nrts_lit.size(); xl++)
 						{
-							for (size_t xl = 0; xl < msy.nrts_lit.size(); xl++)
+							if (!memcmp((void*)&msy.nrts_lit[xl], (void*)&val[x], sizeof(_char)))
 							{
-								if (!memcmp((void*)&msy.nrts_lit[xl], (void*)&val[x], sizeof(_char)))
+								if (!strcmp(sep, &msy.nrts_lit[xl]))
 								{
-									if (!strcmp(sep, &msy.nrts_lit[xl]))
+									for (; mk < x; mk++)
 									{
-										for (; mk < x; mk++)
+										rstr.push_back(val[mk]);
+									}
+
+									if (!rstr.empty())
+									{
+										ret_->push_back(rstr);
+										rstr.clear();
+									}
+								}
+								lit = (slint)xl;
+								litloc = (slint)x;
+								xl = msy.nrts_lit.size();
+							}
+						}
+						if (lit < 0)
+						{
+							if (lign < 0)
+							{
+								for (size_t yl = 0; yl < msy.nrts_lign.size(); yl++)
+								{
+									if (!memcmp((void*)&msy.nrts_lign[yl][0], (void*)&val[x], sizeof(_char)))
+									{
+										size_t zl = 0;
+
+										while (zl < msy.nrts_lign[yl].length() && zl < t)
 										{
-											rstr.push_back(val[mk]);
+											if (memcmp((void*)&msy.nrts_lign[yl][zl], (void*)&val[x + zl], sizeof(_char)))
+											{
+												zl = msy.nrts_lign[yl].length();
+											}
+											zl++;
 										}
 
-										if (!rstr.empty())
+										if (zl == msy.nrts_lign[yl].length())
 										{
-											ret_->push_back(rstr);
-											rstr.clear();
+											lign = (slint)yl;
+											yl = msy.nrts_lign.size();
 										}
 									}
-									lit = (slint)xl;
-									litloc = (slint)x;
-									xl = msy.nrts_lit.size();
 								}
-							}
-							if (lit < 0)
-							{
 								if (lign < 0)
 								{
-									for (size_t yl = 0; yl < msy.nrts_lign.size(); yl++)
+									for (size_t xl = 0; xl < msy.nrts_ord.size(); xl++)
 									{
-										if (!memcmp((void*)&msy.nrts_lign[yl][0], (void*)&val[x], sizeof(_char)))
+										if (!memcmp((void*)&msy.nrts_ord[xl], (void*)&val[x], sizeof(_char)))
 										{
-											size_t zl = 1;
-
-											while (zl < msy.nrts_lign[yl].length() && zl < vl)
+											if (ord.empty())
 											{
-												if (memcmp((void*)&msy.nrts_lign[yl][zl], (void*)&val[x + zl], sizeof(_char)))
+												if (!strcmp(sep, &msy.nrts_ord[xl]) || !strcmp(sep, &msy.nrts_ord_[xl]))
 												{
-													zl = msy.nrts_lign[yl].length();
-												}
-												zl++;
-											}
-
-											if (zl == msy.nrts_lign[yl].length())
-											{
-												lign = (slint)yl;
-												yl = msy.nrts_lign.size();
-											}
-										}
-									}
-									if (lign < 0)
-									{
-										for (size_t xl = 0; xl < msy.nrts_ord.size(); xl++)
-										{
-											if (!memcmp((void*)&msy.nrts_ord[xl], (void*)&val[x], sizeof(_char)))
-											{
-												if (ord.empty())
-												{
-													if (!strcmp(sep, &msy.nrts_ord[xl]) || !strcmp(sep, &msy.nrts_ord_[xl]))
+													for (; mk < x; mk++)
 													{
-														for (; mk < x; mk++)
-														{
-															rstr.push_back(val[mk]);
-														}
+														rstr.push_back(val[mk]);
+													}
 
-														if (!rstr.empty())
-														{
-															ret_->push_back(rstr);
-															rstr.clear();
-														}
+													if (!rstr.empty())
+													{
+														ret_->push_back(rstr);
+														rstr.clear();
 													}
 												}
-												ord.push_back(xl);
-												ordl.push_back(x);
-												xl = msy.nrts_ord.size();
 											}
+											ord.push_back(xl);
+											ordl.push_back(x);
+											xl = msy.nrts_ord.size();
 										}
-										if (!ord.empty())
+									}
+									if (!ord.empty())
+									{
+										for (size_t xl = 0; xl < msy.nrts_ord_.size(); xl++)
 										{
-											for (size_t xl = 0; xl < msy.nrts_ord_.size(); xl++)
+											if (!memcmp((void*)&msy.nrts_ord_[xl], (void*)&val[x], sizeof(_char)))
 											{
-												if (!memcmp((void*)&msy.nrts_ord_[xl], (void*)&val[x], sizeof(_char)))
+												if (ord[ord.size() - 1] == xl)
 												{
-													if (ord[ord.size() - 1] == xl)
-													{
-														ord.pop_back();
-														ordl.pop_back();
+													ord.pop_back();
+													ordl.pop_back();
 
-														if (ord.empty())
+													if (ord.empty())
+													{
+														if (!strcmp(sep, &msy.nrts_ord[xl]) || !strcmp(sep, &msy.nrts_ord_[xl]))
 														{
-															if (!strcmp(sep, &msy.nrts_ord[xl]) || !strcmp(sep, &msy.nrts_ord_[xl]))
+															if (ksep)
 															{
 																for (; mk < x + sl; mk++)
 																{
 																	rstr.push_back(val[mk]);
 																}
-																x += (sl - 1);
-																mk = x + 1;
 
 																if (!rstr.empty())
 																{
@@ -9495,21 +10417,63 @@ sint machine::ArgSep(std::vector <std::string>* ret_, bool ksep, size_t f, size_
 																	rstr.clear();
 																}
 															}
+															else
+															{
+																for (mk += sl; mk < x; mk++)
+																{
+																	rstr.push_back(val[mk]);
+																}
+
+																if (!rstr.empty())
+																{
+																	ret_->push_back(rstr);
+																	rstr.clear();
+																}
+															}
+															x += (sl - 1);
+															mk = x + 1;
 														}
 													}
-													xl = msy.nrts_ord_.size();
 												}
+												xl = msy.nrts_ord_.size();
 											}
 										}
-										else
+									}
+									else
+									{
+										if (!memcmp((void*)&val[x], (void*)&sep[0], sizeof(_char)))
 										{
-											if (!memcmp((void*)&val[x], (void*)&sep[0], sizeof(_char)))
+											if (!x)
 											{
-												if (!x)
+												size_t y = 1;
+
+												while (y < sl && x + y < t)
+												{
+													if (memcmp((void*)&val[x + y], (void*)&sep[y], sizeof(_char)))
+													{
+														y = sl;
+													}
+													y++;
+												}
+
+												if (y == sl)
+												{
+													if (ksep)
+													{
+														std::string nsep(sep);
+														ret_->push_back(nsep);
+													}
+													x += sl - 1;
+													mk = x + 1;
+												}
+											}
+											else
+											{
+												if (memcmp((void*)&ig, (void*)&val[x - 1], sizeof(_char)))
 												{
 													size_t y = 1;
 
-													while (y < sl && x + y < vl)
+													while (y < sl && x + y < t)
 													{
 														if (memcmp((void*)&val[x + y], (void*)&sep[y], sizeof(_char)))
 														{
@@ -9520,1347 +10484,7 @@ sint machine::ArgSep(std::vector <std::string>* ret_, bool ksep, size_t f, size_
 
 													if (y == sl)
 													{
-														if (ksep)
-														{
-															std::string nsep(sep);
-															ret_->push_back(nsep);
-														}
-														x += sl - 1;
-														mk = x + 1;
-													}
-												}
-												else
-												{
-													if (memcmp((void*)&ig, (void*)&val[x - 1], sizeof(_char)))
-													{
-														size_t y = 1;
-
-														while (y < sl && x + y < vl)
-														{
-															if (memcmp((void*)&val[x + y], (void*)&sep[y], sizeof(_char)))
-															{
-																y = sl;
-															}
-															y++;
-														}
-
-														if (y == sl)
-														{
-															for (; mk < x; mk++)
-															{
-																rstr.push_back(val[mk]);
-															}
-															x += (sl - 1);
-															mk = x + 1;
-
-															if (!rstr.empty())
-															{
-																ret_->push_back(rstr);
-																rstr.clear();
-															}
-
-															if (ksep)
-															{
-																std::string nsep(sep);
-																ret_->push_back(nsep);
-															}
-														}
-													}
-													else
-													{
-														if (x > 1)
-														{
-															if (!memcmp((void*)&ig, (void*)&val[x - 2], sizeof(_char)))
-															{
-																size_t y = 1;
-
-																while (y < sl && x + y < vl)
-																{
-																	if (memcmp((void*)&val[x + y], (void*)&sep[y], sizeof(_char)))
-																	{
-																		y = sl;
-																	}
-																	y++;
-																}
-
-																if (y == sl)
-																{
-																	for (; mk < x; mk++)
-																	{
-																		rstr.push_back(val[mk]);
-																	}
-																	x += (sl - 1);
-																	mk = x + 1;
-
-																	if (!rstr.empty())
-																	{
-																		ret_->push_back(rstr);
-																		rstr.clear();
-																	}
-
-																	if (ksep)
-																	{
-																		std::string nsep(sep);
-																		ret_->push_back(nsep);
-																	}
-																}
-															}
-														}
-													}
-												}
-											}
-										}
-									}
-								}
-							}
-						}
-					}
-				}
-
-				for (; mk < vl; mk++)
-				{
-					rstr.push_back(val[mk]);
-				}
-				if (!rstr.empty())
-				{
-					ret_->push_back(rstr);
-				}
-				if (lit > -1)
-				{
-					carr_64 ncar;
-					ret = bot_sprintf(ncar.carr, ncar.siz, "Open literal '%c' at: %u", msy.nrts_lit[lit], (uint)litloc);
-					std::string rstr(ncar.carr);
-					ret_->push_back(rstr);
-					ret = -1;
-				}
-				else if (!ord.empty())
-				{
-					carr_64 ncar;
-					ret = bot_sprintf(ncar.carr, ncar.siz, "Open bracket '%c' at: %u", msy.nrts_ord[ord[0]], (uint)ordl[0]);
-					std::string rstr(ncar.carr);
-					ret_->push_back(rstr);
-					ret = -1;
-				}
-				else
-				{
-					ret = 0;
-				}
-			}
-			else
-			{
-				carr_64 ncar;
-				ret = bot_sprintf(ncar.carr, ncar.siz, "Bad Size: vl: %u", (uint)vl);
-				std::string rstr(ncar.carr);
-				ret_->push_back(rstr);
-				ret = -1;
-			}
-		}
-		break;
-	}
-	case BOT_RTV_CCHAR:
-	{
-		void* ptr = va_arg(args, void*);
-		c_char* sep = reinterpret_cast<c_char*>(ptr);
-
-		if (sep)
-		{
-			ret = -1;
-
-			if (vl && vl < (size_t)BOT_STRLEN_MAX)
-			{
-				size_t sl = bot_cstrlen(sep);
-				slint lign = -1;
-				slint lit = -1;
-				slint litloc = 0;
-				std::vector<size_t> ord;
-				std::vector<size_t> ordl;
-				std::string rstr;
-				size_t mk = 0;
-				_char ig = '\\';
-
-				for (size_t x = f; x < t + 1; x++)
-				{
-					if (lit > -1)
-					{
-						for (size_t xl = 0; xl < msy.nrts_lit.size(); xl++)
-						{
-							if (!memcmp((void*)&msy.nrts_lit[xl], (void*)&val[x], sizeof(_char)))
-							{
-								if (memcmp((void*)&ig, (void*)&val[x - 1], sizeof(_char)))
-								{
-									if (lit == (slint)xl)
-									{
-										if (!strcmp(sep, &msy.nrts_lit[xl]))
-										{
-											for (; mk < x + sl; mk++)
-											{
-												rstr.push_back(val[mk]);
-											}
-											x += (sl - 1);
-											mk = x + 1;
-
-											if (!rstr.empty())
-											{
-												ret_->push_back(rstr);
-												rstr.clear();
-											}
-										}
-										lit = -1;
-										litloc = (slint)x;
-									}
-									xl = msy.nrts_lit.size();
-								}
-								else
-								{
-									if (x > 1)
-									{
-										if (!memcmp((void*)&ig, (void*)&val[x - 2], sizeof(_char)))
-										{
-											if (lit == (slint)xl)
-											{
-												if (!strcmp(sep, &msy.nrts_lit[xl]))
-												{
-													for (; mk < x + sl; mk++)
-													{
-														rstr.push_back(val[mk]);
-													}
-													x += (sl - 1);
-													mk = x + 1;
-
-													if (!rstr.empty())
-													{
-														ret_->push_back(rstr);
-														rstr.clear();
-													}
-												}
-												lit = -1;
-												litloc = (slint)x;
-											}
-											xl = msy.nrts_lit.size();
-										}
-									}
-								}
-							}
-						}
-					}
-					else
-					{
-						if (lign > -1)
-						{
-							for (size_t yl = 0; yl < msy.nrts_lign_.size(); yl++)
-							{
-								if (!memcmp((void*)&msy.nrts_lign_[yl][0], (void*)&val[x], sizeof(_char)))
-								{
-									size_t zl = 1;
-
-									while (zl < msy.nrts_lign[yl].length() && zl < vl)
-									{
-										if (memcmp((void*)&msy.nrts_lign_[yl][zl], (void*)&val[x + zl], sizeof(_char)))
-										{
-											zl = msy.nrts_lign[yl].length();
-										}
-										zl++;
-									}
-
-									if (zl == msy.nrts_lign[yl].length())
-									{
-										if (lign == (slint)yl)
-										{
-											lign = -1;
-											yl = msy.nrts_lign_.size();
-										}
-									}
-								}
-							}
-						}
-						if (lign < 0)
-						{
-							for (size_t xl = 0; xl < msy.nrts_lit.size(); xl++)
-							{
-								if (!memcmp((void*)&msy.nrts_lit[xl], (void*)&val[x], sizeof(_char)))
-								{
-									if (!strcmp(sep, &msy.nrts_lit[xl]))
-									{
-										for (; mk < x; mk++)
-										{
-											rstr.push_back(val[mk]);
-										}
-
-										if (!rstr.empty())
-										{
-											ret_->push_back(rstr);
-											rstr.clear();
-										}
-									}
-									lit = (slint)xl;
-									litloc = (slint)x;
-									xl = msy.nrts_lit.size();
-								}
-							}
-							if (lit < 0)
-							{
-								if (lign < 0)
-								{
-									for (size_t yl = 0; yl < msy.nrts_lign.size(); yl++)
-									{
-										if (!memcmp((void*)&msy.nrts_lign[yl][0], (void*)&val[x], sizeof(_char)))
-										{
-											size_t zl = 1;
-
-											while (zl < msy.nrts_lign[yl].length() && zl < vl)
-											{
-												if (memcmp((void*)&msy.nrts_lign[yl][zl], (void*)&val[x + zl], sizeof(_char)))
-												{
-													zl = msy.nrts_lign[yl].length();
-												}
-												zl++;
-											}
-
-											if (zl == msy.nrts_lign[yl].length())
-											{
-												lign = (slint)yl;
-												yl = msy.nrts_lign.size();
-											}
-										}
-									}
-									if (lign < 0)
-									{
-										for (size_t xl = 0; xl < msy.nrts_ord.size(); xl++)
-										{
-											if (!memcmp((void*)&msy.nrts_ord[xl], (void*)&val[x], sizeof(_char)))
-											{
-												if (ord.empty())
-												{
-													if (!strcmp(sep, &msy.nrts_ord[xl]) || !strcmp(sep, &msy.nrts_ord_[xl]))
-													{
 														for (; mk < x; mk++)
-														{
-															rstr.push_back(val[mk]);
-														}
-
-														if (!rstr.empty())
-														{
-															ret_->push_back(rstr);
-															rstr.clear();
-														}
-													}
-												}
-												ord.push_back(xl);
-												ordl.push_back(x);
-												xl = msy.nrts_ord.size();
-											}
-										}
-										if (!ord.empty())
-										{
-											for (size_t xl = 0; xl < msy.nrts_ord_.size(); xl++)
-											{
-												if (!memcmp((void*)&msy.nrts_ord_[xl], (void*)&val[x], sizeof(_char)))
-												{
-													if (ord[ord.size() - 1] == xl)
-													{
-														ord.pop_back();
-														ordl.pop_back();
-
-														if (ord.empty())
-														{
-															if (!strcmp(sep, &msy.nrts_ord[xl]) || !strcmp(sep, &msy.nrts_ord_[xl]))
-															{
-																for (; mk < x + sl; mk++)
-																{
-																	rstr.push_back(val[mk]);
-																}
-																x += (sl - 1);
-																mk = x + 1;
-
-																if (!rstr.empty())
-																{
-																	ret_->push_back(rstr);
-																	rstr.clear();
-																}
-															}
-														}
-													}
-													xl = msy.nrts_ord_.size();
-												}
-											}
-										}
-										else
-										{
-											if (!memcmp((void*)&val[x], (void*)&sep[0], sizeof(_char)))
-											{
-												if (!x)
-												{
-													size_t y = 1;
-
-													while (y < sl && x + y < vl)
-													{
-														if (memcmp((void*)&val[x + y], &sep[y], sizeof(_char)))
-														{
-															y = sl;
-														}
-														y++;
-													}
-
-													if (y == sl)
-													{
-														if (ksep)
-														{
-															std::string nsep(sep);
-															ret_->push_back(nsep);
-														}
-														x += sl - 1;
-														mk = x + 1;
-													}
-												}
-												else
-												{
-													if (memcmp((void*)&ig, (void*)&val[x - 1], sizeof(_char)))
-													{
-														size_t y = 1;
-
-														while (y < sl && x + y < vl)
-														{
-															if (memcmp((void*)&val[x + y], &sep[y], sizeof(_char)))
-															{
-																y = sl;
-															}
-															y++;
-														}
-
-														if (y == sl)
-														{
-															for (; mk < x; mk++)
-															{
-																rstr.push_back(val[mk]);
-															}
-															x += (sl - 1);
-															mk = x + 1;
-
-															if (!rstr.empty())
-															{
-																ret_->push_back(rstr);
-																rstr.clear();
-															}
-
-															if (ksep)
-															{
-																std::string nsep(sep);
-																ret_->push_back(nsep);
-															}
-														}
-													}
-													else
-													{
-														if (x > 1)
-														{
-															if (!memcmp((void*)&ig, (void*)&val[x - 2], sizeof(_char)))
-															{
-																size_t y = 1;
-
-																while (y < sl && x + y < vl)
-																{
-																	if (memcmp((void*)&val[x + y], (void*)&sep[y], sizeof(_char)))
-																	{
-																		y = sl;
-																	}
-																	y++;
-																}
-
-																if (y == sl)
-																{
-																	for (; mk < x; mk++)
-																	{
-																		rstr.push_back(val[mk]);
-																	}
-																	x += (sl - 1);
-																	mk = x + 1;
-
-																	if (!rstr.empty())
-																	{
-																		ret_->push_back(rstr);
-																		rstr.clear();
-																	}
-
-																	if (ksep)
-																	{
-																		std::string nsep(sep);
-																		ret_->push_back(nsep);
-																	}
-																}
-															}
-														}
-													}
-												}
-											}
-										}
-									}
-								}
-							}
-						}
-					}
-				}
-
-				for (; mk < vl; mk++)
-				{
-					rstr.push_back(val[mk]);
-				}
-				if (!rstr.empty())
-				{
-					ret_->push_back(rstr);
-				}
-				if (lit > -1)
-				{
-					carr_64 ncar;
-					ret = bot_sprintf(ncar.carr, ncar.siz, "Open literal '%c' at: %u", msy.nrts_lit[lit], (uint)litloc);
-					std::string rstr(ncar.carr);
-					ret_->push_back(rstr);
-					ret = -1;
-				}
-				else if (!ord.empty())
-				{
-					carr_64 ncar;
-					ret = bot_sprintf(ncar.carr, ncar.siz, "Open bracket '%c' at: %u", msy.nrts_ord[ord[0]], (uint)ordl[0]);
-					std::string rstr(ncar.carr);
-					ret_->push_back(rstr);
-					ret = -1;
-				}
-				else
-				{
-					ret = 0;
-				}
-			}
-			else
-			{
-				carr_64 ncar;
-				ret = bot_sprintf(ncar.carr, ncar.siz, "Bad Size: vl: %u", (uint)vl);
-				std::string rstr(ncar.carr);
-				ret_->push_back(rstr);
-				ret = -1;
-			}
-		}
-		break;
-	}
-	case BOT_RTV_STR:
-	{
-		void* ptr = va_arg(args, void*);
-		std::string* sep = reinterpret_cast<std::string*>(ptr);
-
-		if (sep)
-		{
-			ret = -1;
-
-			if (vl && vl < (size_t)BOT_STRLEN_MAX)
-			{
-				slint lign = -1;
-				slint lit = -1;
-				slint litloc = 0;
-				std::vector<size_t> ord;
-				std::vector<size_t> ordl;
-				std::string rstr;
-				size_t mk = 0;
-				_char ig = '\\';
-
-				for (size_t x = f; x < t + 1; x++)
-				{
-					if (lit > -1)
-					{
-						for (size_t xl = 0; xl < msy.nrts_lit.size(); xl++)
-						{
-							if (!memcmp((void*)&msy.nrts_lit[xl], (void*)&val[x], sizeof(_char)))
-							{
-								if (memcmp((void*)&ig, (void*)&val[x - 1], sizeof(_char)))
-								{
-									if (lit == (slint)xl)
-									{
-										if (!strcmp(sep->c_str(), &msy.nrts_lit[xl]))
-										{
-											for (; mk < x + sep->length(); mk++)
-											{
-												rstr.push_back(val[mk]);
-											}
-											x += (sep->length() - 1);
-											mk = x + 1;
-
-											if (!rstr.empty())
-											{
-												ret_->push_back(rstr);
-												rstr.clear();
-											}
-										}
-										lit = -1;
-										litloc = (slint)x;
-									}
-									xl = msy.nrts_lit.size();
-								}
-								else
-								{
-									if (x > 1)
-									{
-										if (!memcmp((void*)&ig, (void*)&val[x - 2], sizeof(_char)))
-										{
-											if (lit == (slint)xl)
-											{
-												if (!strcmp(sep->c_str(), &msy.nrts_lit[xl]))
-												{
-													for (; mk < x + sep->length(); mk++)
-													{
-														rstr.push_back(val[mk]);
-													}
-													x += (sep->length() - 1);
-													mk = x + 1;
-
-													if (!rstr.empty())
-													{
-														ret_->push_back(rstr);
-														rstr.clear();
-													}
-												}
-												lit = -1;
-												litloc = (slint)x;
-											}
-											xl = msy.nrts_lit.size();
-										}
-									}
-								}
-							}
-						}
-					}
-					else
-					{
-						if (lign > -1)
-						{
-							for (size_t yl = 0; yl < msy.nrts_lign_.size(); yl++)
-							{
-								if (!memcmp((void*)&msy.nrts_lign_[yl][0], (void*)&val[x], sizeof(_char)))
-								{
-									size_t zl = 1;
-
-									while (zl < msy.nrts_lign[yl].length() && zl < vl)
-									{
-										if (memcmp((void*)&msy.nrts_lign_[yl][zl], (void*)&val[x + zl], sizeof(_char)))
-										{
-											zl = msy.nrts_lign[yl].length();
-										}
-										zl++;
-									}
-
-									if (zl == msy.nrts_lign[yl].length())
-									{
-										if (lign == (slint)yl)
-										{
-											lign = -1;
-											yl = msy.nrts_lign_.size();
-										}
-									}
-								}
-							}
-						}
-						if (lign < 0)
-						{
-							for (size_t xl = 0; xl < msy.nrts_lit.size(); xl++)
-							{
-								if (!memcmp((void*)&msy.nrts_lit[xl], (void*)&val[x], sizeof(_char)))
-								{
-									if (!strcmp(sep->c_str(), &msy.nrts_lit[xl]))
-									{
-										for (; mk < x; mk++)
-										{
-											rstr.push_back(val[mk]);
-										}
-
-										if (!rstr.empty())
-										{
-											ret_->push_back(rstr);
-											rstr.clear();
-										}
-									}
-									lit = (slint)xl;
-									litloc = (slint)x;
-									xl = msy.nrts_lit.size();
-								}
-							}
-							if (lit < 0)
-							{
-								if (lign < 0)
-								{
-									for (size_t yl = 0; yl < msy.nrts_lign.size(); yl++)
-									{
-										if (!memcmp((void*)&msy.nrts_lign[yl][0], (void*)&val[x], sizeof(_char)))
-										{
-											size_t zl = 1;
-
-											while (zl < msy.nrts_lign[yl].length() && zl < vl)
-											{
-												if (memcmp((void*)&msy.nrts_lign[yl][zl], (void*)&val[x + zl], sizeof(_char)))
-												{
-													zl = msy.nrts_lign[yl].length();
-												}
-												zl++;
-											}
-
-											if (zl == msy.nrts_lign[yl].length())
-											{
-												lign = (slint)yl;
-												yl = msy.nrts_lign.size();
-											}
-										}
-									}
-									if (lign < 0)
-									{
-										for (size_t xl = 0; xl < msy.nrts_ord.size(); xl++)
-										{
-											if (!memcmp((void*)&msy.nrts_ord[xl], (void*)&val[x], sizeof(_char)))
-											{
-												if (ord.empty())
-												{
-													if (!strcmp(sep->c_str(), &msy.nrts_ord[xl]) || !strcmp(sep->c_str(), &msy.nrts_ord_[xl]))
-													{
-														for (; mk < x; mk++)
-														{
-															rstr.push_back(val[mk]);
-														}
-
-														if (!rstr.empty())
-														{
-															ret_->push_back(rstr);
-															rstr.clear();
-														}
-													}
-												}
-												ord.push_back(xl);
-												ordl.push_back(x);
-												xl = msy.nrts_ord.size();
-											}
-										}
-										if (!ord.empty())
-										{
-											for (size_t xl = 0; xl < msy.nrts_ord_.size(); xl++)
-											{
-												if (!memcmp((void*)&msy.nrts_ord_[xl], (void*)&val[x], sizeof(_char)))
-												{
-													if (ord[ord.size() - 1] == xl)
-													{
-														ord.pop_back();
-														ordl.pop_back();
-
-														if (ord.empty())
-														{
-															if (!strcmp(sep->c_str(), &msy.nrts_ord[xl]) || !strcmp(sep->c_str(), &msy.nrts_ord_[xl]))
-															{
-																for (; mk < x + sep->length(); mk++)
-																{
-																	rstr.push_back(val[mk]);
-																}
-																x += (sep->length() - 1);
-																mk = x + 1;
-
-																if (!rstr.empty())
-																{
-																	ret_->push_back(rstr);
-																	rstr.clear();
-																}
-															}
-														}
-													}
-													xl = msy.nrts_ord_.size();
-												}
-											}
-										}
-										else
-										{
-											if (!memcmp((void*)&val[x], (void*)&sep->at(0), sizeof(_char)))
-											{
-												if (!x)
-												{
-													size_t y = 1;
-
-													while (y < sep->length() && x + y < vl)
-													{
-														if (memcmp((void*)&val[x + y], &sep->at(y), sizeof(_char)))
-														{
-															y = sep->length();
-														}
-														y++;
-													}
-
-													if (y == sep->length())
-													{
-														if (ksep)
-														{
-															ret_->push_back(*sep);
-														}
-														x += sep->length() - 1;
-														mk = x + 1;
-													}
-												}
-												else
-												{
-													if (memcmp((void*)&ig, (void*)&val[x - 1], sizeof(_char)))
-													{
-														size_t y = 1;
-
-														while (y < sep->length() && x + y < vl)
-														{
-															if (memcmp((void*)&val[x + y], &sep->at(y), sizeof(_char)))
-															{
-																y = sep->length();
-															}
-															y++;
-														}
-
-														if (y == sep->length())
-														{
-															for (; mk < x; mk++)
-															{
-																rstr.push_back(val[mk]);
-															}
-															x += (sep->length() - 1);
-															mk = x + 1;
-
-															if (!rstr.empty())
-															{
-																ret_->push_back(rstr);
-																rstr.clear();
-															}
-
-															if (ksep)
-															{
-																ret_->push_back(*sep);
-															}
-														}
-													}
-													else
-													{
-														if (x > 1)
-														{
-															if (!memcmp((void*)&ig, (void*)&val[x - 2], sizeof(_char)))
-															{
-																size_t y = 1;
-
-																while (y < sep->length() && x + y < vl)
-																{
-																	if (memcmp((void*)&val[x + y], &sep->at(y), sizeof(_char)))
-																	{
-																		y = sep->length();
-																	}
-																	y++;
-																}
-
-																if (y == sep->length())
-																{
-																	for (; mk < x; mk++)
-																	{
-																		rstr.push_back(val[mk]);
-																	}
-																	x += (sep->length() - 1);
-																	mk = x + 1;
-
-																	if (!rstr.empty())
-																	{
-																		ret_->push_back(rstr);
-																		rstr.clear();
-																	}
-
-																	if (ksep)
-																	{
-																		ret_->push_back(*sep);
-																	}
-																}
-															}
-														}
-													}
-												}
-											}
-										}
-									}
-								}
-							}
-						}
-					}
-				}
-
-				for (; mk < vl; mk++)
-				{
-					rstr.push_back(val[mk]);
-				}
-				if (!rstr.empty())
-				{
-					ret_->push_back(rstr);
-				}
-				if (lit > -1)
-				{
-					carr_64 ncar;
-					ret = bot_sprintf(ncar.carr, ncar.siz, "Open literal '%c' at: %u", msy.nrts_lit[lit], (uint)litloc);
-					std::string rstr(ncar.carr);
-					ret_->push_back(rstr);
-					ret = -1;
-				}
-				else if (!ord.empty())
-				{
-					carr_64 ncar;
-					ret = bot_sprintf(ncar.carr, ncar.siz, "Open bracket '%c' at: %u", msy.nrts_ord[ord[0]], (uint)ordl[0]);
-					std::string rstr(ncar.carr);
-					ret_->push_back(rstr);
-					ret = -1;
-				}
-				else
-				{
-					ret = 0;
-				}
-			}
-			else
-			{
-				carr_64 ncar;
-				ret = bot_sprintf(ncar.carr, ncar.siz, "Bad Size: vl: %u", (uint)vl);
-				std::string rstr(ncar.carr);
-				ret_->push_back(rstr);
-				ret = -1;
-			}
-		}
-		break;
-	}
-	case BOT_RTV_VCHAR:
-	{
-		void* ptr = va_arg(args, void*);
-		std::vector<_char>* sep = reinterpret_cast<std::vector<_char>*>(ptr);
-
-		if (sep)
-		{
-			ret = -1;
-
-			if (vl && vl < (size_t)BOT_STRLEN_MAX)
-			{
-				slint lign = -1;
-				slint lit = -1;
-				slint litloc = 0;
-				std::vector<size_t> ord;
-				std::vector<size_t> ordl;
-				std::string rstr;
-				size_t mk = 0;
-				_char ig = '\\';
-
-				for (size_t x = f; x < t + 1; x++)
-				{
-					if (lit > -1)
-					{
-						for (size_t xl = 0; xl < msy.nrts_lit.size(); xl++)
-						{
-							if (!memcmp((void*)&msy.nrts_lit[xl], (void*)&val[x], sizeof(_char)))
-							{
-								if (memcmp((void*)&ig, (void*)&val[x - 1], sizeof(_char)))
-								{
-									if (lit == (slint)xl)
-									{
-										for (size_t xt = 0; xt < sep->size(); xt++)
-										{
-											if (!memcmp((void*)&sep->at(xt), (void*)&msy.nrts_lit[xl], sizeof(_char)))
-											{
-												for (; mk < x + sizeof(_char); mk++)
-												{
-													rstr.push_back(val[mk]);
-												}
-												x += (sizeof(_char) - 1);
-												mk = x + 1;
-
-												if (!rstr.empty())
-												{
-													ret_->push_back(rstr);
-													rstr.clear();
-												}
-												xt = sep->size();
-											}
-										}
-										lit = -1;
-										litloc = (slint)x;
-									}
-									xl = msy.nrts_lit.size();
-								}
-								else
-								{
-									if (x > 1)
-									{
-										if (!memcmp((void*)&ig, (void*)&val[x - 2], sizeof(_char)))
-										{
-											if (lit == (slint)xl)
-											{
-												for (size_t xt = 0; xt < sep->size(); xt++)
-												{
-													if (!memcmp((void*)&sep->at(xt), (void*)&msy.nrts_lit[xl], sizeof(_char)))
-													{
-														for (; mk < x + sizeof(_char); mk++)
-														{
-															rstr.push_back(val[mk]);
-														}
-														x += (sizeof(_char) - 1);
-														mk = x + 1;
-
-														if (!rstr.empty())
-														{
-															ret_->push_back(rstr);
-															rstr.clear();
-														}
-														xt = sep->size();
-													}
-												}
-												lit = -1;
-												litloc = (slint)x;
-											}
-											xl = msy.nrts_lit.size();
-										}
-									}
-								}
-							}
-						}
-					}
-					else
-					{
-						if (lign > -1)
-						{
-							for (size_t yl = 0; yl < msy.nrts_lign_.size(); yl++)
-							{
-								if (!memcmp((void*)&msy.nrts_lign_[yl][0], (void*)&val[x], sizeof(_char)))
-								{
-									size_t zl = 1;
-
-									while (zl < msy.nrts_lign[yl].length() && zl < vl)
-									{
-										if (memcmp((void*)&msy.nrts_lign_[yl][zl], (void*)&val[x + zl], sizeof(_char)))
-										{
-											zl = msy.nrts_lign[yl].length();
-										}
-										zl++;
-									}
-
-									if (zl == msy.nrts_lign[yl].length())
-									{
-										if (lign == (slint)yl)
-										{
-											lign = -1;
-											yl = msy.nrts_lign_.size();
-										}
-									}
-								}
-							}
-						}
-						if (lign < 0)
-						{
-							for (size_t xl = 0; xl < msy.nrts_lit.size(); xl++)
-							{
-								if (!memcmp((void*)&msy.nrts_lit[xl], (void*)&val[x], sizeof(_char)))
-								{
-									for (size_t xt = 0; xt < sep->size(); xt++)
-									{
-										if (!memcmp((void*)&sep->at(xt), (void*)&msy.nrts_lit[xl], sizeof(_char)))
-										{
-											for (; mk < x; mk++)
-											{
-												rstr.push_back(val[mk]);
-											}
-
-											if (!rstr.empty())
-											{
-												ret_->push_back(rstr);
-												rstr.clear();
-											}
-											xt = sep->size();
-										}
-									}
-									lit = (slint)xl;
-									litloc = (slint)x;
-									xl = msy.nrts_lit.size();
-								}
-							}
-							if (lit < 0)
-							{
-								if (lign < 0)
-								{
-									for (size_t yl = 0; yl < msy.nrts_lign.size(); yl++)
-									{
-										if (!memcmp((void*)&msy.nrts_lign[yl][0], (void*)&val[x], sizeof(_char)))
-										{
-											size_t zl = 1;
-
-											while (zl < msy.nrts_lign[yl].length() && zl < vl)
-											{
-												if (memcmp((void*)&msy.nrts_lign[yl][zl], (void*)&val[x + zl], sizeof(_char)))
-												{
-													zl = msy.nrts_lign[yl].length();
-												}
-												zl++;
-											}
-
-											if (zl == msy.nrts_lign[yl].length())
-											{
-												lign = (slint)yl;
-												yl = msy.nrts_lign.size();
-											}
-										}
-									}
-									if (lign < 0)
-									{
-										for (size_t xl = 0; xl < msy.nrts_ord.size(); xl++)
-										{
-											if (!memcmp((void*)&msy.nrts_ord[xl], (void*)&val[x], sizeof(_char)))
-											{
-												if (ord.empty())
-												{
-													for (size_t xt = 0; xt < sep->size(); xt++)
-													{
-														if (!memcmp((void*)&sep->at(xt), (void*)&msy.nrts_ord[xl], sizeof(_char)) || !memcmp((void*)&sep->at(xt), (void*)&msy.nrts_ord_[xl], sizeof(_char)))
-														{
-															for (; mk < x; mk++)
-															{
-																rstr.push_back(val[mk]);
-															}
-
-															if (!rstr.empty())
-															{
-																ret_->push_back(rstr);
-																rstr.clear();
-															}
-															xt = sep->size();
-														}
-													}
-												}
-												ord.push_back(xl);
-												ordl.push_back(x);
-												xl = msy.nrts_ord.size();
-											}
-										}
-										if (!ord.empty())
-										{
-											for (size_t xl = 0; xl < msy.nrts_ord_.size(); xl++)
-											{
-												if (!memcmp((void*)&msy.nrts_ord_[xl], (void*)&val[x], sizeof(_char)))
-												{
-													if (ord[ord.size() - 1] == xl)
-													{
-														ord.pop_back();
-														ordl.pop_back();
-
-														if (ord.empty())
-														{
-															for (size_t xt = 0; xt < sep->size(); xt++)
-															{
-																if (!memcmp((void*)&sep->at(xt), (void*)&msy.nrts_ord[xl], sizeof(_char)) || !memcmp((void*)&sep->at(xt), (void*)&msy.nrts_ord_[xl], sizeof(_char)))
-																{
-																	for (; mk < x + sizeof(_char); mk++)
-																	{
-																		rstr.push_back(val[mk]);
-																	}
-																	x += (sizeof(_char) - 1);
-																	mk = x + 1;
-
-																	if (!rstr.empty())
-																	{
-																		ret_->push_back(rstr);
-																		rstr.clear();
-																	}
-																	xt = sep->size();
-																}
-															}
-														}
-													}
-													xl = msy.nrts_ord_.size();
-												}
-											}
-										}
-										else
-										{
-											for (size_t xt = 0; xt < sep->size(); xt++)
-											{
-												if (!memcmp((void*)&val[x], (void*)&sep->at(xt), sizeof(_char)))
-												{
-													if (!x)
-													{
-														if (ksep)
-														{
-															std::string str;
-															str.push_back(sep->at(xt));
-															ret_->push_back(str);
-														}
-														x += sizeof(_char) - 1;
-														mk = x + 1;
-														xt = sep->size();
-													}
-													else
-													{
-														if (memcmp((void*)&ig, (void*)&val[x - 1], sizeof(_char)))
-														{
-															for (; mk < x; mk++)
-															{
-																rstr.push_back(val[mk]);
-															}
-															x += sizeof(_char) - 1;
-															mk = x + 1;
-
-															if (!rstr.empty())
-															{
-																ret_->push_back(rstr);
-																rstr.clear();
-															}
-
-															if (ksep)
-															{
-																std::string str;
-																str.push_back(sep->at(xt));
-																ret_->push_back(str);
-															}
-															xt = sep->size();
-														}
-														else
-														{
-															if (x > 1)
-															{
-																if (!memcmp((void*)&ig, (void*)&val[x - 2], sizeof(_char)))
-																{
-																	for (; mk < x; mk++)
-																	{
-																		rstr.push_back(val[mk]);
-																	}
-																	x += sizeof(_char) - 1;
-																	mk = x + 1;
-
-																	if (!rstr.empty())
-																	{
-																		ret_->push_back(rstr);
-																		rstr.clear();
-																	}
-
-																	if (ksep)
-																	{
-																		std::string str;
-																		str.push_back(sep->at(xt));
-																		ret_->push_back(str);
-																	}
-																	xt = sep->size();
-																}
-															}
-														}
-													}
-												}
-											}
-										}
-									}
-								}
-							}
-						}
-					}
-				}
-
-				for (; mk < vl; mk++)
-				{
-					rstr.push_back(val[mk]);
-				}
-				if (!rstr.empty())
-				{
-					ret_->push_back(rstr);
-				}
-				if (lit > -1)
-				{
-					carr_64 ncar;
-					ret = bot_sprintf(ncar.carr, ncar.siz, "Open literal '%c' at: %u", msy.nrts_lit[lit], (uint)litloc);
-					std::string rstr(ncar.carr);
-					ret_->push_back(rstr);
-					ret = -1;
-				}
-				else if (!ord.empty())
-				{
-					carr_64 ncar;
-					ret = bot_sprintf(ncar.carr, ncar.siz, "Open bracket '%c' at: %u", msy.nrts_ord[ord[0]], (uint)ordl[0]);
-					std::string rstr(ncar.carr);
-					ret_->push_back(rstr);
-					ret = -1;
-				}
-				else
-				{
-					ret = 0;
-				}
-			}
-			else
-			{
-				carr_64 ncar;
-				ret = bot_sprintf(ncar.carr, ncar.siz, "Bad Size: vl: %u", (uint)vl);
-				std::string rstr(ncar.carr);
-				ret_->push_back(rstr);
-				ret = -1;
-			}
-		}
-		break;
-	}
-	case BOT_RTV_VCCHAR:
-	{
-		void* ptr = va_arg(args, void*);
-		std::vector<c_char*>* sep = reinterpret_cast<std::vector<c_char*>*>(ptr);
-
-		if (sep)
-		{
-			ret = -1;
-
-			if (vl && vl < (size_t)BOT_STRLEN_MAX)
-			{
-				slint lign = -1;
-				slint lit = -1;
-				slint litloc = 0;
-				std::vector<size_t> ord;
-				std::vector<size_t> ordl;
-				std::string rstr;
-				size_t mk = 0;
-				_char ig = '\\';
-
-				for (size_t x = f; x < t + 1; x++)
-				{
-					if (lit > -1)
-					{
-						for (size_t xl = 0; xl < msy.nrts_lit.size(); xl++)
-						{
-							if (!memcmp((void*)&msy.nrts_lit[xl], (void*)&val[x], sizeof(_char)))
-							{
-								if (memcmp((void*)&ig, (void*)&val[x - 1], sizeof(_char)))
-								{
-									if (lit == (slint)xl)
-									{
-										for (size_t xt = 0; xt < sep->size(); xt++)
-										{
-											size_t sl = bot_cstrlen(sep->at(xt));
-
-											if (!strcmp(sep->at(xt), &msy.nrts_lit[xl]))
-											{
-												for (; mk < x + sl; mk++)
-												{
-													rstr.push_back(val[mk]);
-												}
-												x += (sl - 1);
-												mk = x + 1;
-
-												if (!rstr.empty())
-												{
-													ret_->push_back(rstr);
-													rstr.clear();
-												}
-												xt = sep->size();
-											}
-										}
-										lit = -1;
-										litloc = (slint)x;
-									}
-									xl = msy.nrts_lit.size();
-								}
-								else
-								{
-									if (x > 1)
-									{
-										if (!memcmp((void*)&ig, (void*)&val[x - 2], sizeof(_char)))
-										{
-											if (lit == (slint)xl)
-											{
-												for (size_t xt = 0; xt < sep->size(); xt++)
-												{
-													size_t sl = bot_cstrlen(sep->at(xt));
-
-													if (!strcmp(sep->at(xt), &msy.nrts_lit[xl]))
-													{
-														for (; mk < x + sl; mk++)
 														{
 															rstr.push_back(val[mk]);
 														}
@@ -10872,215 +10496,25 @@ sint machine::ArgSep(std::vector <std::string>* ret_, bool ksep, size_t f, size_
 															ret_->push_back(rstr);
 															rstr.clear();
 														}
-														xt = sep->size();
-													}
-												}
-												lit = -1;
-												litloc = (slint)x;
-											}
-											xl = msy.nrts_lit.size();
-										}
-									}
-								}
-							}
-						}
-					}
-					else
-					{
-						if (lign > -1)
-						{
-							for (size_t yl = 0; yl < msy.nrts_lign_.size(); yl++)
-							{
-								if (!memcmp((void*)&msy.nrts_lign_[yl][0], (void*)&val[x], sizeof(_char)))
-								{
-									size_t zl = 1;
 
-									while (zl < msy.nrts_lign[yl].length() && zl < vl)
-									{
-										if (memcmp((void*)&msy.nrts_lign_[yl][zl], (void*)&val[x + zl], sizeof(_char)))
-										{
-											zl = msy.nrts_lign[yl].length();
-										}
-										zl++;
-									}
-
-									if (zl == msy.nrts_lign[yl].length())
-									{
-										if (lign == (slint)yl)
-										{
-											lign = -1;
-											yl = msy.nrts_lign_.size();
-										}
-									}
-								}
-							}
-						}
-						if (lign < 0)
-						{
-							for (size_t xl = 0; xl < msy.nrts_lit.size(); xl++)
-							{
-								if (!memcmp((void*)&msy.nrts_lit[xl], (void*)&val[x], sizeof(_char)))
-								{
-									for (size_t xt = 0; xt < sep->size(); xt++)
-									{
-										if (!strcmp(sep->at(xt), &msy.nrts_lit[xl]))
-										{
-											for (; mk < x; mk++)
-											{
-												rstr.push_back(val[mk]);
-											}
-
-											if (!rstr.empty())
-											{
-												ret_->push_back(rstr);
-												rstr.clear();
-											}
-											xt = sep->size();
-										}
-									}
-									lit = (slint)xl;
-									litloc = (slint)x;
-									xl = msy.nrts_lit.size();
-								}
-							}
-							if (lit < 0)
-							{
-								if (lign < 0)
-								{
-									for (size_t yl = 0; yl < msy.nrts_lign.size(); yl++)
-									{
-										if (!memcmp((void*)&msy.nrts_lign[yl][0], (void*)&val[x], sizeof(_char)))
-										{
-											size_t zl = 1;
-
-											while (zl < msy.nrts_lign[yl].length() && zl < vl)
-											{
-												if (memcmp((void*)&msy.nrts_lign[yl][zl], (void*)&val[x + zl], sizeof(_char)))
-												{
-													zl = msy.nrts_lign[yl].length();
-												}
-												zl++;
-											}
-
-											if (zl == msy.nrts_lign[yl].length())
-											{
-												lign = (slint)yl;
-												yl = msy.nrts_lign.size();
-											}
-										}
-									}
-									if (lign < 0)
-									{
-										for (size_t xl = 0; xl < msy.nrts_ord.size(); xl++)
-										{
-											if (!memcmp((void*)&msy.nrts_ord[xl], (void*)&val[x], sizeof(_char)))
-											{
-												if (ord.empty())
-												{
-													for (size_t xt = 0; xt < sep->size(); xt++)
-													{
-														if (!strcmp(sep->at(xt), &msy.nrts_ord[xl]) || !strcmp(sep->at(xt), &msy.nrts_ord_[xl]))
+														if (ksep)
 														{
-															for (; mk < x; mk++)
-															{
-																rstr.push_back(val[mk]);
-															}
-
-															if (!rstr.empty())
-															{
-																ret_->push_back(rstr);
-																rstr.clear();
-															}
-															xt = sep->size();
+															std::string nsep(sep);
+															ret_->push_back(nsep);
 														}
 													}
 												}
-												ord.push_back(xl);
-												ordl.push_back(x);
-												xl = msy.nrts_ord.size();
-											}
-										}
-										if (!ord.empty())
-										{
-											for (size_t xl = 0; xl < msy.nrts_ord_.size(); xl++)
-											{
-												if (!memcmp((void*)&msy.nrts_ord_[xl], (void*)&val[x], sizeof(_char)))
+												else
 												{
-													if (ord[ord.size() - 1] == xl)
+													if (x > 1)
 													{
-														ord.pop_back();
-														ordl.pop_back();
-
-														if (ord.empty())
+														if (!memcmp((void*)&ig, (void*)&val[x - 2], sizeof(_char)))
 														{
-															for (size_t xt = 0; xt < sep->size(); xt++)
-															{
-																if (!strcmp(sep->at(xt), &msy.nrts_ord[xl]) || !strcmp(sep->at(xt), &msy.nrts_ord_[xl]))
-																{
-																	size_t sl = bot_cstrlen(sep->at(xt));
-
-																	for (; mk < x + sl; mk++)
-																	{
-																		rstr.push_back(val[mk]);
-																	}
-																	x += (sl - 1);
-																	mk = x + 1;
-
-																	if (!rstr.empty())
-																	{
-																		ret_->push_back(rstr);
-																		rstr.clear();
-																	}
-																	xt = sep->size();
-																}
-															}
-														}
-													}
-													xl = msy.nrts_ord_.size();
-												}
-											}
-										}
-										else
-										{
-											for (size_t xt = 0; xt < sep->size(); xt++)
-											{
-												if (!memcmp((void*)&val[x], (void*)&sep->at(xt)[0], sizeof(_char)))
-												{
-													if (!x)
-													{
-														size_t sl = bot_cstrlen(sep->at(xt));
-														size_t y = 1;
-
-														while (y < sl && x + y < vl)
-														{
-															if (memcmp((void*)&val[x + y], &sep->at(xt)[y], sizeof(_char)))
-															{
-																y = sl;
-															}
-															y++;
-														}
-
-														if (y == sl)
-														{
-															if (ksep)
-															{
-																ret_->push_back(sep->at(xt));
-															}
-															x += (sl - 1);
-															mk = x + 1;
-															xt = sep->size();
-														}
-													}
-													else
-													{
-														if (memcmp((void*)&ig, (void*)&val[x - 1], sizeof(_char)))
-														{
-															size_t sl = bot_cstrlen(sep->at(xt));
 															size_t y = 1;
 
-															while (y < sl && x + y < vl)
+															while (y < sl && x + y < t)
 															{
-																if (memcmp((void*)&val[x + y], &sep->at(xt)[y], sizeof(_char)))
+																if (memcmp((void*)&val[x + y], (void*)&sep[y], sizeof(_char)))
 																{
 																	y = sl;
 																}
@@ -11104,50 +10538,8 @@ sint machine::ArgSep(std::vector <std::string>* ret_, bool ksep, size_t f, size_
 
 																if (ksep)
 																{
-																	ret_->push_back(sep->at(xt));
-																}
-																xt = sep->size();
-															}
-														}
-														else
-														{
-															if (x > 1)
-															{
-																if (!memcmp((void*)&ig, (void*)&val[x - 2], sizeof(_char)))
-																{
-																	size_t sl = bot_cstrlen(sep->at(xt));
-																	size_t y = 1;
-
-																	while (y < sl && x + y < vl)
-																	{
-																		if (memcmp((void*)&val[x + y], &sep->at(xt)[y], sizeof(_char)))
-																		{
-																			y = sl;
-																		}
-																		y++;
-																	}
-
-																	if (y == sl)
-																	{
-																		for (; mk < x; mk++)
-																		{
-																			rstr.push_back(val[mk]);
-																		}
-																		x += (sl - 1);
-																		mk = x + 1;
-
-																		if (!rstr.empty())
-																		{
-																			ret_->push_back(rstr);
-																			rstr.clear();
-																		}
-
-																		if (ksep)
-																		{
-																			ret_->push_back(sep->at(xt));
-																		}
-																		xt = sep->size();
-																	}
+																	std::string nsep(sep);
+																	ret_->push_back(nsep);
 																}
 															}
 														}
@@ -11161,43 +10553,1527 @@ sint machine::ArgSep(std::vector <std::string>* ret_, bool ksep, size_t f, size_
 						}
 					}
 				}
+			}
+		}
+		break;
+	}
+	case BOT_RTV_CCHAR:
+	{
+		void* ptr = va_arg(args, void*);
+		c_char* sep = reinterpret_cast<c_char*>(ptr);
 
-				for (; mk < vl; mk++)
-				{
-					rstr.push_back(val[mk]);
-				}
-				if (!rstr.empty())
-				{
-					ret_->push_back(rstr);
-				}
+		if (sep)
+		{
+			size_t sl = bot_cstrlen(sep);
+
+			for (size_t x = f; x < t + 1; x++)
+			{
 				if (lit > -1)
 				{
-					carr_64 ncar;
-					ret = bot_sprintf(ncar.carr, ncar.siz, "Open literal '%c' at: %u", msy.nrts_lit[lit], (uint)litloc);
-					std::string rstr(ncar.carr);
-					ret_->push_back(rstr);
-					ret = -1;
-				}
-				else if (!ord.empty())
-				{
-					carr_64 ncar;
-					ret = bot_sprintf(ncar.carr, ncar.siz, "Open bracket '%c' at: %u", msy.nrts_ord[ord[0]], (uint)ordl[0]);
-					std::string rstr(ncar.carr);
-					ret_->push_back(rstr);
-					ret = -1;
+					for (size_t xl = 0; xl < msy.nrts_lit.size(); xl++)
+					{
+						if (!memcmp((void*)&msy.nrts_lit[xl], (void*)&val[x], sizeof(_char)))
+						{
+							if (memcmp((void*)&ig, (void*)&val[x - 1], sizeof(_char)))
+							{
+								if (lit == (slint)xl)
+								{
+									if (!strcmp(sep, &msy.nrts_lit[xl]))
+									{
+										if (ksep)
+										{
+											for (; mk < x + sl; mk++)
+											{
+												rstr.push_back(val[mk]);
+											}
+
+											if (!rstr.empty())
+											{
+												ret_->push_back(rstr);
+												rstr.clear();
+											}
+										}
+										else
+										{
+											for (mk += sl; mk < x; mk++)
+											{
+												rstr.push_back(val[mk]);
+											}
+
+											if (!rstr.empty())
+											{
+												ret_->push_back(rstr);
+												rstr.clear();
+											}
+										}
+										x += (sl - 1);
+										mk = x + 1;
+									}
+									lit = -1;
+									litloc = (slint)x;
+								}
+								xl = msy.nrts_lit.size();
+							}
+							else
+							{
+								if (x > 1)
+								{
+									if (!memcmp((void*)&ig, (void*)&val[x - 2], sizeof(_char)))
+									{
+										if (lit == (slint)xl)
+										{
+											if (!strcmp(sep, &msy.nrts_lit[xl]))
+											{
+												if (ksep)
+												{
+													for (; mk < x + sl; mk++)
+													{
+														rstr.push_back(val[mk]);
+													}
+
+													if (!rstr.empty())
+													{
+														ret_->push_back(rstr);
+														rstr.clear();
+													}
+												}
+												else
+												{
+													for (mk += sl; mk < x; mk++)
+													{
+														rstr.push_back(val[mk]);
+													}
+
+													if (!rstr.empty())
+													{
+														ret_->push_back(rstr);
+														rstr.clear();
+													}
+												}
+												x += (sl - 1);
+												mk = x + 1;
+											}
+											lit = -1;
+											litloc = (slint)x;
+										}
+										xl = msy.nrts_lit.size();
+									}
+								}
+							}
+						}
+					}
 				}
 				else
 				{
-					ret = 0;
+					if (lign > -1)
+					{
+						for (size_t yl = 0; yl < msy.nrts_lign_.size(); yl++)
+						{
+							if (!memcmp((void*)&msy.nrts_lign_[yl][0], (void*)&val[x], sizeof(_char)))
+							{
+								size_t zl = 0;
+
+								while (zl < msy.nrts_lign_[yl].length() && zl < t)
+								{
+									if (memcmp((void*)&msy.nrts_lign_[yl][zl], (void*)&val[x + zl], sizeof(_char)))
+									{
+										zl = msy.nrts_lign_[yl].length();
+									}
+									zl++;
+								}
+
+								if (zl == msy.nrts_lign_[yl].length())
+								{
+									if (lign == (slint)yl)
+									{
+										lign = -1;
+										yl = msy.nrts_lign_.size();
+									}
+								}
+							}
+						}
+					}
+					if (lign < 0)
+					{
+						for (size_t xl = 0; xl < msy.nrts_lit.size(); xl++)
+						{
+							if (!memcmp((void*)&msy.nrts_lit[xl], (void*)&val[x], sizeof(_char)))
+							{
+								if (!strcmp(sep, &msy.nrts_lit[xl]))
+								{
+									for (; mk < x; mk++)
+									{
+										rstr.push_back(val[mk]);
+									}
+
+									if (!rstr.empty())
+									{
+										ret_->push_back(rstr);
+										rstr.clear();
+									}
+								}
+								lit = (slint)xl;
+								litloc = (slint)x;
+								xl = msy.nrts_lit.size();
+							}
+						}
+						if (lit < 0)
+						{
+							if (lign < 0)
+							{
+								for (size_t yl = 0; yl < msy.nrts_lign.size(); yl++)
+								{
+									if (!memcmp((void*)&msy.nrts_lign[yl][0], (void*)&val[x], sizeof(_char)))
+									{
+										size_t zl = 0;
+
+										while (zl < msy.nrts_lign[yl].length() && zl < t)
+										{
+											if (memcmp((void*)&msy.nrts_lign[yl][zl], (void*)&val[x + zl], sizeof(_char)))
+											{
+												zl = msy.nrts_lign[yl].length();
+											}
+											zl++;
+										}
+
+										if (zl == msy.nrts_lign[yl].length())
+										{
+											lign = (slint)yl;
+											yl = msy.nrts_lign.size();
+										}
+									}
+								}
+								if (lign < 0)
+								{
+									for (size_t xl = 0; xl < msy.nrts_ord.size(); xl++)
+									{
+										if (!memcmp((void*)&msy.nrts_ord[xl], (void*)&val[x], sizeof(_char)))
+										{
+											if (ord.empty())
+											{
+												if (!strcmp(sep, &msy.nrts_ord[xl]) || !strcmp(sep, &msy.nrts_ord_[xl]))
+												{
+													for (; mk < x; mk++)
+													{
+														rstr.push_back(val[mk]);
+													}
+
+													if (!rstr.empty())
+													{
+														ret_->push_back(rstr);
+														rstr.clear();
+													}
+												}
+											}
+											ord.push_back(xl);
+											ordl.push_back(x);
+											xl = msy.nrts_ord.size();
+										}
+									}
+									if (!ord.empty())
+									{
+										for (size_t xl = 0; xl < msy.nrts_ord_.size(); xl++)
+										{
+											if (!memcmp((void*)&msy.nrts_ord_[xl], (void*)&val[x], sizeof(_char)))
+											{
+												if (ord[ord.size() - 1] == xl)
+												{
+													ord.pop_back();
+													ordl.pop_back();
+
+													if (ord.empty())
+													{
+														if (!strcmp(sep, &msy.nrts_ord[xl]) || !strcmp(sep, &msy.nrts_ord_[xl]))
+														{
+															if (ksep)
+															{
+																for (; mk < x + sl; mk++)
+																{
+																	rstr.push_back(val[mk]);
+																}
+
+																if (!rstr.empty())
+																{
+																	ret_->push_back(rstr);
+																	rstr.clear();
+																}
+															}
+															else
+															{
+																for (mk += sl; mk < x; mk++)
+																{
+																	rstr.push_back(val[mk]);
+																}
+
+																if (!rstr.empty())
+																{
+																	ret_->push_back(rstr);
+																	rstr.clear();
+																}
+															}
+															x += (sl - 1);
+															mk = x + 1;
+														}
+													}
+												}
+												xl = msy.nrts_ord_.size();
+											}
+										}
+									}
+									else
+									{
+										if (!memcmp((void*)&val[x], (void*)&sep[0], sizeof(_char)))
+										{
+											if (!x)
+											{
+												size_t y = 1;
+
+												while (y < sl && x + y < t)
+												{
+													if (memcmp((void*)&val[x + y], &sep[y], sizeof(_char)))
+													{
+														y = sl;
+													}
+													y++;
+												}
+
+												if (y == sl)
+												{
+													if (ksep)
+													{
+														std::string nsep(sep);
+														ret_->push_back(nsep);
+													}
+													x += sl - 1;
+													mk = x + 1;
+												}
+											}
+											else
+											{
+												if (memcmp((void*)&ig, (void*)&val[x - 1], sizeof(_char)))
+												{
+													size_t y = 1;
+
+													while (y < sl && x + y < t)
+													{
+														if (memcmp((void*)&val[x + y], &sep[y], sizeof(_char)))
+														{
+															y = sl;
+														}
+														y++;
+													}
+
+													if (y == sl)
+													{
+														for (; mk < x; mk++)
+														{
+															rstr.push_back(val[mk]);
+														}
+														x += (sl - 1);
+														mk = x + 1;
+
+														if (!rstr.empty())
+														{
+															ret_->push_back(rstr);
+															rstr.clear();
+														}
+
+														if (ksep)
+														{
+															std::string nsep(sep);
+															ret_->push_back(nsep);
+														}
+													}
+												}
+												else
+												{
+													if (x > 1)
+													{
+														if (!memcmp((void*)&ig, (void*)&val[x - 2], sizeof(_char)))
+														{
+															size_t y = 1;
+
+															while (y < sl && x + y < t)
+															{
+																if (memcmp((void*)&val[x + y], (void*)&sep[y], sizeof(_char)))
+																{
+																	y = sl;
+																}
+																y++;
+															}
+
+															if (y == sl)
+															{
+																for (; mk < x; mk++)
+																{
+																	rstr.push_back(val[mk]);
+																}
+																x += (sl - 1);
+																mk = x + 1;
+
+																if (!rstr.empty())
+																{
+																	ret_->push_back(rstr);
+																	rstr.clear();
+																}
+
+																if (ksep)
+																{
+																	std::string nsep(sep);
+																	ret_->push_back(nsep);
+																}
+															}
+														}
+													}
+												}
+											}
+										}
+									}
+								}
+							}
+						}
+					}
 				}
 			}
-			else
+		}
+		break;
+	}
+	case BOT_RTV_STR:
+	{
+		void* ptr = va_arg(args, void*);
+		std::string* sep = reinterpret_cast<std::string*>(ptr);
+
+		if (sep)
+		{
+			for (size_t x = f; x < t + 1; x++)
 			{
-				carr_64 ncar;
-				ret = bot_sprintf(ncar.carr, ncar.siz, "Bad Size: vl: %u", (uint)vl);
-				std::string rstr(ncar.carr);
-				ret_->push_back(rstr);
-				ret = -1;
+				if (lit > -1)
+				{
+					for (size_t xl = 0; xl < msy.nrts_lit.size(); xl++)
+					{
+						if (!memcmp((void*)&msy.nrts_lit[xl], (void*)&val[x], sizeof(_char)))
+						{
+							if (memcmp((void*)&ig, (void*)&val[x - 1], sizeof(_char)))
+							{
+								if (lit == (slint)xl)
+								{
+									if (!strcmp(sep->c_str(), &msy.nrts_lit[xl]))
+									{
+										if (ksep)
+										{
+											for (; mk < x + sep->length(); mk++)
+											{
+												rstr.push_back(val[mk]);
+											}
+
+											if (!rstr.empty())
+											{
+												ret_->push_back(rstr);
+												rstr.clear();
+											}
+										}
+										else
+										{
+											for (mk += sep->length(); mk < x; mk++)
+											{
+												rstr.push_back(val[mk]);
+											}
+
+											if (!rstr.empty())
+											{
+												ret_->push_back(rstr);
+												rstr.clear();
+											}
+										}
+										x += (sep->length() - 1);
+										mk = x + 1;
+									}
+									lit = -1;
+									litloc = (slint)x;
+								}
+								xl = msy.nrts_lit.size();
+							}
+							else
+							{
+								if (x > 1)
+								{
+									if (!memcmp((void*)&ig, (void*)&val[x - 2], sizeof(_char)))
+									{
+										if (lit == (slint)xl)
+										{
+											if (!strcmp(sep->c_str(), &msy.nrts_lit[xl]))
+											{
+												if (ksep)
+												{
+													for (; mk < x + sep->length(); mk++)
+													{
+														rstr.push_back(val[mk]);
+													}
+
+													if (!rstr.empty())
+													{
+														ret_->push_back(rstr);
+														rstr.clear();
+													}
+												}
+												else
+												{
+													for (mk += sep->length(); mk < x; mk++)
+													{
+														rstr.push_back(val[mk]);
+													}
+
+													if (!rstr.empty())
+													{
+														ret_->push_back(rstr);
+														rstr.clear();
+													}
+												}
+												x += (sep->length() - 1);
+												mk = x + 1;
+											}
+											lit = -1;
+											litloc = (slint)x;
+										}
+										xl = msy.nrts_lit.size();
+									}
+								}
+							}
+						}
+					}
+				}
+				else
+				{
+					if (lign > -1)
+					{
+						for (size_t yl = 0; yl < msy.nrts_lign_.size(); yl++)
+						{
+							if (!memcmp((void*)&msy.nrts_lign_[yl][0], (void*)&val[x], sizeof(_char)))
+							{
+								size_t zl = 0;
+
+								while (zl < msy.nrts_lign_[yl].length() && zl < t)
+								{
+									if (memcmp((void*)&msy.nrts_lign_[yl][zl], (void*)&val[x + zl], sizeof(_char)))
+									{
+										zl = msy.nrts_lign_[yl].length();
+									}
+									zl++;
+								}
+
+								if (zl == msy.nrts_lign_[yl].length())
+								{
+									if (lign == (slint)yl)
+									{
+										lign = -1;
+										yl = msy.nrts_lign_.size();
+									}
+								}
+							}
+						}
+					}
+					if (lign < 0)
+					{
+						for (size_t xl = 0; xl < msy.nrts_lit.size(); xl++)
+						{
+							if (!memcmp((void*)&msy.nrts_lit[xl], (void*)&val[x], sizeof(_char)))
+							{
+								if (!strcmp(sep->c_str(), &msy.nrts_lit[xl]))
+								{
+									for (; mk < x; mk++)
+									{
+										rstr.push_back(val[mk]);
+									}
+
+									if (!rstr.empty())
+									{
+										ret_->push_back(rstr);
+										rstr.clear();
+									}
+								}
+								lit = (slint)xl;
+								litloc = (slint)x;
+								xl = msy.nrts_lit.size();
+							}
+						}
+						if (lit < 0)
+						{
+							if (lign < 0)
+							{
+								for (size_t yl = 0; yl < msy.nrts_lign.size(); yl++)
+								{
+									if (!memcmp((void*)&msy.nrts_lign[yl][0], (void*)&val[x], sizeof(_char)))
+									{
+										size_t zl = 0;
+
+										while (zl < msy.nrts_lign[yl].length() && zl < t)
+										{
+											if (memcmp((void*)&msy.nrts_lign[yl][zl], (void*)&val[x + zl], sizeof(_char)))
+											{
+												zl = msy.nrts_lign[yl].length();
+											}
+											zl++;
+										}
+
+										if (zl == msy.nrts_lign[yl].length())
+										{
+											lign = (slint)yl;
+											yl = msy.nrts_lign.size();
+										}
+									}
+								}
+								if (lign < 0)
+								{
+									for (size_t xl = 0; xl < msy.nrts_ord.size(); xl++)
+									{
+										if (!memcmp((void*)&msy.nrts_ord[xl], (void*)&val[x], sizeof(_char)))
+										{
+											if (ord.empty())
+											{
+												if (!strcmp(sep->c_str(), &msy.nrts_ord[xl]) || !strcmp(sep->c_str(), &msy.nrts_ord_[xl]))
+												{
+													for (; mk < x; mk++)
+													{
+														rstr.push_back(val[mk]);
+													}
+
+													if (!rstr.empty())
+													{
+														ret_->push_back(rstr);
+														rstr.clear();
+													}
+												}
+											}
+											ord.push_back(xl);
+											ordl.push_back(x);
+											xl = msy.nrts_ord.size();
+										}
+									}
+									if (!ord.empty())
+									{
+										for (size_t xl = 0; xl < msy.nrts_ord_.size(); xl++)
+										{
+											if (!memcmp((void*)&msy.nrts_ord_[xl], (void*)&val[x], sizeof(_char)))
+											{
+												if (ord[ord.size() - 1] == xl)
+												{
+													ord.pop_back();
+													ordl.pop_back();
+
+													if (ord.empty())
+													{
+														if (!strcmp(sep->c_str(), &msy.nrts_ord[xl]) || !strcmp(sep->c_str(), &msy.nrts_ord_[xl]))
+														{
+															if (ksep)
+															{
+																for (; mk < x + sep->length(); mk++)
+																{
+																	rstr.push_back(val[mk]);
+																}
+
+																if (!rstr.empty())
+																{
+																	ret_->push_back(rstr);
+																	rstr.clear();
+																}
+															}
+															else
+															{
+																for (mk += sep->length(); mk < x; mk++)
+																{
+																	rstr.push_back(val[mk]);
+																}
+
+																if (!rstr.empty())
+																{
+																	ret_->push_back(rstr);
+																	rstr.clear();
+																}
+															}
+															x += (sep->length() - 1);
+															mk = x + 1;
+														}
+													}
+												}
+												xl = msy.nrts_ord_.size();
+											}
+										}
+									}
+									else
+									{
+										if (!memcmp((void*)&val[x], (void*)&sep->at(0), sizeof(_char)))
+										{
+											if (!x)
+											{
+												size_t y = 1;
+
+												while (y < sep->length() && x + y < t)
+												{
+													if (memcmp((void*)&val[x + y], &sep->at(y), sizeof(_char)))
+													{
+														y = sep->length();
+													}
+													y++;
+												}
+
+												if (y == sep->length())
+												{
+													if (ksep)
+													{
+														ret_->push_back(*sep);
+													}
+													x += sep->length() - 1;
+													mk = x + 1;
+												}
+											}
+											else
+											{
+												if (memcmp((void*)&ig, (void*)&val[x - 1], sizeof(_char)))
+												{
+													size_t y = 1;
+
+													while (y < sep->length() && x + y < t)
+													{
+														if (memcmp((void*)&val[x + y], &sep->at(y), sizeof(_char)))
+														{
+															y = sep->length();
+														}
+														y++;
+													}
+
+													if (y == sep->length())
+													{
+														for (; mk < x; mk++)
+														{
+															rstr.push_back(val[mk]);
+														}
+														x += (sep->length() - 1);
+														mk = x + 1;
+
+														if (!rstr.empty())
+														{
+															ret_->push_back(rstr);
+															rstr.clear();
+														}
+
+														if (ksep)
+														{
+															ret_->push_back(*sep);
+														}
+													}
+												}
+												else
+												{
+													if (x > 1)
+													{
+														if (!memcmp((void*)&ig, (void*)&val[x - 2], sizeof(_char)))
+														{
+															size_t y = 1;
+
+															while (y < sep->length() && x + y < t)
+															{
+																if (memcmp((void*)&val[x + y], &sep->at(y), sizeof(_char)))
+																{
+																	y = sep->length();
+																}
+																y++;
+															}
+
+															if (y == sep->length())
+															{
+																for (; mk < x; mk++)
+																{
+																	rstr.push_back(val[mk]);
+																}
+																x += (sep->length() - 1);
+																mk = x + 1;
+
+																if (!rstr.empty())
+																{
+																	ret_->push_back(rstr);
+																	rstr.clear();
+																}
+
+																if (ksep)
+																{
+																	ret_->push_back(*sep);
+																}
+															}
+														}
+													}
+												}
+											}
+										}
+									}
+								}
+							}
+						}
+					}
+				}
+			}
+		}
+		break;
+	}
+	case BOT_RTV_VCHAR:
+	{
+		std::vector<_char>* sep = va_arg(args, std::vector<_char>*);
+
+		if (sep)
+		{
+			for (size_t x = f; x < t + 1; x++)
+			{
+				if (lit > -1)
+				{
+					for (size_t xl = 0; xl < msy.nrts_lit.size(); xl++)
+					{
+						if (!memcmp((void*)&msy.nrts_lit[xl], (void*)&val[x], sizeof(_char)))
+						{
+							if (memcmp((void*)&ig, (void*)&val[x - 1], sizeof(_char)))
+							{
+								if (lit == (slint)xl)
+								{
+									for (size_t xt = 0; xt < sep->size(); xt++)
+									{
+										if (!memcmp((void*)&sep->at(xt), (void*)&msy.nrts_lit[xl], sizeof(_char)))
+										{
+											if (ksep)
+											{
+												for (; mk < x + sizeof(_char); mk++)
+												{
+													rstr.push_back(val[mk]);
+												}
+												if (!rstr.empty())
+												{
+													ret_->push_back(rstr);
+													rstr.clear();
+												}
+											}
+											else
+											{
+												for (mk += sizeof(_char); mk < x; mk++)
+												{
+													rstr.push_back(val[mk]);
+												}
+												if (!rstr.empty())
+												{
+													ret_->push_back(rstr);
+													rstr.clear();
+												}
+											}
+											x += (sizeof(_char) - 1);
+											mk = x + 1;
+											xt = sep->size();
+										}
+									}
+									lit = -1;
+									litloc = (slint)x;
+								}
+								xl = msy.nrts_lit.size();
+							}
+							else
+							{
+								if (x > 1)
+								{
+									if (!memcmp((void*)&ig, (void*)&val[x - 2], sizeof(_char)))
+									{
+										if (lit == (slint)xl)
+										{
+											for (size_t xt = 0; xt < sep->size(); xt++)
+											{
+												if (!memcmp((void*)&sep->at(xt), (void*)&msy.nrts_lit[xl], sizeof(_char)))
+												{
+													if (ksep)
+													{
+														for (; mk < x + sizeof(_char); mk++)
+														{
+															rstr.push_back(val[mk]);
+														}
+														if (!rstr.empty())
+														{
+															ret_->push_back(rstr);
+															rstr.clear();
+														}
+													}
+													else
+													{
+														for (mk += sizeof(_char); mk < x; mk++)
+														{
+															rstr.push_back(val[mk]);
+														}
+														if (!rstr.empty())
+														{
+															ret_->push_back(rstr);
+															rstr.clear();
+														}
+													}
+													x += (sizeof(_char) - 1);
+													mk = x + 1;
+													xt = sep->size();
+												}
+											}
+											lit = -1;
+											litloc = (slint)x;
+										}
+										xl = msy.nrts_lit.size();
+									}
+								}
+							}
+						}
+					}
+				}
+				else
+				{
+					if (lign > -1)
+					{
+						for (size_t yl = 0; yl < msy.nrts_lign_.size(); yl++)
+						{
+							if (!memcmp((void*)&msy.nrts_lign_[yl][0], (void*)&val[x], sizeof(_char)))
+							{
+								size_t zl = 0;
+
+								while (zl < msy.nrts_lign_[yl].length() && zl < t)
+								{
+									if (memcmp((void*)&msy.nrts_lign_[yl][zl], (void*)&val[x + zl], sizeof(_char)))
+									{
+										zl = msy.nrts_lign_[yl].length();
+									}
+									zl++;
+								}
+
+								if (zl == msy.nrts_lign_[yl].length())
+								{
+									if (lign == (slint)yl)
+									{
+										lign = -1;
+										yl = msy.nrts_lign_.size();
+									}
+								}
+							}
+						}
+					}
+					if (lign < 0)
+					{
+						for (size_t xl = 0; xl < msy.nrts_lit.size(); xl++)
+						{
+							if (!memcmp((void*)&msy.nrts_lit[xl], (void*)&val[x], sizeof(_char)))
+							{
+								for (size_t xt = 0; xt < sep->size(); xt++)
+								{
+									if (!memcmp((void*)&sep->at(xt), (void*)&msy.nrts_lit[xl], sizeof(_char)))
+									{
+										for (; mk < x; mk++)
+										{
+											rstr.push_back(val[mk]);
+										}
+
+										if (!rstr.empty())
+										{
+											ret_->push_back(rstr);
+											rstr.clear();
+										}
+										xt = sep->size();
+									}
+								}
+								lit = (slint)xl;
+								litloc = (slint)x;
+								xl = msy.nrts_lit.size();
+							}
+						}
+						if (lit < 0)
+						{
+							if (lign < 0)
+							{
+								for (size_t yl = 0; yl < msy.nrts_lign.size(); yl++)
+								{
+									if (!memcmp((void*)&msy.nrts_lign[yl][0], (void*)&val[x], sizeof(_char)))
+									{
+										size_t zl = 0;
+
+										while (zl < msy.nrts_lign[yl].length() && zl < t)
+										{
+											if (memcmp((void*)&msy.nrts_lign[yl][zl], (void*)&val[x + zl], sizeof(_char)))
+											{
+												zl = msy.nrts_lign[yl].length();
+											}
+											zl++;
+										}
+
+										if (zl == msy.nrts_lign[yl].length())
+										{
+											lign = (slint)yl;
+											yl = msy.nrts_lign.size();
+										}
+									}
+								}
+								if (lign < 0)
+								{
+									for (size_t xl = 0; xl < msy.nrts_ord.size(); xl++)
+									{
+										if (!memcmp((void*)&msy.nrts_ord[xl], (void*)&val[x], sizeof(_char)))
+										{
+											if (ord.empty())
+											{
+												for (size_t xt = 0; xt < sep->size(); xt++)
+												{
+													if (!memcmp((void*)&sep->at(xt), (void*)&msy.nrts_ord[xl], sizeof(_char)) || !memcmp((void*)&sep->at(xt), (void*)&msy.nrts_ord_[xl], sizeof(_char)))
+													{
+														for (; mk < x; mk++)
+														{
+															rstr.push_back(val[mk]);
+														}
+
+														if (!rstr.empty())
+														{
+															ret_->push_back(rstr);
+															rstr.clear();
+														}
+														xt = sep->size();
+													}
+												}
+											}
+											ord.push_back(xl);
+											ordl.push_back(x);
+											xl = msy.nrts_ord.size();
+										}
+									}
+									if (!ord.empty())
+									{
+										for (size_t xl = 0; xl < msy.nrts_ord_.size(); xl++)
+										{
+											if (!memcmp((void*)&msy.nrts_ord_[xl], (void*)&val[x], sizeof(_char)))
+											{
+												if (ord[ord.size() - 1] == xl)
+												{
+													ord.pop_back();
+													ordl.pop_back();
+
+													if (ord.empty())
+													{
+														for (size_t xt = 0; xt < sep->size(); xt++)
+														{
+															if (!memcmp((void*)&sep->at(xt), (void*)&msy.nrts_ord[xl], sizeof(_char)) || !memcmp((void*)&sep->at(xt), (void*)&msy.nrts_ord_[xl], sizeof(_char)))
+															{
+																if (ksep)
+																{
+																	for (; mk < x + sizeof(_char); mk++)
+																	{
+																		rstr.push_back(val[mk]);
+																	}
+																	if (!rstr.empty())
+																	{
+																		ret_->push_back(rstr);
+																		rstr.clear();
+																	}
+																}
+																else
+																{
+																	for (mk += sizeof(_char); mk < x; mk++)
+																	{
+																		rstr.push_back(val[mk]);
+																	}
+																	if (!rstr.empty())
+																	{
+																		ret_->push_back(rstr);
+																		rstr.clear();
+																	}
+																}
+																x += (sizeof(_char) - 1);
+																mk = x + 1;
+																xt = sep->size();
+															}
+														}
+													}
+												}
+												xl = msy.nrts_ord_.size();
+											}
+										}
+									}
+									else
+									{
+										for (size_t xt = 0; xt < sep->size(); xt++)
+										{
+											if (!memcmp((void*)&val[x], (void*)&sep->at(xt), sizeof(_char)))
+											{
+												if (!x)
+												{
+													if (ksep)
+													{
+														std::string str;
+														str.push_back(sep->at(xt));
+														ret_->push_back(str);
+													}
+													x += sizeof(_char) - 1;
+													mk = x + 1;
+													xt = sep->size();
+												}
+												else
+												{
+													if (memcmp((void*)&ig, (void*)&val[x - 1], sizeof(_char)))
+													{
+														for (; mk < x; mk++)
+														{
+															rstr.push_back(val[mk]);
+														}
+														x += sizeof(_char) - 1;
+														mk = x + 1;
+
+														if (!rstr.empty())
+														{
+															ret_->push_back(rstr);
+															rstr.clear();
+														}
+
+														if (ksep)
+														{
+															std::string str;
+															str.push_back(sep->at(xt));
+															ret_->push_back(str);
+														}
+														xt = sep->size();
+													}
+													else
+													{
+														if (x > 1)
+														{
+															if (!memcmp((void*)&ig, (void*)&val[x - 2], sizeof(_char)))
+															{
+																for (; mk < x; mk++)
+																{
+																	rstr.push_back(val[mk]);
+																}
+																x += sizeof(_char) - 1;
+																mk = x + 1;
+
+																if (!rstr.empty())
+																{
+																	ret_->push_back(rstr);
+																	rstr.clear();
+																}
+
+																if (ksep)
+																{
+																	std::string str;
+																	str.push_back(sep->at(xt));
+																	ret_->push_back(str);
+																}
+																xt = sep->size();
+															}
+														}
+													}
+												}
+											}
+										}
+									}
+								}
+							}
+						}
+					}
+				}
+			}
+		}
+		break;
+	}
+	case BOT_RTV_VCCHAR:
+	{
+		void* ptr = va_arg(args, void*);
+		std::vector<c_char*>* sep = reinterpret_cast<std::vector<c_char*>*>(ptr);
+
+		if (sep)
+		{
+			for (size_t x = f; x < t + 1; x++)
+			{
+				if (lit > -1)
+				{
+					for (size_t xl = 0; xl < msy.nrts_lit.size(); xl++)
+					{
+						if (!memcmp((void*)&msy.nrts_lit[xl], (void*)&val[x], sizeof(_char)))
+						{
+							if (memcmp((void*)&ig, (void*)&val[x - 1], sizeof(_char)))
+							{
+								if (lit == (slint)xl)
+								{
+									for (size_t xt = 0; xt < sep->size(); xt++)
+									{
+										size_t sl = bot_cstrlen(sep->at(xt));
+
+										if (!strcmp(sep->at(xt), &msy.nrts_lit[xl]))
+										{
+											if (ksep)
+											{
+												for (; mk < x + sl; mk++)
+												{
+													rstr.push_back(val[mk]);
+												}
+												if (!rstr.empty())
+												{
+													ret_->push_back(rstr);
+													rstr.clear();
+												}
+											}
+											else
+											{
+												for (mk += sl; mk < x; mk++)
+												{
+													rstr.push_back(val[mk]);
+												}
+												if (!rstr.empty())
+												{
+													ret_->push_back(rstr);
+													rstr.clear();
+												}
+											}
+											x += (sl - 1);
+											mk = x + 1;
+											xt = sep->size();
+										}
+									}
+									lit = -1;
+									litloc = (slint)x;
+								}
+								xl = msy.nrts_lit.size();
+							}
+							else
+							{
+								if (x > 1)
+								{
+									if (!memcmp((void*)&ig, (void*)&val[x - 2], sizeof(_char)))
+									{
+										if (lit == (slint)xl)
+										{
+											for (size_t xt = 0; xt < sep->size(); xt++)
+											{
+												size_t sl = bot_cstrlen(sep->at(xt));
+
+												if (!strcmp(sep->at(xt), &msy.nrts_lit[xl]))
+												{
+													if (ksep)
+													{
+														for (; mk < x + sl; mk++)
+														{
+															rstr.push_back(val[mk]);
+														}
+														if (!rstr.empty())
+														{
+															ret_->push_back(rstr);
+															rstr.clear();
+														}
+													}
+													else
+													{
+														for (mk += sl; mk < x; mk++)
+														{
+															rstr.push_back(val[mk]);
+														}
+														if (!rstr.empty())
+														{
+															ret_->push_back(rstr);
+															rstr.clear();
+														}
+													}
+													x += (sl - 1);
+													mk = x + 1;
+													xt = sep->size();
+												}
+											}
+											lit = -1;
+											litloc = (slint)x;
+										}
+										xl = msy.nrts_lit.size();
+									}
+								}
+							}
+						}
+					}
+				}
+				else
+				{
+					if (lign > -1)
+					{
+						for (size_t yl = 0; yl < msy.nrts_lign_.size(); yl++)
+						{
+							if (!memcmp((void*)&msy.nrts_lign_[yl][0], (void*)&val[x], sizeof(_char)))
+							{
+								size_t zl = 0;
+
+								while (zl < msy.nrts_lign_[yl].length() && zl < t)
+								{
+									if (memcmp((void*)&msy.nrts_lign_[yl][zl], (void*)&val[x + zl], sizeof(_char)))
+									{
+										zl = msy.nrts_lign_[yl].length();
+									}
+									zl++;
+								}
+
+								if (zl == msy.nrts_lign_[yl].length())
+								{
+									if (lign == (slint)yl)
+									{
+										lign = -1;
+										yl = msy.nrts_lign_.size();
+									}
+								}
+							}
+						}
+					}
+					if (lign < 0)
+					{
+						for (size_t xl = 0; xl < msy.nrts_lit.size(); xl++)
+						{
+							if (!memcmp((void*)&msy.nrts_lit[xl], (void*)&val[x], sizeof(_char)))
+							{
+								for (size_t xt = 0; xt < sep->size(); xt++)
+								{
+									if (!strcmp(sep->at(xt), &msy.nrts_lit[xl]))
+									{
+										for (; mk < x; mk++)
+										{
+											rstr.push_back(val[mk]);
+										}
+
+										if (!rstr.empty())
+										{
+											ret_->push_back(rstr);
+											rstr.clear();
+										}
+										xt = sep->size();
+									}
+								}
+								lit = (slint)xl;
+								litloc = (slint)x;
+								xl = msy.nrts_lit.size();
+							}
+						}
+						if (lit < 0)
+						{
+							if (lign < 0)
+							{
+								for (size_t yl = 0; yl < msy.nrts_lign.size(); yl++)
+								{
+									if (!memcmp((void*)&msy.nrts_lign[yl][0], (void*)&val[x], sizeof(_char)))
+									{
+										size_t zl = 0;
+
+										while (zl < msy.nrts_lign[yl].length() && zl < t)
+										{
+											if (memcmp((void*)&msy.nrts_lign[yl][zl], (void*)&val[x + zl], sizeof(_char)))
+											{
+												zl = msy.nrts_lign[yl].length();
+											}
+											zl++;
+										}
+
+										if (zl == msy.nrts_lign[yl].length())
+										{
+											lign = (slint)yl;
+											yl = msy.nrts_lign.size();
+										}
+									}
+								}
+								if (lign < 0)
+								{
+									for (size_t xl = 0; xl < msy.nrts_ord.size(); xl++)
+									{
+										if (!memcmp((void*)&msy.nrts_ord[xl], (void*)&val[x], sizeof(_char)))
+										{
+											if (ord.empty())
+											{
+												for (size_t xt = 0; xt < sep->size(); xt++)
+												{
+													if (!strcmp(sep->at(xt), &msy.nrts_ord[xl]) || !strcmp(sep->at(xt), &msy.nrts_ord_[xl]))
+													{
+														for (; mk < x; mk++)
+														{
+															rstr.push_back(val[mk]);
+														}
+
+														if (!rstr.empty())
+														{
+															ret_->push_back(rstr);
+															rstr.clear();
+														}
+														xt = sep->size();
+													}
+												}
+											}
+											ord.push_back(xl);
+											ordl.push_back(x);
+											xl = msy.nrts_ord.size();
+										}
+									}
+									if (!ord.empty())
+									{
+										for (size_t xl = 0; xl < msy.nrts_ord_.size(); xl++)
+										{
+											if (!memcmp((void*)&msy.nrts_ord_[xl], (void*)&val[x], sizeof(_char)))
+											{
+												if (ord[ord.size() - 1] == xl)
+												{
+													ord.pop_back();
+													ordl.pop_back();
+
+													if (ord.empty())
+													{
+														for (size_t xt = 0; xt < sep->size(); xt++)
+														{
+															if (!strcmp(sep->at(xt), &msy.nrts_ord[xl]) || !strcmp(sep->at(xt), &msy.nrts_ord_[xl]))
+															{
+																size_t sl = bot_cstrlen(sep->at(xt));
+
+																if (ksep)
+																{
+																	for (; mk < x + sl; mk++)
+																	{
+																		rstr.push_back(val[mk]);
+																	}
+																	if (!rstr.empty())
+																	{
+																		ret_->push_back(rstr);
+																		rstr.clear();
+																	}
+																}
+																else
+																{
+																	for (mk += sl; mk < x; mk++)
+																	{
+																		rstr.push_back(val[mk]);
+																	}
+																	if (!rstr.empty())
+																	{
+																		ret_->push_back(rstr);
+																		rstr.clear();
+																	}
+																}
+																x += (sl - 1);
+																mk = x + 1;
+																xt = sep->size();
+															}
+														}
+													}
+												}
+												xl = msy.nrts_ord_.size();
+											}
+										}
+									}
+									else
+									{
+										for (size_t xt = 0; xt < sep->size(); xt++)
+										{
+											if (!memcmp((void*)&val[x], (void*)&sep->at(xt)[0], sizeof(_char)))
+											{
+												if (!x)
+												{
+													size_t sl = bot_cstrlen(sep->at(xt));
+													size_t y = 1;
+
+													while (y < sl && x + y < t)
+													{
+														if (memcmp((void*)&val[x + y], &sep->at(xt)[y], sizeof(_char)))
+														{
+															y = sl;
+														}
+														y++;
+													}
+
+													if (y == sl)
+													{
+														if (ksep)
+														{
+															ret_->push_back(sep->at(xt));
+														}
+														x += (sl - 1);
+														mk = x + 1;
+														xt = sep->size();
+													}
+												}
+												else
+												{
+													if (memcmp((void*)&ig, (void*)&val[x - 1], sizeof(_char)))
+													{
+														size_t sl = bot_cstrlen(sep->at(xt));
+														size_t y = 1;
+
+														while (y < sl && x + y < t)
+														{
+															if (memcmp((void*)&val[x + y], &sep->at(xt)[y], sizeof(_char)))
+															{
+																y = sl;
+															}
+															y++;
+														}
+
+														if (y == sl)
+														{
+															for (; mk < x; mk++)
+															{
+																rstr.push_back(val[mk]);
+															}
+															x += (sl - 1);
+															mk = x + 1;
+
+															if (!rstr.empty())
+															{
+																ret_->push_back(rstr);
+																rstr.clear();
+															}
+
+															if (ksep)
+															{
+																ret_->push_back(sep->at(xt));
+															}
+															xt = sep->size();
+														}
+													}
+													else
+													{
+														if (x > 1)
+														{
+															if (!memcmp((void*)&ig, (void*)&val[x - 2], sizeof(_char)))
+															{
+																size_t sl = bot_cstrlen(sep->at(xt));
+																size_t y = 1;
+
+																while (y < sl && x + y < t)
+																{
+																	if (memcmp((void*)&val[x + y], &sep->at(xt)[y], sizeof(_char)))
+																	{
+																		y = sl;
+																	}
+																	y++;
+																}
+
+																if (y == sl)
+																{
+																	for (; mk < x; mk++)
+																	{
+																		rstr.push_back(val[mk]);
+																	}
+																	x += (sl - 1);
+																	mk = x + 1;
+
+																	if (!rstr.empty())
+																	{
+																		ret_->push_back(rstr);
+																		rstr.clear();
+																	}
+
+																	if (ksep)
+																	{
+																		ret_->push_back(sep->at(xt));
+																	}
+																	xt = sep->size();
+																}
+															}
+														}
+													}
+												}
+											}
+										}
+									}
+								}
+							}
+						}
+					}
+				}
 			}
 		}
 		break;
@@ -11209,73 +12085,207 @@ sint machine::ArgSep(std::vector <std::string>* ret_, bool ksep, size_t f, size_
 
 		if (sep)
 		{
-			ret = -1;
-
-			if (vl && vl < (size_t)BOT_STRLEN_MAX)
+			for (size_t x = f; x < t + 1; x++)
 			{
-				slint lign = -1;
-				slint lit = -1;
-				slint litloc = 0;
-				std::vector<size_t> ord;
-				std::vector<size_t> ordl;
-				std::string rstr;
-				size_t mk = 0;
-				_char ig = '\\';
-
-				for (size_t x = f; x < t + 1; x++)
+				if (lit > -1)
 				{
-					if (lit > -1)
+					for (size_t xl = 0; xl < msy.nrts_lit.size(); xl++)
 					{
-						for (size_t xl = 0; xl < msy.nrts_lit.size(); xl++)
+						if (!memcmp((void*)&msy.nrts_lit[xl], (void*)&val[x], sizeof(_char)))
 						{
-							if (!memcmp((void*)&msy.nrts_lit[xl], (void*)&val[x], sizeof(_char)))
+							if (memcmp((void*)&ig, (void*)&val[x - 1], sizeof(_char)))
 							{
-								if (memcmp((void*)&ig, (void*)&val[x - 1], sizeof(_char)))
+								if (lit == (slint)xl)
 								{
-									if (lit == (slint)xl)
+									for (size_t xt = 0; xt < sep->size(); xt++)
 									{
-										for (size_t xt = 0; xt < sep->size(); xt++)
+										if (!strcmp(sep->at(xt).c_str(), &msy.nrts_lit[xl]))
 										{
-											if (!strcmp(sep->at(xt).c_str(), &msy.nrts_lit[xl]))
+											if (ksep)
 											{
 												for (; mk < x + sep->at(xt).length(); mk++)
 												{
 													rstr.push_back(val[mk]);
 												}
-												x += (sep->at(xt).length() - 1);
-												mk = x + 1;
-
 												if (!rstr.empty())
 												{
 													ret_->push_back(rstr);
 													rstr.clear();
 												}
-												xt = sep->size();
 											}
-										}
-										lit = -1;
-										litloc = (slint)x;
-									}
-									xl = msy.nrts_lit.size();
-								}
-								else
-								{
-									if (x > 1)
-									{
-										if (!memcmp((void*)&ig, (void*)&val[x - 2], sizeof(_char)))
-										{
-											if (lit == (slint)xl)
+											else
 											{
-												for (size_t xt = 0; xt < sep->size(); xt++)
+												for (mk += sep->at(xt).length(); mk < x; mk++)
 												{
-													if (!strcmp(sep->at(xt).c_str(), &msy.nrts_lit[xl]))
+													rstr.push_back(val[mk]);
+												}
+												if (!rstr.empty())
+												{
+													ret_->push_back(rstr);
+													rstr.clear();
+												}
+											}
+											x += (sep->at(xt).length() - 1);
+											mk = x + 1;
+											xt = sep->size();
+										}
+									}
+									lit = -1;
+									litloc = (slint)x;
+								}
+								xl = msy.nrts_lit.size();
+							}
+							else
+							{
+								if (x > 1)
+								{
+									if (!memcmp((void*)&ig, (void*)&val[x - 2], sizeof(_char)))
+									{
+										if (lit == (slint)xl)
+										{
+											for (size_t xt = 0; xt < sep->size(); xt++)
+											{
+												if (!strcmp(sep->at(xt).c_str(), &msy.nrts_lit[xl]))
+												{
+													if (ksep)
 													{
 														for (; mk < x + sep->at(xt).length(); mk++)
 														{
 															rstr.push_back(val[mk]);
 														}
-														x += (sep->at(xt).length() - 1);
-														mk = x + 1;
+														if (!rstr.empty())
+														{
+															ret_->push_back(rstr);
+															rstr.clear();
+														}
+													}
+													else
+													{
+														for (mk += sep->at(xt).length(); mk < x; mk++)
+														{
+															rstr.push_back(val[mk]);
+														}
+														if (!rstr.empty())
+														{
+															ret_->push_back(rstr);
+															rstr.clear();
+														}
+													}
+													x += (sep->at(xt).length() - 1);
+													mk = x + 1;
+													xt = sep->size();
+												}
+											}
+											lit = -1;
+											litloc = (slint)x;
+										}
+										xl = msy.nrts_lit.size();
+									}
+								}
+							}
+						}
+					}
+				}
+				else
+				{
+					if (lign > -1)
+					{
+						for (size_t yl = 0; yl < msy.nrts_lign_.size(); yl++)
+						{
+							if (!memcmp((void*)&msy.nrts_lign_[yl][0], (void*)&val[x], sizeof(_char)))
+							{
+								size_t zl = 0;
+
+								while (zl < msy.nrts_lign_[yl].length() && zl < t)
+								{
+									if (memcmp((void*)&msy.nrts_lign_[yl][zl], (void*)&val[x + zl], sizeof(_char)))
+									{
+										zl = msy.nrts_lign_[yl].length();
+									}
+									zl++;
+								}
+
+								if (zl == msy.nrts_lign_[yl].length())
+								{
+									if (lign == (slint)yl)
+									{
+										lign = -1;
+										yl = msy.nrts_lign_.size();
+									}
+								}
+							}
+						}
+					}
+					if (lign < 0)
+					{
+						for (size_t xl = 0; xl < msy.nrts_lit.size(); xl++)
+						{
+							if (!memcmp((void*)&msy.nrts_lit[xl], (void*)&val[x], sizeof(_char)))
+							{
+								for (size_t xt = 0; xt < sep->size(); xt++)
+								{
+									if (!strcmp(sep->at(xt).c_str(), &msy.nrts_lit[xl]))
+									{
+										for (; mk < x; mk++)
+										{
+											rstr.push_back(val[mk]);
+										}
+
+										if (!rstr.empty())
+										{
+											ret_->push_back(rstr);
+											rstr.clear();
+										}
+										xt = sep->size();
+									}
+								}
+								lit = (slint)xl;
+								litloc = (slint)x;
+								xl = msy.nrts_lit.size();
+							}
+						}
+						if (lit < 0)
+						{
+							if (lign < 0)
+							{
+								for (size_t yl = 0; yl < msy.nrts_lign.size(); yl++)
+								{
+									if (!memcmp((void*)&msy.nrts_lign[yl][0], (void*)&val[x], sizeof(_char)))
+									{
+										size_t zl = 0;
+
+										while (zl < msy.nrts_lign[yl].length() && zl < t)
+										{
+											if (memcmp((void*)&msy.nrts_lign[yl][zl], (void*)&val[x + zl], sizeof(_char)))
+											{
+												zl = msy.nrts_lign[yl].length();
+											}
+											zl++;
+										}
+
+										if (zl == msy.nrts_lign[yl].length())
+										{
+											lign = (slint)yl;
+											yl = msy.nrts_lign.size();
+										}
+									}
+								}
+								if (lign < 0)
+								{
+									for (size_t xl = 0; xl < msy.nrts_ord.size(); xl++)
+									{
+										if (!memcmp((void*)&msy.nrts_ord[xl], (void*)&val[x], sizeof(_char)))
+										{
+											if (ord.empty())
+											{
+												for (size_t xt = 0; xt < sep->size(); xt++)
+												{
+													if (!strcmp(sep->at(xt).c_str(), &msy.nrts_ord[xl]) || !strcmp(sep->at(xt).c_str(), &msy.nrts_ord_[xl]))
+													{
+														for (; mk < x; mk++)
+														{
+															rstr.push_back(val[mk]);
+														}
 
 														if (!rstr.empty())
 														{
@@ -11285,149 +12295,151 @@ sint machine::ArgSep(std::vector <std::string>* ret_, bool ksep, size_t f, size_
 														xt = sep->size();
 													}
 												}
-												lit = -1;
-												litloc = (slint)x;
 											}
-											xl = msy.nrts_lit.size();
+											ord.push_back(xl);
+											ordl.push_back(x);
+											xl = msy.nrts_ord.size();
 										}
 									}
-								}
-							}
-						}
-					}
-					else
-					{
-						if (lign > -1)
-						{
-							for (size_t yl = 0; yl < msy.nrts_lign_.size(); yl++)
-							{
-								if (!memcmp((void*)&msy.nrts_lign_[yl][0], (void*)&val[x], sizeof(_char)))
-								{
-									size_t zl = 1;
-
-									while (zl < msy.nrts_lign[yl].length() && zl < vl)
+									if (!ord.empty())
 									{
-										if (memcmp((void*)&msy.nrts_lign_[yl][zl], (void*)&val[x + zl], sizeof(_char)))
+										for (size_t xl = 0; xl < msy.nrts_ord_.size(); xl++)
 										{
-											zl = msy.nrts_lign[yl].length();
-										}
-										zl++;
-									}
-
-									if (zl == msy.nrts_lign[yl].length())
-									{
-										if (lign == (slint)yl)
-										{
-											lign = -1;
-											yl = msy.nrts_lign_.size();
-										}
-									}
-								}
-							}
-						}
-						if (lign < 0)
-						{
-							for (size_t xl = 0; xl < msy.nrts_lit.size(); xl++)
-							{
-								if (!memcmp((void*)&msy.nrts_lit[xl], (void*)&val[x], sizeof(_char)))
-								{
-									for (size_t xt = 0; xt < sep->size(); xt++)
-									{
-										if (!strcmp(sep->at(xt).c_str(), &msy.nrts_lit[xl]))
-										{
-											for (; mk < x; mk++)
+											if (!memcmp((void*)&msy.nrts_ord_[xl], (void*)&val[x], sizeof(_char)))
 											{
-												rstr.push_back(val[mk]);
-											}
-
-											if (!rstr.empty())
-											{
-												ret_->push_back(rstr);
-												rstr.clear();
-											}
-											xt = sep->size();
-										}
-									}
-									lit = (slint)xl;
-									litloc = (slint)x;
-									xl = msy.nrts_lit.size();
-								}
-							}
-							if (lit < 0)
-							{
-								if (lign < 0)
-								{
-									for (size_t yl = 0; yl < msy.nrts_lign.size(); yl++)
-									{
-										if (!memcmp((void*)&msy.nrts_lign[yl][0], (void*)&val[x], sizeof(_char)))
-										{
-											size_t zl = 1;
-
-											while (zl < msy.nrts_lign[yl].length() && zl < vl)
-											{
-												if (memcmp((void*)&msy.nrts_lign[yl][zl], (void*)&val[x + zl], sizeof(_char)))
+												if (ord[ord.size() - 1] == xl)
 												{
-													zl = msy.nrts_lign[yl].length();
-												}
-												zl++;
-											}
+													ord.pop_back();
+													ordl.pop_back();
 
-											if (zl == msy.nrts_lign[yl].length())
-											{
-												lign = (slint)yl;
-												yl = msy.nrts_lign.size();
-											}
-										}
-									}
-									if (lign < 0)
-									{
-										for (size_t xl = 0; xl < msy.nrts_ord.size(); xl++)
-										{
-											if (!memcmp((void*)&msy.nrts_ord[xl], (void*)&val[x], sizeof(_char)))
-											{
-												if (ord.empty())
-												{
-													for (size_t xt = 0; xt < sep->size(); xt++)
+													if (ord.empty())
 													{
-														if (!strcmp(sep->at(xt).c_str(), &msy.nrts_ord[xl]) || !strcmp(sep->at(xt).c_str(), &msy.nrts_ord_[xl]))
+														for (size_t xt = 0; xt < sep->size(); xt++)
+														{
+															if (!strcmp(sep->at(xt).c_str(), &msy.nrts_ord[xl]) || !strcmp(sep->at(xt).c_str(), &msy.nrts_ord_[xl]))
+															{
+																if (ksep)
+																{
+																	for (; mk < x + sep->at(xt).length(); mk++)
+																	{
+																		rstr.push_back(val[mk]);
+																	}
+																	if (!rstr.empty())
+																	{
+																		ret_->push_back(rstr);
+																		rstr.clear();
+																	}
+																}
+																else
+																{
+																	for (mk += sep->at(xt).length(); mk < x; mk++)
+																	{
+																		rstr.push_back(val[mk]);
+																	}
+																	if (!rstr.empty())
+																	{
+																		ret_->push_back(rstr);
+																		rstr.clear();
+																	}
+																}
+																x += (sep->at(xt).length() - 1);
+																mk = x + 1;
+																xt = sep->size();
+															}
+														}
+													}
+												}
+												xl = msy.nrts_ord_.size();
+											}
+										}
+									}
+									else
+									{
+										for (size_t xt = 0; xt < sep->size(); xt++)
+										{
+											if (!memcmp((void*)&val[x], (void*)&sep->at(xt)[0], sizeof(_char)))
+											{
+												if (!x)
+												{
+													size_t y = 1;
+
+													while (y < sep->at(xt).length() && x + y < t)
+													{
+														if (memcmp((void*)&val[x + y], &sep->at(xt)[y], sizeof(_char)))
+														{
+															y = sep->at(xt).length();
+														}
+														y++;
+													}
+
+													if (y == sep->at(xt).length())
+													{
+														if (ksep)
+														{
+															ret_->push_back(sep->at(xt));
+														}
+														x += (sep->at(xt).length() - 1);
+														mk = x + 1;
+														xt = sep->size();
+													}
+												}
+												else
+												{
+													if (memcmp((void*)&ig, (void*)&val[x - 1], sizeof(_char)))
+													{
+														size_t y = 1;
+
+														while (y < sep->at(xt).length() && x + y < t)
+														{
+															if (memcmp((void*)&val[x + y], &sep->at(xt)[y], sizeof(_char)))
+															{
+																y = sep->at(xt).length();
+															}
+															y++;
+														}
+
+														if (y == sep->at(xt).length())
 														{
 															for (; mk < x; mk++)
 															{
 																rstr.push_back(val[mk]);
 															}
+															x += (sep->at(xt).length() - 1);
+															mk = x + 1;
 
 															if (!rstr.empty())
 															{
 																ret_->push_back(rstr);
 																rstr.clear();
 															}
+
+															if (ksep)
+															{
+																ret_->push_back(sep->at(xt));
+															}
 															xt = sep->size();
 														}
 													}
-												}
-												ord.push_back(xl);
-												ordl.push_back(x);
-												xl = msy.nrts_ord.size();
-											}
-										}
-										if (!ord.empty())
-										{
-											for (size_t xl = 0; xl < msy.nrts_ord_.size(); xl++)
-											{
-												if (!memcmp((void*)&msy.nrts_ord_[xl], (void*)&val[x], sizeof(_char)))
-												{
-													if (ord[ord.size() - 1] == xl)
+													else
 													{
-														ord.pop_back();
-														ordl.pop_back();
-
-														if (ord.empty())
+														if (x > 1)
 														{
-															for (size_t xt = 0; xt < sep->size(); xt++)
+															if (!memcmp((void*)&ig, (void*)&val[x - 2], sizeof(_char)))
 															{
-																if (!strcmp(sep->at(xt).c_str(), &msy.nrts_ord[xl]) || !strcmp(sep->at(xt).c_str(), &msy.nrts_ord_[xl]))
+																size_t y = 1;
+
+																while (y < sep->at(xt).length() && x + y < t)
 																{
-																	for (; mk < x + sep->at(xt).length(); mk++)
+																	if (memcmp((void*)&val[x + y], &sep->at(xt)[y], sizeof(_char)))
+																	{
+																		y = sep->at(xt).length();
+																	}
+																	y++;
+																}
+
+																if (y == sep->at(xt).length())
+																{
+																	for (; mk < x; mk++)
 																	{
 																		rstr.push_back(val[mk]);
 																	}
@@ -11439,120 +12451,12 @@ sint machine::ArgSep(std::vector <std::string>* ret_, bool ksep, size_t f, size_
 																		ret_->push_back(rstr);
 																		rstr.clear();
 																	}
+
+																	if (ksep)
+																	{
+																		ret_->push_back(sep->at(xt));
+																	}
 																	xt = sep->size();
-																}
-															}
-														}
-													}
-													xl = msy.nrts_ord_.size();
-												}
-											}
-										}
-										else
-										{
-											for (size_t xt = 0; xt < sep->size(); xt++)
-											{
-												if (!memcmp((void*)&val[x], (void*)&sep->at(xt)[0], sizeof(_char)))
-												{
-													if (!x)
-													{
-														size_t y = 1;
-
-														while (y < sep->at(xt).length() && x + y < vl)
-														{
-															if (memcmp((void*)&val[x + y], &sep->at(xt)[y], sizeof(_char)))
-															{
-																y = sep->at(xt).length();
-															}
-															y++;
-														}
-
-														if (y == sep->at(xt).length())
-														{
-															if (ksep)
-															{
-																ret_->push_back(sep->at(xt));
-															}
-															x += (sep->at(xt).length() - 1);
-															mk = x + 1;
-															xt = sep->size();
-														}
-													}
-													else
-													{
-														if (memcmp((void*)&ig, (void*)&val[x - 1], sizeof(_char)))
-														{
-															size_t y = 1;
-
-															while (y < sep->at(xt).length() && x + y < vl)
-															{
-																if (memcmp((void*)&val[x + y], &sep->at(xt)[y], sizeof(_char)))
-																{
-																	y = sep->at(xt).length();
-																}
-																y++;
-															}
-
-															if (y == sep->at(xt).length())
-															{
-																for (; mk < x; mk++)
-																{
-																	rstr.push_back(val[mk]);
-																}
-																x += (sep->at(xt).length() - 1);
-																mk = x + 1;
-
-																if (!rstr.empty())
-																{
-																	ret_->push_back(rstr);
-																	rstr.clear();
-																}
-
-																if (ksep)
-																{
-																	ret_->push_back(sep->at(xt));
-																}
-																xt = sep->size();
-															}
-														}
-														else
-														{
-															if (x > 1)
-															{
-																if (!memcmp((void*)&ig, (void*)&val[x - 2], sizeof(_char)))
-																{
-																	size_t y = 1;
-
-																	while (y < sep->at(xt).length() && x + y < vl)
-																	{
-																		if (memcmp((void*)&val[x + y], &sep->at(xt)[y], sizeof(_char)))
-																		{
-																			y = sep->at(xt).length();
-																		}
-																		y++;
-																	}
-
-																	if (y == sep->at(xt).length())
-																	{
-																		for (; mk < x; mk++)
-																		{
-																			rstr.push_back(val[mk]);
-																		}
-																		x += (sep->at(xt).length() - 1);
-																		mk = x + 1;
-
-																		if (!rstr.empty())
-																		{
-																			ret_->push_back(rstr);
-																			rstr.clear();
-																		}
-
-																		if (ksep)
-																		{
-																			ret_->push_back(sep->at(xt));
-																		}
-																		xt = sep->size();
-																	}
 																}
 															}
 														}
@@ -11566,43 +12470,6 @@ sint machine::ArgSep(std::vector <std::string>* ret_, bool ksep, size_t f, size_
 						}
 					}
 				}
-
-				for (; mk < vl; mk++)
-				{
-					rstr.push_back(val[mk]);
-				}
-				if (!rstr.empty())
-				{
-					ret_->push_back(rstr);
-				}
-				if (lit > -1)
-				{
-					carr_64 ncar;
-					ret = bot_sprintf(ncar.carr, ncar.siz, "Open literal '%c' at: %u", msy.nrts_lit[lit], (uint)litloc);
-					std::string rstr(ncar.carr);
-					ret_->push_back(rstr);
-					ret = -1;
-				}
-				else if (!ord.empty())
-				{
-					carr_64 ncar;
-					ret = bot_sprintf(ncar.carr, ncar.siz, "Open bracket '%c' at: %u", msy.nrts_ord[ord[0]], (uint)ordl[0]);
-					std::string rstr(ncar.carr);
-					ret_->push_back(rstr);
-					ret = -1;
-				}
-				else
-				{
-					ret = 0;
-				}
-			}
-			else
-			{
-				carr_64 ncar;
-				ret = bot_sprintf(ncar.carr, ncar.siz, "Bad Size: vl: %u", (uint)vl);
-				std::string rstr(ncar.carr);
-				ret_->push_back(rstr);
-				ret = -1;
 			}
 		}
 		break;
@@ -11611,6 +12478,3420 @@ sint machine::ArgSep(std::vector <std::string>* ret_, bool ksep, size_t f, size_
 	{
 		break;
 	}
+	}
+	for (; mk < t + 1; mk++)
+	{
+		rstr.push_back(val[mk]);
+	}
+	if (!rstr.empty())
+	{
+		ret_->push_back(rstr);
+	}
+	if (lit > -1)
+	{
+		ret = bot_sprintfs(&rstr, true, "Open literal '%c' at: %u", msy.nrts_lit[lit], (uint)litloc);
+		ret_->push_back(rstr);
+		ret = -1;
+	}
+	else if (!ord.empty())
+	{
+		ret = bot_sprintfs(&rstr, true, "Open bracket '%c' at: %u", msy.nrts_ord[ord[0]], (uint)ordl[0]);
+		ret_->push_back(rstr);
+		ret = -1;
+	}
+	else
+	{
+		ret = 0;
+	}
+	va_end(args);
+	return ret;
+}
+sint machine::ArgSep(std::vector <BOT_ARG>* ret_, bool ksep, size_t f, size_t t, c_char* val, ...)
+{
+	if (debug_lvl >= 1100 && debug_m)
+	{
+		carr_256 outp;
+		sint op = bot_sprintf(outp.carr, outp.siz, "::ArgSep(std::vector <BOT_ARG>* ret_(%i), bool ksep(%u), size_t f(%u), size_t t(%u), c_char* val(%s), ...)", (sint)ret_, (uint)ksep, f, t, (sint)val);
+		op = Output(outp.carr, 2);
+	}
+
+	if (!ret_ || !val)
+	{
+		return -1;
+	}
+	else
+	{
+		size_t ret = (size_t)bot_cstrchk(val);
+
+		if (!ret || ret > (sint)BOT_STRLEN_MAX)
+		{
+			BOT_ARG a;
+			ret = (size_t)bot_sprintfs(&a.arg, false, "Bad Size: len: %u", ret);
+			ret_->push_back(a);
+			return -1;
+		}
+
+		if (!t || t > ret - 1 || t < f)
+		{
+			t = ret - 1;
+		}
+	}
+
+	slint lign = -1;
+	slint lit = -1;
+	slint litloc = 0;
+	std::vector<size_t> ord;
+	std::vector<size_t> ordl;
+	size_t mk = f;
+	sint ig = (sint)'\\';
+	sint ret = -1;
+	sint typ = BOT_RTV_MAX;
+	BOT_ARG a((sllint)f);
+	va_list args;
+	va_start(args, val);
+	typ = va_arg(args, sint);
+
+	switch (typ)
+	{
+	case BOT_RTV_SINT:
+	{
+		sint sep = va_arg(args, sint);
+		size_t sl = sizeof(sint);
+		
+		for (size_t x = f; x < t + 1; x++)
+		{
+			if (lit > -1)
+			{
+				for (size_t xl = 0; xl < msy.nrts_lit.size(); xl++)
+				{
+					if (!memcmp((void*)&msy.nrts_lit[xl], (void*)&val[x], sl))
+					{
+						if (memcmp((void*)&ig, (void*)&val[x - 1], sl))
+						{
+							if (lit == (slint)xl)
+							{
+								if (!memcmp((void*)&sep, (void*)&msy.nrts_lit[xl], sl))
+								{
+									if (ksep)
+									{
+										a.loc = (sllint)mk;
+
+										for (; mk < x + sl; mk++)
+										{
+											a.arg.push_back(val[mk]);
+										}
+
+										if (!a.arg.empty())
+										{
+											ret_->push_back(a);
+											a.arg.clear();
+										}
+
+										x += (sl - 1);
+										mk = x + 1;
+									}
+									else
+									{
+										a.loc = (sllint)mk + sl;
+
+										for (mk += sl; mk < x; mk++)
+										{
+											a.arg.push_back(val[mk]);
+										}
+
+										if (!a.arg.empty())
+										{
+											ret_->push_back(a);
+											a.arg.clear();
+										}
+
+										x += (sl - 1);
+										mk = x + 1;
+									}
+								}
+								lit = -1;
+								litloc = (slint)x;
+							}
+							xl = msy.nrts_lit.size();
+						}
+						else
+						{
+							if (x > 1)
+							{
+								if (!memcmp((void*)&ig, (void*)&val[x - 2], sl))
+								{
+									if (lit == (slint)xl)
+									{
+										if (!memcmp((void*)&sep, (void*)&msy.nrts_lit[xl], sl))
+										{
+											if (ksep)
+											{
+												a.loc = (sllint)mk;
+
+												for (; mk < x + sl; mk++)
+												{
+													a.arg.push_back(val[mk]);
+												}
+
+												if (!a.arg.empty())
+												{
+													ret_->push_back(a);
+													a.arg.clear();
+												}
+
+												x += (sl - 1);
+												mk = x + 1;
+											}
+											else
+											{
+												a.loc = (sllint)mk + sl;
+
+												for (mk += sl; mk < x; mk++)
+												{
+													a.arg.push_back(val[mk]);
+												}
+
+												if (!a.arg.empty())
+												{
+													ret_->push_back(a);
+													a.arg.clear();
+												}
+
+												x += (sl - 1);
+												mk = x + 1;
+											}
+										}
+										lit = -1;
+										litloc = (slint)x;
+									}
+									xl = msy.nrts_lit.size();
+								}
+							}
+						}
+					}
+				}
+			}
+			else
+			{
+				if (lign > -1)
+				{
+					for (size_t yl = 0; yl < msy.nrts_lign_.size(); yl++)
+					{
+						if (!memcmp((void*)&msy.nrts_lign_[yl][0], (void*)&val[x], sl))
+						{
+							size_t zl = 0;
+
+							while (zl < msy.nrts_lign_[yl].length() && zl < t)
+							{
+								if (memcmp((void*)&msy.nrts_lign_[yl][zl], (void*)&val[x + zl], sl))
+								{
+									zl = msy.nrts_lign_[yl].length();
+								}
+								zl++;
+							}
+
+							if (zl == msy.nrts_lign_[yl].length())
+							{
+								if (lign == (slint)yl)
+								{
+									lign = -1;
+									yl = msy.nrts_lign_.size();
+								}
+							}
+						}
+					}
+				}
+				if (lign < 0)
+				{
+					for (size_t xl = 0; xl < msy.nrts_lit.size(); xl++)
+					{
+						if (!memcmp((void*)&msy.nrts_lit[xl], (void*)&val[x], sl))
+						{
+							if (!memcmp((void*)&sep, (void*)&msy.nrts_lit[xl], sl))
+							{
+								a.loc = (sllint)mk;
+
+								for (; mk < xl; mk++)
+								{
+									a.arg.push_back(val[mk]);
+								}
+
+								if (!a.arg.empty())
+								{
+									ret_->push_back(a);
+									a.arg.clear();
+								}
+							}
+							lit = (slint)xl;
+							litloc = (slint)x;
+							xl = msy.nrts_lit.size();
+						}
+					}
+					if (lit < 0)
+					{
+						if (lign < 0)
+						{
+							for (size_t yl = 0; yl < msy.nrts_lign.size(); yl++)
+							{
+								if (!memcmp((void*)&msy.nrts_lign[yl][0], (void*)&val[x], sl))
+								{
+									size_t zl = 0;
+
+									while (zl < msy.nrts_lign[yl].length() && zl < t)
+									{
+										if (memcmp((void*)&msy.nrts_lign[yl][zl], (void*)&val[x + zl], sl))
+										{
+											zl = msy.nrts_lign[yl].length();
+										}
+										zl++;
+									}
+
+									if (zl == msy.nrts_lign[yl].length())
+									{
+										lign = (slint)yl;
+										yl = msy.nrts_lign.size();
+									}
+								}
+							}
+							if (lign < 0)
+							{
+								for (size_t xl = 0; xl < msy.nrts_ord.size(); xl++)
+								{
+									if (!memcmp((void*)&msy.nrts_ord[xl], (void*)&val[x], sl))
+									{
+										if (ord.empty())
+										{
+											if (!memcmp((void*)&sep, (void*)&msy.nrts_ord[xl], sl) || !memcmp((void*)&sep, (void*)&msy.nrts_ord_[xl], sl))
+											{
+												a.loc = (sllint)mk;
+
+												for (; mk < x; mk++)
+												{
+													a.arg.push_back(val[mk]);
+												}
+
+												if (!a.arg.empty())
+												{
+													ret_->push_back(a);
+													a.arg.clear();
+												}
+											}
+										}
+										ord.push_back(xl);
+										ordl.push_back(x);
+										xl = msy.nrts_ord.size();
+									}
+								}
+								if (!ord.empty())
+								{
+									for (size_t xl = 0; xl < msy.nrts_ord_.size(); xl++)
+									{
+										if (!memcmp((void*)&msy.nrts_ord_[xl], (void*)&val[x], sl))
+										{
+											if (ord[ord.size() - 1] == xl)
+											{
+												ord.pop_back();
+												ordl.pop_back();
+
+												if (ord.empty())
+												{
+													if (!memcmp((void*)&sep, (void*)&msy.nrts_ord[xl], sl) || !memcmp((void*)&sep, (void*)&msy.nrts_ord_[xl], sl))
+													{
+														if (ksep)
+														{
+															a.loc = (sllint)mk;
+
+															for (; mk < x + sl; mk++)
+															{
+																a.arg.push_back(val[mk]);
+															}
+
+															if (!a.arg.empty())
+															{
+																ret_->push_back(a);
+																a.arg.clear();
+															}
+
+															x += (sl - 1);
+															mk = x + 1;
+														}
+														else
+														{
+															a.loc = (sllint)mk + sl;
+
+															for (mk += sl; mk < x; mk++)
+															{
+																a.arg.push_back(val[mk]);
+															}
+
+															if (!a.arg.empty())
+															{
+																ret_->push_back(a);
+																a.arg.clear();
+															}
+
+															x += (sl - 1);
+															mk = x + 1;
+														}
+													}
+												}
+											}
+											xl = msy.nrts_ord_.size();
+										}
+									}
+								}
+								else
+								{
+									if (!memcmp((void*)&val[x], (void*)&sep, sl))
+									{
+										if (!x)
+										{
+											if (ksep)
+											{
+												a.loc = (sllint)mk;
+												a.arg.push_back(sep);
+												ret_->push_back(a);
+												a.arg.clear();
+											}
+											x += sl - 1;
+											mk = x + 1;
+										}
+										else
+										{
+											if (memcmp((void*)&ig, (void*)&val[x - 1], sl))
+											{
+												a.loc = (sllint)mk;
+
+												for (; mk < x; mk++)
+												{
+													a.arg.push_back(val[mk]);
+												}
+
+												if (!a.arg.empty())
+												{
+													ret_->push_back(a);
+													a.arg.clear();
+												}
+
+												x += (sl - 1);
+												mk = x + 1;
+
+												if (ksep)
+												{
+													a.loc = (sllint)mk;
+													a.arg.push_back(sep);
+													ret_->push_back(a);
+													a.arg.clear();
+												}
+											}
+											else
+											{
+												if (x > 1)
+												{
+													if (memcmp((void*)&ig, (void*)&val[x - 2], sl))
+													{
+														a.loc = (sllint)mk;
+
+														for (; mk < x; mk++)
+														{
+															a.arg.push_back(val[mk]);
+														}
+
+														if (!a.arg.empty())
+														{
+															ret_->push_back(a);
+															a.arg.clear();
+														}
+
+														x += (sl - 1);
+														mk = x + 1;
+
+														if (ksep)
+														{
+															a.loc = (sllint)mk;
+															a.arg.push_back(sep);
+															ret_->push_back(a);
+															a.arg.clear();
+														}
+													}
+												}
+											}
+										}
+									}
+								}
+							}
+						}
+					}
+				}
+			}
+		}
+		break;
+	}
+	case BOT_RTV_CHAR:
+	{
+		sint ptr = va_arg(args, sint);
+		_char sep = (_char)ptr;
+
+		if (sep)
+		{
+			size_t sl = sizeof(_char);
+
+			for (size_t x = f; x < t + 1; x++)
+			{
+				if (lit > -1)
+				{
+					for (size_t xl = 0; xl < msy.nrts_lit.size(); xl++)
+					{
+						if (!memcmp((void*)&msy.nrts_lit[xl], (void*)&val[x], sl))
+						{
+							if (memcmp((void*)&ig, (void*)&val[x - 1], sl))
+							{
+								if (lit == (slint)xl)
+								{
+									if (!memcmp((void*)&sep, (void*)&msy.nrts_lit[xl], sl))
+									{
+										if (ksep)
+										{
+											a.loc = (sllint)mk;
+
+											for (; mk < x + sl; mk++)
+											{
+												a.arg.push_back(val[mk]);
+											}
+
+											if (!a.arg.empty())
+											{
+												ret_->push_back(a);
+												a.arg.clear();
+											}
+
+											x += (sl - 1);
+											mk = x + 1;
+										}
+										else
+										{
+											a.loc = (sllint)mk + sl;
+
+											for (mk += sl; mk < x; mk++)
+											{
+												a.arg.push_back(val[mk]);
+											}
+
+											if (!a.arg.empty())
+											{
+												ret_->push_back(a);
+												a.arg.clear();
+											}
+
+											x += (sl - 1);
+											mk = x + 1;
+										}
+									}
+									lit = -1;
+									litloc = (slint)x;
+								}
+								xl = msy.nrts_lit.size();
+							}
+							else
+							{
+								if (x > 1)
+								{
+									if (!memcmp((void*)&ig, (void*)&val[x - 2], sl))
+									{
+										if (lit == (slint)xl)
+										{
+											if (!memcmp((void*)&sep, (void*)&msy.nrts_lit[xl], sl))
+											{
+												if (ksep)
+												{
+													a.loc = (sllint)mk;
+
+													for (; mk < x + sl; mk++)
+													{
+														a.arg.push_back(val[mk]);
+													}
+
+													if (!a.arg.empty())
+													{
+														ret_->push_back(a);
+														a.arg.clear();
+													}
+
+													x += (sl - 1);
+													mk = x + 1;
+												}
+												else
+												{
+													a.loc = (sllint)mk + sl;
+
+													for (mk += sl; mk < x; mk++)
+													{
+														a.arg.push_back(val[mk]);
+													}
+
+													if (!a.arg.empty())
+													{
+														ret_->push_back(a);
+														a.arg.clear();
+													}
+
+													x += (sl - 1);
+													mk = x + 1;
+												}
+											}
+											lit = -1;
+											litloc = (slint)x;
+										}
+										xl = msy.nrts_lit.size();
+									}
+								}
+							}
+						}
+					}
+				}
+				else
+				{
+					if (lign > -1)
+					{
+						for (size_t yl = 0; yl < msy.nrts_lign_.size(); yl++)
+						{
+							if (!memcmp((void*)&msy.nrts_lign_[yl][0], (void*)&val[x], sl))
+							{
+								size_t zl = 0;
+
+								while (zl < msy.nrts_lign_[yl].length() && zl < t)
+								{
+									if (memcmp((void*)&msy.nrts_lign_[yl][zl], (void*)&val[x + zl], sl))
+									{
+										zl = msy.nrts_lign_[yl].length();
+									}
+									zl++;
+								}
+
+								if (zl == msy.nrts_lign_[yl].length())
+								{
+									if (lign == (slint)yl)
+									{
+										lign = -1;
+										yl = msy.nrts_lign_.size();
+									}
+								}
+							}
+						}
+					}
+					if (lign < 0)
+					{
+						for (size_t xl = 0; xl < msy.nrts_lit.size(); xl++)
+						{
+							if (!memcmp((void*)&msy.nrts_lit[xl], (void*)&val[x], sl))
+							{
+								if (!memcmp((void*)&sep, (void*)&msy.nrts_lit[xl], sl))
+								{
+									a.loc = (sllint)mk;
+
+									for (; mk < x; mk++)
+									{
+										a.arg.push_back(val[mk]);
+									}
+
+									if (!a.arg.empty())
+									{
+										ret_->push_back(a);
+										a.arg.clear();
+									}
+								}
+								lit = (slint)xl;
+								litloc = (slint)x;
+								xl = msy.nrts_lit.size();
+							}
+						}
+						if (lit < 0)
+						{
+							if (lign < 0)
+							{
+								for (size_t yl = 0; yl < msy.nrts_lign.size(); yl++)
+								{
+									if (!memcmp((void*)&msy.nrts_lign[yl][0], (void*)&val[x], sl))
+									{
+										size_t zl = 0;
+
+										while (zl < msy.nrts_lign[yl].length() && zl < t)
+										{
+											if (memcmp((void*)&msy.nrts_lign[yl][zl], (void*)&val[x + zl], sl))
+											{
+												zl = msy.nrts_lign[yl].length();
+											}
+											zl++;
+										}
+
+										if (zl == msy.nrts_lign[yl].length())
+										{
+											lign = (slint)yl;
+											yl = msy.nrts_lign.size();
+										}
+									}
+								}
+								if (lign < 0)
+								{
+									for (size_t xl = 0; xl < msy.nrts_ord.size(); xl++)
+									{
+										if (!memcmp((void*)&msy.nrts_ord[xl], (void*)&val[x], sl))
+										{
+											if (ord.empty())
+											{
+												if (!memcmp((void*)&sep, (void*)&msy.nrts_ord[xl], sl) || !memcmp((void*)&sep, (void*)&msy.nrts_ord_[xl], sl))
+												{
+													a.loc = (sllint)mk;
+
+													for (; mk < x; mk++)
+													{
+														a.arg.push_back(val[mk]);
+													}
+
+													if (!a.arg.empty())
+													{
+														ret_->push_back(a);
+														a.arg.clear();
+													}
+												}
+											}
+											ord.push_back(xl);
+											ordl.push_back(x);
+											xl = msy.nrts_ord.size();
+										}
+									}
+									if (!ord.empty())
+									{
+										for (size_t xl = 0; xl < msy.nrts_ord_.size(); xl++)
+										{
+											if (!memcmp((void*)&msy.nrts_ord_[xl], (void*)&val[x], sl))
+											{
+												if (ord[ord.size() - 1] == xl)
+												{
+													ord.pop_back();
+													ordl.pop_back();
+
+													if (ord.empty())
+													{
+														if (!memcmp((void*)&sep, (void*)&msy.nrts_ord[xl], sl) || !memcmp((void*)&sep, (void*)&msy.nrts_ord_[xl], sl))
+														{
+															if (ksep)
+															{
+																a.loc = (sllint)mk;
+
+																for (; mk < x + sl; mk++)
+																{
+																	a.arg.push_back(val[mk]);
+																}
+
+																if (!a.arg.empty())
+																{
+																	ret_->push_back(a);
+																	a.arg.clear();
+																}
+
+																x += (sl - 1);
+																mk = x + 1;
+															}
+															else
+															{
+																a.loc = (sllint)mk + sl;
+
+																for (mk += sl; mk < x; mk++)
+																{
+																	a.arg.push_back(val[mk]);
+																}
+
+																if (!a.arg.empty())
+																{
+																	ret_->push_back(a);
+																	a.arg.clear();
+																}
+
+																x += (sl - 1);
+																mk = x + 1;
+															}
+														}
+													}
+												}
+												xl = msy.nrts_ord_.size();
+											}
+										}
+									}
+									else
+									{
+										if (!memcmp((void*)&val[x], (void*)&sep, sl))
+										{
+											if (!x)
+											{
+												if (ksep)
+												{
+													a.loc = (sllint)mk;
+													a.arg.push_back(sep);
+													ret_->push_back(a);
+													a.arg.clear();
+												}
+												x += sl - 1;
+												mk = x + 1;
+											}
+											else
+											{
+												if (memcmp((void*)&ig, (void*)&val[x - 1], sl))
+												{
+													a.loc = (sllint)mk;
+
+													for (; mk < x; mk++)
+													{
+														a.arg.push_back(val[mk]);
+													}
+
+													if (!a.arg.empty())
+													{
+														ret_->push_back(a);
+														a.arg.clear();
+													}
+
+													x += (sl - 1);
+													mk = x + 1;
+
+													if (ksep)
+													{
+														a.loc = (sllint)mk;
+														a.arg.push_back(sep);
+														ret_->push_back(a);
+														a.arg.clear();
+													}
+												}
+												else
+												{
+													if (x > 1)
+													{
+														if (memcmp((void*)&ig, (void*)&val[x - 2], sl))
+														{
+															a.loc = (sllint)mk;
+
+															for (; mk < x; mk++)
+															{
+																a.arg.push_back(val[mk]);
+															}
+
+															if (!a.arg.empty())
+															{
+																ret_->push_back(a);
+																a.arg.clear();
+															}
+
+															x += (sl - 1);
+															mk = x + 1;
+
+															if (ksep)
+															{
+																a.loc = (sllint)mk;
+																a.arg.push_back(sep);
+																ret_->push_back(a);
+																a.arg.clear();
+															}
+														}
+													}
+												}
+											}
+										}
+									}
+								}
+							}
+						}
+					}
+				}
+			}
+		}
+		break;
+	}
+	case BOT_RTV_CHARP:
+	{
+		void* ptr = va_arg(args, void*);
+		_char* sep = reinterpret_cast<_char*>(ptr);
+
+		if (sep)
+		{
+			size_t sl = bot_strlen(sep);
+
+			for (size_t x = f; x < t + 1; x++)
+			{
+				if (lit > -1)
+				{
+					for (size_t xl = 0; xl < msy.nrts_lit.size(); xl++)
+					{
+						if (!memcmp((void*)&msy.nrts_lit[xl], (void*)&val[x], sizeof(_char)))
+						{
+							if (memcmp((void*)&ig, (void*)&val[x - 1], sizeof(_char)))
+							{
+								if (lit == (slint)xl)
+								{
+									if (!strcmp(sep, &msy.nrts_lit[xl]))
+									{
+										if (ksep)
+										{
+											a.loc = (sllint)mk;
+
+											for (; mk < x + sl; mk++)
+											{
+												a.arg.push_back(val[mk]);
+											}
+
+											if (!a.arg.empty())
+											{
+												ret_->push_back(a);
+												a.arg.clear();
+											}
+
+											x += (sl - 1);
+											mk = x + 1;
+										}
+										else
+										{
+											a.loc = (sllint)mk + sl;
+
+											for (mk += sl; mk < x; mk++)
+											{
+												a.arg.push_back(val[mk]);
+											}
+
+											if (!a.arg.empty())
+											{
+												ret_->push_back(a);
+												a.arg.clear();
+											}
+
+											x += (sl - 1);
+											mk = x + 1;
+										}
+									}
+									lit = -1;
+									litloc = (slint)x;
+								}
+								xl = msy.nrts_lit.size();
+							}
+							else
+							{
+								if (x > 1)
+								{
+									if (!memcmp((void*)&ig, (void*)&val[x - 2], sizeof(_char)))
+									{
+										if (lit == (slint)xl)
+										{
+											if (!strcmp(sep, &msy.nrts_lit[xl]))
+											{
+												if (ksep)
+												{
+													a.loc = (sllint)mk;
+
+													for (; mk < x + sl; mk++)
+													{
+														a.arg.push_back(val[mk]);
+													}
+
+													if (!a.arg.empty())
+													{
+														ret_->push_back(a);
+														a.arg.clear();
+													}
+
+													x += (sl - 1);
+													mk = x + 1;
+												}
+												else
+												{
+													a.loc = (sllint)mk + sl;
+
+													for (mk += sl; mk < x; mk++)
+													{
+														a.arg.push_back(val[mk]);
+													}
+
+													if (!a.arg.empty())
+													{
+														ret_->push_back(a);
+														a.arg.clear();
+													}
+
+													x += (sl - 1);
+													mk = x + 1;
+												}
+											}
+											lit = -1;
+											litloc = (slint)x;
+										}
+										xl = msy.nrts_lit.size();
+									}
+								}
+							}
+						}
+					}
+				}
+				else
+				{
+					if (lign > -1)
+					{
+						for (size_t yl = 0; yl < msy.nrts_lign_.size(); yl++)
+						{
+							if (!memcmp((void*)&msy.nrts_lign_[yl][0], (void*)&val[x], sizeof(_char)))
+							{
+								size_t zl = 0;
+
+								while (zl < msy.nrts_lign_[yl].length() && zl < t)
+								{
+									if (memcmp((void*)&msy.nrts_lign_[yl][zl], (void*)&val[x + zl], sizeof(_char)))
+									{
+										zl = msy.nrts_lign_[yl].length();
+									}
+									zl++;
+								}
+
+								if (zl == msy.nrts_lign_[yl].length())
+								{
+									if (lign == (slint)yl)
+									{
+										lign = -1;
+										yl = msy.nrts_lign_.size();
+									}
+								}
+							}
+						}
+					}
+					if (lign < 0)
+					{
+						for (size_t xl = 0; xl < msy.nrts_lit.size(); xl++)
+						{
+							if (!memcmp((void*)&msy.nrts_lit[xl], (void*)&val[x], sizeof(_char)))
+							{
+								if (!strcmp(sep, &msy.nrts_lit[xl]))
+								{
+									a.loc = (sllint)mk;
+
+									for (; mk < x; mk++)
+									{
+										a.arg.push_back(val[mk]);
+									}
+
+									if (!a.arg.empty())
+									{
+										ret_->push_back(a);
+										a.arg.clear();
+									}
+								}
+								lit = (slint)xl;
+								litloc = (slint)x;
+								xl = msy.nrts_lit.size();
+							}
+						}
+						if (lit < 0)
+						{
+							if (lign < 0)
+							{
+								for (size_t yl = 0; yl < msy.nrts_lign.size(); yl++)
+								{
+									if (!memcmp((void*)&msy.nrts_lign[yl][0], (void*)&val[x], sizeof(_char)))
+									{
+										size_t zl = 0;
+
+										while (zl < msy.nrts_lign[yl].length() && zl < t)
+										{
+											if (memcmp((void*)&msy.nrts_lign[yl][zl], (void*)&val[x + zl], sizeof(_char)))
+											{
+												zl = msy.nrts_lign[yl].length();
+											}
+											zl++;
+										}
+
+										if (zl == msy.nrts_lign[yl].length())
+										{
+											lign = (slint)yl;
+											yl = msy.nrts_lign.size();
+										}
+									}
+								}
+								if (lign < 0)
+								{
+									for (size_t xl = 0; xl < msy.nrts_ord.size(); xl++)
+									{
+										if (!memcmp((void*)&msy.nrts_ord[xl], (void*)&val[x], sizeof(_char)))
+										{
+											if (ord.empty())
+											{
+												if (!strcmp(sep, &msy.nrts_ord[xl]) || !strcmp(sep, &msy.nrts_ord_[xl]))
+												{
+													a.loc = (sllint)mk;
+
+													for (; mk < x; mk++)
+													{
+														a.arg.push_back(val[mk]);
+													}
+
+													if (!a.arg.empty())
+													{
+														ret_->push_back(a);
+														a.arg.clear();
+													}
+												}
+											}
+											ord.push_back(xl);
+											ordl.push_back(x);
+											xl = msy.nrts_ord.size();
+										}
+									}
+									if (!ord.empty())
+									{
+										for (size_t xl = 0; xl < msy.nrts_ord_.size(); xl++)
+										{
+											if (!memcmp((void*)&msy.nrts_ord_[xl], (void*)&val[x], sizeof(_char)))
+											{
+												if (ord[ord.size() - 1] == xl)
+												{
+													ord.pop_back();
+													ordl.pop_back();
+
+													if (ord.empty())
+													{
+														if (!strcmp(sep, &msy.nrts_ord[xl]) || !strcmp(sep, &msy.nrts_ord_[xl]))
+														{
+															if (ksep)
+															{
+																a.loc = (sllint)mk;
+
+																for (; mk < x + sl; mk++)
+																{
+																	a.arg.push_back(val[mk]);
+																}
+
+																if (!a.arg.empty())
+																{
+																	ret_->push_back(a);
+																	a.arg.clear();
+																}
+
+																x += (sl - 1);
+																mk = x + 1;
+															}
+															else
+															{
+																a.loc = (sllint)mk + sl;
+
+																for (mk += sl; mk < x; mk++)
+																{
+																	a.arg.push_back(val[mk]);
+																}
+
+																if (!a.arg.empty())
+																{
+																	ret_->push_back(a);
+																	a.arg.clear();
+																}
+
+																x += (sl - 1);
+																mk = x + 1;
+															}
+														}
+													}
+												}
+												xl = msy.nrts_ord_.size();
+											}
+										}
+									}
+									else
+									{
+										if (!memcmp((void*)&val[x], (void*)&sep[0], sizeof(_char)))
+										{
+											if (!x)
+											{
+												size_t y = 1;
+
+												while (y < sl && x + y < t)
+												{
+													if (memcmp((void*)&val[x + y], (void*)&sep[y], sizeof(_char)))
+													{
+														y = sl;
+													}
+													y++;
+												}
+
+												if (y == sl)
+												{
+													if (ksep)
+													{
+														a.loc = (sllint)mk;
+														a.arg.append(sep);
+														ret_->push_back(a);
+														a.arg.clear();
+													}
+													x += sl - 1;
+													mk = x + 1;
+												}
+											}
+											else
+											{
+												if (memcmp((void*)&ig, (void*)&val[x - 1], sizeof(_char)))
+												{
+													size_t y = 1;
+
+													while (y < sl && x + y < t)
+													{
+														if (memcmp((void*)&val[x + y], (void*)&sep[y], sizeof(_char)))
+														{
+															y = sl;
+														}
+														y++;
+													}
+
+													if (y == sl)
+													{
+														a.loc = (sllint)mk;
+
+														for (; mk < x; mk++)
+														{
+															a.arg.push_back(val[mk]);
+														}
+
+														if (!a.arg.empty())
+														{
+															ret_->push_back(a);
+															a.arg.clear();
+														}
+
+														x += (sl - 1);
+														mk = x + 1;
+
+														if (ksep)
+														{
+															a.loc = (sllint)mk;
+															a.arg.append(sep);
+															ret_->push_back(a);
+															a.arg.clear();
+														}
+													}
+												}
+												else
+												{
+													if (x > 1)
+													{
+														if (!memcmp((void*)&ig, (void*)&val[x - 2], sizeof(_char)))
+														{
+															size_t y = 1;
+
+															while (y < sl && x + y < t)
+															{
+																if (memcmp((void*)&val[x + y], (void*)&sep[y], sizeof(_char)))
+																{
+																	y = sl;
+																}
+																y++;
+															}
+
+															if (y == sl)
+															{
+																a.loc = (sllint)mk;
+
+																for (; mk < x; mk++)
+																{
+																	a.arg.push_back(val[mk]);
+																}
+
+																if (!a.arg.empty())
+																{
+																	ret_->push_back(a);
+																	a.arg.clear();
+																}
+
+																x += (sl - 1);
+																mk = x + 1;
+
+																if (ksep)
+																{
+																	a.loc = (sllint)mk;
+																	a.arg.append(sep);
+																	ret_->push_back(a);
+																	a.arg.clear();
+																}
+															}
+														}
+													}
+												}
+											}
+										}
+									}
+								}
+							}
+						}
+					}
+				}
+			}
+		}
+		break;
+	}
+	case BOT_RTV_CCHAR:
+	{
+		void* ptr = va_arg(args, void*);
+		c_char* sep = reinterpret_cast<c_char*>(ptr);
+
+		if (sep)
+		{
+			size_t sl = bot_cstrlen(sep);
+
+			for (size_t x = f; x < t + 1; x++)
+			{
+				if (lit > -1)
+				{
+					for (size_t xl = 0; xl < msy.nrts_lit.size(); xl++)
+					{
+						if (!memcmp((void*)&msy.nrts_lit[xl], (void*)&val[x], sizeof(_char)))
+						{
+							if (memcmp((void*)&ig, (void*)&val[x - 1], sizeof(_char)))
+							{
+								if (lit == (slint)xl)
+								{
+									if (!strcmp(sep, &msy.nrts_lit[xl]))
+									{
+										if (ksep)
+										{
+											a.loc = (sllint)mk;
+
+											for (; mk < x + sl; mk++)
+											{
+												a.arg.push_back(val[mk]);
+											}
+
+											if (!a.arg.empty())
+											{
+												ret_->push_back(a);
+												a.arg.clear();
+											}
+
+											x += (sl - 1);
+											mk = x + 1;
+										}
+										else
+										{
+											a.loc = (sllint)mk + sl;
+
+											for (mk += sl; mk < x; mk++)
+											{
+												a.arg.push_back(val[mk]);
+											}
+
+											if (!a.arg.empty())
+											{
+												ret_->push_back(a);
+												a.arg.clear();
+											}
+
+											x += (sl - 1);
+											mk = x + 1;
+										}
+									}
+									lit = -1;
+									litloc = (slint)x;
+								}
+								xl = msy.nrts_lit.size();
+							}
+							else
+							{
+								if (x > 1)
+								{
+									if (!memcmp((void*)&ig, (void*)&val[x - 2], sizeof(_char)))
+									{
+										if (lit == (slint)xl)
+										{
+											if (!strcmp(sep, &msy.nrts_lit[xl]))
+											{
+												if (ksep)
+												{
+													a.loc = (sllint)mk;
+
+													for (; mk < x + sl; mk++)
+													{
+														a.arg.push_back(val[mk]);
+													}
+
+													if (!a.arg.empty())
+													{
+														ret_->push_back(a);
+														a.arg.clear();
+													}
+
+													x += (sl - 1);
+													mk = x + 1;
+												}
+												else
+												{
+													a.loc = (sllint)mk + sl;
+
+													for (mk += sl; mk < x; mk++)
+													{
+														a.arg.push_back(val[mk]);
+													}
+
+													if (!a.arg.empty())
+													{
+														ret_->push_back(a);
+														a.arg.clear();
+													}
+
+													x += (sl - 1);
+													mk = x + 1;
+												}
+											}
+											lit = -1;
+											litloc = (slint)x;
+										}
+										xl = msy.nrts_lit.size();
+									}
+								}
+							}
+						}
+					}
+				}
+				else
+				{
+					if (lign > -1)
+					{
+						for (size_t yl = 0; yl < msy.nrts_lign_.size(); yl++)
+						{
+							if (!memcmp((void*)&msy.nrts_lign_[yl][0], (void*)&val[x], sizeof(_char)))
+							{
+								size_t zl = 0;
+
+								while (zl < msy.nrts_lign_[yl].length() && zl < t)
+								{
+									if (memcmp((void*)&msy.nrts_lign_[yl][zl], (void*)&val[x + zl], sizeof(_char)))
+									{
+										zl = msy.nrts_lign_[yl].length();
+									}
+									zl++;
+								}
+
+								if (zl == msy.nrts_lign_[yl].length())
+								{
+									if (lign == (slint)yl)
+									{
+										lign = -1;
+										yl = msy.nrts_lign_.size();
+									}
+								}
+							}
+						}
+					}
+					if (lign < 0)
+					{
+						for (size_t xl = 0; xl < msy.nrts_lit.size(); xl++)
+						{
+							if (!memcmp((void*)&msy.nrts_lit[xl], (void*)&val[x], sizeof(_char)))
+							{
+								if (!strcmp(sep, &msy.nrts_lit[xl]))
+								{
+									a.loc = (sllint)mk;
+
+									for (; mk < x; mk++)
+									{
+										a.arg.push_back(val[mk]);
+									}
+
+									if (!a.arg.empty())
+									{
+										ret_->push_back(a);
+										a.arg.clear();
+									}
+								}
+								lit = (slint)xl;
+								litloc = (slint)x;
+								xl = msy.nrts_lit.size();
+							}
+						}
+						if (lit < 0)
+						{
+							if (lign < 0)
+							{
+								for (size_t yl = 0; yl < msy.nrts_lign.size(); yl++)
+								{
+									if (!memcmp((void*)&msy.nrts_lign[yl][0], (void*)&val[x], sizeof(_char)))
+									{
+										size_t zl = 0;
+
+										while (zl < msy.nrts_lign[yl].length() && zl < t)
+										{
+											if (memcmp((void*)&msy.nrts_lign[yl][zl], (void*)&val[x + zl], sizeof(_char)))
+											{
+												zl = msy.nrts_lign[yl].length();
+											}
+											zl++;
+										}
+
+										if (zl == msy.nrts_lign[yl].length())
+										{
+											lign = (slint)yl;
+											yl = msy.nrts_lign.size();
+										}
+									}
+								}
+								if (lign < 0)
+								{
+									for (size_t xl = 0; xl < msy.nrts_ord.size(); xl++)
+									{
+										if (!memcmp((void*)&msy.nrts_ord[xl], (void*)&val[x], sizeof(_char)))
+										{
+											if (ord.empty())
+											{
+												if (!strcmp(sep, &msy.nrts_ord[xl]) || !strcmp(sep, &msy.nrts_ord_[xl]))
+												{
+													a.loc = (sllint)mk;
+
+													for (; mk < x; mk++)
+													{
+														a.arg.push_back(val[mk]);
+													}
+
+													if (!a.arg.empty())
+													{
+														ret_->push_back(a);
+														a.arg.clear();
+													}
+												}
+											}
+											ord.push_back(xl);
+											ordl.push_back(x);
+											xl = msy.nrts_ord.size();
+										}
+									}
+									if (!ord.empty())
+									{
+										for (size_t xl = 0; xl < msy.nrts_ord_.size(); xl++)
+										{
+											if (!memcmp((void*)&msy.nrts_ord_[xl], (void*)&val[x], sizeof(_char)))
+											{
+												if (ord[ord.size() - 1] == xl)
+												{
+													ord.pop_back();
+													ordl.pop_back();
+
+													if (ord.empty())
+													{
+														if (!strcmp(sep, &msy.nrts_ord[xl]) || !strcmp(sep, &msy.nrts_ord_[xl]))
+														{
+															if (ksep)
+															{
+																a.loc = (sllint)mk;
+
+																for (; mk < x + sl; mk++)
+																{
+																	a.arg.push_back(val[mk]);
+																}
+
+																if (!a.arg.empty())
+																{
+																	ret_->push_back(a);
+																	a.arg.clear();
+																}
+
+																x += (sl - 1);
+																mk = x + 1;
+															}
+															else
+															{
+																a.loc = (sllint)mk + sl;
+
+																for (mk += sl; mk < x; mk++)
+																{
+																	a.arg.push_back(val[mk]);
+																}
+
+																if (!a.arg.empty())
+																{
+																	ret_->push_back(a);
+																	a.arg.clear();
+																}
+
+																x += (sl - 1);
+																mk = x + 1;
+															}
+														}
+													}
+												}
+												xl = msy.nrts_ord_.size();
+											}
+										}
+									}
+									else
+									{
+										if (!memcmp((void*)&val[x], (void*)&sep[0], sizeof(_char)))
+										{
+											if (!x)
+											{
+												size_t y = 1;
+
+												while (y < sl && x + y < t)
+												{
+													if (memcmp((void*)&val[x + y], &sep[y], sizeof(_char)))
+													{
+														y = sl;
+													}
+													y++;
+												}
+
+												if (y == sl)
+												{
+													if (ksep)
+													{
+														a.loc = (sllint)mk;
+														a.arg.append(sep);
+														ret_->push_back(a);
+														a.arg.clear();
+													}
+													x += sl - 1;
+													mk = x + 1;
+												}
+											}
+											else
+											{
+												if (memcmp((void*)&ig, (void*)&val[x - 1], sizeof(_char)))
+												{
+													size_t y = 1;
+
+													while (y < sl && x + y < t)
+													{
+														if (memcmp((void*)&val[x + y], &sep[y], sizeof(_char)))
+														{
+															y = sl;
+														}
+														y++;
+													}
+
+													if (y == sl)
+													{
+														a.loc = (sllint)mk;
+
+														for (; mk < x; mk++)
+														{
+															a.arg.push_back(val[mk]);
+														}
+
+														if (!a.arg.empty())
+														{
+															ret_->push_back(a);
+															a.arg.clear();
+														}
+														x += (sl - 1);
+														mk = x + 1;
+
+														if (ksep)
+														{
+															a.loc = (sllint)mk;
+															a.arg.append(sep);
+															ret_->push_back(a);
+															a.arg.clear();
+														}
+													}
+												}
+												else
+												{
+													if (x > 1)
+													{
+														if (!memcmp((void*)&ig, (void*)&val[x - 2], sizeof(_char)))
+														{
+															size_t y = 1;
+
+															while (y < sl && x + y < t)
+															{
+																if (memcmp((void*)&val[x + y], (void*)&sep[y], sizeof(_char)))
+																{
+																	y = sl;
+																}
+																y++;
+															}
+
+															if (y == sl)
+															{
+																a.loc = (sllint)mk;
+
+																for (; mk < x; mk++)
+																{
+																	a.arg.push_back(val[mk]);
+																}
+
+																if (!a.arg.empty())
+																{
+																	ret_->push_back(a);
+																	a.arg.clear();
+																}
+																x += (sl - 1);
+																mk = x + 1;
+
+																if (ksep)
+																{
+																	a.loc = (sllint)mk;
+																	a.arg.append(sep);
+																	ret_->push_back(a);
+																	a.arg.clear();
+																}
+															}
+														}
+													}
+												}
+											}
+										}
+									}
+								}
+							}
+						}
+					}
+				}
+			}
+		}
+		break;
+	}
+	case BOT_RTV_STR:
+	{
+		void* ptr = va_arg(args, void*);
+		std::string* sep = reinterpret_cast<std::string*>(ptr);
+
+		if (sep)
+		{
+			for (size_t x = f; x < t + 1; x++)
+			{
+				if (lit > -1)
+				{
+					for (size_t xl = 0; xl < msy.nrts_lit.size(); xl++)
+					{
+						if (!memcmp((void*)&msy.nrts_lit[xl], (void*)&val[x], sizeof(_char)))
+						{
+							if (memcmp((void*)&ig, (void*)&val[x - 1], sizeof(_char)))
+							{
+								if (lit == (slint)xl)
+								{
+									if (!strcmp(sep->c_str(), &msy.nrts_lit[xl]))
+									{
+										if (ksep)
+										{
+											a.loc = (sllint)mk;
+
+											for (; mk < x + sep->length(); mk++)
+											{
+												a.arg.push_back(val[mk]);
+											}
+
+											if (!a.arg.empty())
+											{
+												ret_->push_back(a);
+												a.arg.clear();
+											}
+
+											x += (sep->length() - 1);
+											mk = x + 1;
+										}
+										else
+										{
+											a.loc = (sllint)mk + sep->length();
+
+											for (mk += sep->length(); mk < x; mk++)
+											{
+												a.arg.push_back(val[mk]);
+											}
+
+											if (!a.arg.empty())
+											{
+												ret_->push_back(a);
+												a.arg.clear();
+											}
+
+											x += (sep->length() - 1);
+											mk = x + 1;
+										}
+									}
+									lit = -1;
+									litloc = (slint)x;
+								}
+								xl = msy.nrts_lit.size();
+							}
+							else
+							{
+								if (x > 1)
+								{
+									if (!memcmp((void*)&ig, (void*)&val[x - 2], sizeof(_char)))
+									{
+										if (lit == (slint)xl)
+										{
+											if (!strcmp(sep->c_str(), &msy.nrts_lit[xl]))
+											{
+												if (ksep)
+												{
+													a.loc = (sllint)mk;
+
+													for (; mk < x + sep->length(); mk++)
+													{
+														a.arg.push_back(val[mk]);
+													}
+
+													if (!a.arg.empty())
+													{
+														ret_->push_back(a);
+														a.arg.clear();
+													}
+
+													x += (sep->length() - 1);
+													mk = x + 1;
+												}
+												else
+												{
+													a.loc = (sllint)mk + sep->length();
+
+													for (mk += sep->length(); mk < x; mk++)
+													{
+														a.arg.push_back(val[mk]);
+													}
+
+													if (!a.arg.empty())
+													{
+														ret_->push_back(a);
+														a.arg.clear();
+													}
+
+													x += (sep->length() - 1);
+													mk = x + 1;
+												}
+											}
+											lit = -1;
+											litloc = (slint)x;
+										}
+										xl = msy.nrts_lit.size();
+									}
+								}
+							}
+						}
+					}
+				}
+				else
+				{
+					if (lign > -1)
+					{
+						for (size_t yl = 0; yl < msy.nrts_lign_.size(); yl++)
+						{
+							if (!memcmp((void*)&msy.nrts_lign_[yl][0], (void*)&val[x], sizeof(_char)))
+							{
+								size_t zl = 0;
+
+								while (zl < msy.nrts_lign_[yl].length() && zl < t)
+								{
+									if (memcmp((void*)&msy.nrts_lign_[yl][zl], (void*)&val[x + zl], sizeof(_char)))
+									{
+										zl = msy.nrts_lign_[yl].length();
+									}
+									zl++;
+								}
+
+								if (zl == msy.nrts_lign_[yl].length())
+								{
+									if (lign == (slint)yl)
+									{
+										lign = -1;
+										yl = msy.nrts_lign_.size();
+									}
+								}
+							}
+						}
+					}
+					if (lign < 0)
+					{
+						for (size_t xl = 0; xl < msy.nrts_lit.size(); xl++)
+						{
+							if (!memcmp((void*)&msy.nrts_lit[xl], (void*)&val[x], sizeof(_char)))
+							{
+								if (!strcmp(sep->c_str(), &msy.nrts_lit[xl]))
+								{
+									a.loc = (sllint)mk;
+
+									for (; mk < x; mk++)
+									{
+										a.arg.push_back(val[mk]);
+									}
+
+									if (!a.arg.empty())
+									{
+										ret_->push_back(a);
+										a.arg.clear();
+									}
+								}
+								lit = (slint)xl;
+								litloc = (slint)x;
+								xl = msy.nrts_lit.size();
+							}
+						}
+						if (lit < 0)
+						{
+							if (lign < 0)
+							{
+								for (size_t yl = 0; yl < msy.nrts_lign.size(); yl++)
+								{
+									if (!memcmp((void*)&msy.nrts_lign[yl][0], (void*)&val[x], sizeof(_char)))
+									{
+										size_t zl = 0;
+
+										while (zl < msy.nrts_lign[yl].length() && zl < t)
+										{
+											if (memcmp((void*)&msy.nrts_lign[yl][zl], (void*)&val[x + zl], sizeof(_char)))
+											{
+												zl = msy.nrts_lign[yl].length();
+											}
+											zl++;
+										}
+
+										if (zl == msy.nrts_lign[yl].length())
+										{
+											lign = (slint)yl;
+											yl = msy.nrts_lign.size();
+										}
+									}
+								}
+								if (lign < 0)
+								{
+									for (size_t xl = 0; xl < msy.nrts_ord.size(); xl++)
+									{
+										if (!memcmp((void*)&msy.nrts_ord[xl], (void*)&val[x], sizeof(_char)))
+										{
+											if (ord.empty())
+											{
+												if (!strcmp(sep->c_str(), &msy.nrts_ord[xl]) || !strcmp(sep->c_str(), &msy.nrts_ord_[xl]))
+												{
+													a.loc = (sllint)mk;
+
+													for (; mk < x; mk++)
+													{
+														a.arg.push_back(val[mk]);
+													}
+
+													if (!a.arg.empty())
+													{
+														ret_->push_back(a);
+														a.arg.clear();
+													}
+												}
+											}
+											ord.push_back(xl);
+											ordl.push_back(x);
+											xl = msy.nrts_ord.size();
+										}
+									}
+									if (!ord.empty())
+									{
+										for (size_t xl = 0; xl < msy.nrts_ord_.size(); xl++)
+										{
+											if (!memcmp((void*)&msy.nrts_ord_[xl], (void*)&val[x], sizeof(_char)))
+											{
+												if (ord[ord.size() - 1] == xl)
+												{
+													ord.pop_back();
+													ordl.pop_back();
+
+													if (ord.empty())
+													{
+														if (!strcmp(sep->c_str(), &msy.nrts_ord[xl]) || !strcmp(sep->c_str(), &msy.nrts_ord_[xl]))
+														{
+															if (ksep)
+															{
+																a.loc = (sllint)mk;
+
+																for (; mk < x + sep->length(); mk++)
+																{
+																	a.arg.push_back(val[mk]);
+																}
+
+																if (!a.arg.empty())
+																{
+																	ret_->push_back(a);
+																	a.arg.clear();
+																}
+
+																x += (sep->length() - 1);
+																mk = x + 1;
+															}
+															else
+															{
+																a.loc = (sllint)mk + sep->length();
+
+																for (mk += sep->length(); mk < x; mk++)
+																{
+																	a.arg.push_back(val[mk]);
+																}
+
+																if (!a.arg.empty())
+																{
+																	ret_->push_back(a);
+																	a.arg.clear();
+																}
+
+																x += (sep->length() - 1);
+																mk = x + 1;
+															}
+														}
+													}
+												}
+												xl = msy.nrts_ord_.size();
+											}
+										}
+									}
+									else
+									{
+										if (!memcmp((void*)&val[x], (void*)&sep->at(0), sizeof(_char)))
+										{
+											if (!x)
+											{
+												size_t y = 1;
+
+												while (y < sep->length() && x + y < t)
+												{
+													if (memcmp((void*)&val[x + y], &sep->at(y), sizeof(_char)))
+													{
+														y = sep->length();
+													}
+													y++;
+												}
+
+												if (y == sep->length())
+												{
+													if (ksep)
+													{
+														a.loc = (sllint)mk;
+														a.arg.append(sep->c_str());
+														ret_->push_back(a);
+														a.arg.clear();
+													}
+													x += sep->length() - 1;
+													mk = x + 1;
+												}
+											}
+											else
+											{
+												if (memcmp((void*)&ig, (void*)&val[x - 1], sizeof(_char)))
+												{
+													size_t y = 1;
+
+													while (y < sep->length() && x + y < t)
+													{
+														if (memcmp((void*)&val[x + y], &sep->at(y), sizeof(_char)))
+														{
+															y = sep->length();
+														}
+														y++;
+													}
+
+													if (y == sep->length())
+													{
+														a.loc = (sllint)mk;
+
+														for (; mk < x; mk++)
+														{
+															a.arg.push_back(val[mk]);
+														}
+
+														if (!a.arg.empty())
+														{
+															ret_->push_back(a);
+															a.arg.clear();
+														}
+														x += (sep->length() - 1);
+														mk = x + 1;
+
+														if (ksep)
+														{
+															a.loc = (sllint)mk;
+															a.arg.append(sep->c_str());
+															ret_->push_back(a);
+															a.arg.clear();
+														}
+													}
+												}
+												else
+												{
+													if (x > 1)
+													{
+														if (!memcmp((void*)&ig, (void*)&val[x - 2], sizeof(_char)))
+														{
+															size_t y = 1;
+
+															while (y < sep->length() && x + y < t)
+															{
+																if (memcmp((void*)&val[x + y], &sep->at(y), sizeof(_char)))
+																{
+																	y = sep->length();
+																}
+																y++;
+															}
+
+															if (y == sep->length())
+															{
+																a.loc = (sllint)mk;
+
+																for (; mk < x; mk++)
+																{
+																	a.arg.push_back(val[mk]);
+																}
+
+																if (!a.arg.empty())
+																{
+																	ret_->push_back(a);
+																	a.arg.clear();
+																}
+																x += (sep->length() - 1);
+																mk = x + 1;
+
+																if (ksep)
+																{
+																	a.loc = (sllint)mk;
+																	a.arg.append(sep->c_str());
+																	ret_->push_back(a);
+																	a.arg.clear();
+																}
+															}
+														}
+													}
+												}
+											}
+										}
+									}
+								}
+							}
+						}
+					}
+				}
+			}
+		}
+		break;
+	}
+	case BOT_RTV_VCHAR:
+	{
+		void* ptr = va_arg(args, void*);
+		std::vector<_char>* sep = reinterpret_cast<std::vector<_char>*>(ptr);
+
+		if (sep)
+		{
+			size_t sl = sizeof(_char);
+			for (size_t x = f; x < t + 1; x++)
+			{
+				if (lit > -1)
+				{
+					for (size_t xl = 0; xl < msy.nrts_lit.size(); xl++)
+					{
+						if (!memcmp((void*)&msy.nrts_lit[xl], (void*)&val[x], sizeof(_char)))
+						{
+							if (memcmp((void*)&ig, (void*)&val[x - 1], sizeof(_char)))
+							{
+								if (lit == (slint)xl)
+								{
+									for (size_t xt = 0; xt < sep->size(); xt++)
+									{
+										if (!memcmp((void*)&sep->at(xt), (void*)&msy.nrts_lit[xl], sizeof(_char)))
+										{
+											if (ksep)
+											{
+												a.loc = (sllint)mk;
+
+												for (; mk < x + sl; mk++)
+												{
+													a.arg.push_back(val[mk]);
+												}
+
+												if (!a.arg.empty())
+												{
+													ret_->push_back(a);
+													a.arg.clear();
+												}
+
+												x += (sl - 1);
+												mk = x + 1;
+											}
+											else
+											{
+												a.loc = (sllint)mk + sl;
+
+												for (mk += sl; mk < x; mk++)
+												{
+													a.arg.push_back(val[mk]);
+												}
+
+												if (!a.arg.empty())
+												{
+													ret_->push_back(a);
+													a.arg.clear();
+												}
+
+												x += (sl - 1);
+												mk = x + 1;
+											}
+											xt = sep->size();
+										}
+									}
+									lit = -1;
+									litloc = (slint)x;
+								}
+								xl = msy.nrts_lit.size();
+							}
+							else
+							{
+								if (x > 1)
+								{
+									if (!memcmp((void*)&ig, (void*)&val[x - 2], sizeof(_char)))
+									{
+										if (lit == (slint)xl)
+										{
+											for (size_t xt = 0; xt < sep->size(); xt++)
+											{
+												if (!memcmp((void*)&sep->at(xt), (void*)&msy.nrts_lit[xl], sizeof(_char)))
+												{
+													if (ksep)
+													{
+														a.loc = (sllint)mk;
+
+														for (; mk < x + sl; mk++)
+														{
+															a.arg.push_back(val[mk]);
+														}
+
+														if (!a.arg.empty())
+														{
+															ret_->push_back(a);
+															a.arg.clear();
+														}
+
+														x += (sl - 1);
+														mk = x + 1;
+													}
+													else
+													{
+														a.loc = (sllint)mk + sl;
+
+														for (mk += sl; mk < x; mk++)
+														{
+															a.arg.push_back(val[mk]);
+														}
+
+														if (!a.arg.empty())
+														{
+															ret_->push_back(a);
+															a.arg.clear();
+														}
+
+														x += (sl - 1);
+														mk = x + 1;
+													}
+													xt = sep->size();
+												}
+											}
+											lit = -1;
+											litloc = (slint)x;
+										}
+										xl = msy.nrts_lit.size();
+									}
+								}
+							}
+						}
+					}
+				}
+				else
+				{
+					if (lign > -1)
+					{
+						for (size_t yl = 0; yl < msy.nrts_lign_.size(); yl++)
+						{
+							if (!memcmp((void*)&msy.nrts_lign_[yl][0], (void*)&val[x], sizeof(_char)))
+							{
+								size_t zl = 0;
+
+								while (zl < msy.nrts_lign_[yl].length() && zl < t)
+								{
+									if (memcmp((void*)&msy.nrts_lign_[yl][zl], (void*)&val[x + zl], sizeof(_char)))
+									{
+										zl = msy.nrts_lign_[yl].length();
+									}
+									zl++;
+								}
+
+								if (zl == msy.nrts_lign_[yl].length())
+								{
+									if (lign == (slint)yl)
+									{
+										lign = -1;
+										yl = msy.nrts_lign_.size();
+									}
+								}
+							}
+						}
+					}
+					if (lign < 0)
+					{
+						for (size_t xl = 0; xl < msy.nrts_lit.size(); xl++)
+						{
+							if (!memcmp((void*)&msy.nrts_lit[xl], (void*)&val[x], sizeof(_char)))
+							{
+								for (size_t xt = 0; xt < sep->size(); xt++)
+								{
+									if (!memcmp((void*)&sep->at(xt), (void*)&msy.nrts_lit[xl], sizeof(_char)))
+									{
+										a.loc = (sllint)mk;
+
+										for (; mk < x; mk++)
+										{
+											a.arg.push_back(val[mk]);
+										}
+
+										if (!a.arg.empty())
+										{
+											ret_->push_back(a);
+											a.arg.clear();
+										}
+										xt = sep->size();
+									}
+								}
+								lit = (slint)xl;
+								litloc = (slint)x;
+								xl = msy.nrts_lit.size();
+							}
+						}
+						if (lit < 0)
+						{
+							if (lign < 0)
+							{
+								for (size_t yl = 0; yl < msy.nrts_lign.size(); yl++)
+								{
+									if (!memcmp((void*)&msy.nrts_lign[yl][0], (void*)&val[x], sizeof(_char)))
+									{
+										size_t zl = 0;
+
+										while (zl < msy.nrts_lign[yl].length() && zl < t)
+										{
+											if (memcmp((void*)&msy.nrts_lign[yl][zl], (void*)&val[x + zl], sizeof(_char)))
+											{
+												zl = msy.nrts_lign[yl].length();
+											}
+											zl++;
+										}
+
+										if (zl == msy.nrts_lign[yl].length())
+										{
+											lign = (slint)yl;
+											yl = msy.nrts_lign.size();
+										}
+									}
+								}
+								if (lign < 0)
+								{
+									for (size_t xl = 0; xl < msy.nrts_ord.size(); xl++)
+									{
+										if (!memcmp((void*)&msy.nrts_ord[xl], (void*)&val[x], sizeof(_char)))
+										{
+											if (ord.empty())
+											{
+												for (size_t xt = 0; xt < sep->size(); xt++)
+												{
+													if (!memcmp((void*)&sep->at(xt), (void*)&msy.nrts_ord[xl], sizeof(_char)) || !memcmp((void*)&sep->at(xt), (void*)&msy.nrts_ord_[xl], sizeof(_char)))
+													{
+														a.loc = (sllint)mk;
+
+														for (; mk < x; mk++)
+														{
+															a.arg.push_back(val[mk]);
+														}
+
+														if (!a.arg.empty())
+														{
+															ret_->push_back(a);
+															a.arg.clear();
+														}
+														xt = sep->size();
+													}
+												}
+											}
+											ord.push_back(xl);
+											ordl.push_back(x);
+											xl = msy.nrts_ord.size();
+										}
+									}
+									if (!ord.empty())
+									{
+										for (size_t xl = 0; xl < msy.nrts_ord_.size(); xl++)
+										{
+											if (!memcmp((void*)&msy.nrts_ord_[xl], (void*)&val[x], sizeof(_char)))
+											{
+												if (ord[ord.size() - 1] == xl)
+												{
+													ord.pop_back();
+													ordl.pop_back();
+
+													if (ord.empty())
+													{
+														for (size_t xt = 0; xt < sep->size(); xt++)
+														{
+															if (!memcmp((void*)&sep->at(xt), (void*)&msy.nrts_ord[xl], sizeof(_char)) || !memcmp((void*)&sep->at(xt), (void*)&msy.nrts_ord_[xl], sizeof(_char)))
+															{
+																if (ksep)
+																{
+																	a.loc = (sllint)mk;
+
+																	for (; mk < x + sl; mk++)
+																	{
+																		a.arg.push_back(val[mk]);
+																	}
+
+																	if (!a.arg.empty())
+																	{
+																		ret_->push_back(a);
+																		a.arg.clear();
+																	}
+
+																	x += (sl - 1);
+																	mk = x + 1;
+																}
+																else
+																{
+																	a.loc = (sllint)mk + sl;
+
+																	for (mk += sl; mk < x; mk++)
+																	{
+																		a.arg.push_back(val[mk]);
+																	}
+
+																	if (!a.arg.empty())
+																	{
+																		ret_->push_back(a);
+																		a.arg.clear();
+																	}
+
+																	x += (sl - 1);
+																	mk = x + 1;
+																}
+																xt = sep->size();
+															}
+														}
+													}
+												}
+												xl = msy.nrts_ord_.size();
+											}
+										}
+									}
+									else
+									{
+										for (size_t xt = 0; xt < sep->size(); xt++)
+										{
+											if (!memcmp((void*)&val[x], (void*)&sep->at(xt), sizeof(_char)))
+											{
+												if (!x)
+												{
+													if (ksep)
+													{
+														a.loc = (sllint)mk;
+														a.arg.push_back(sep->at(xt));
+														ret_->push_back(a);
+														a.arg.clear();
+													}
+													x += sizeof(_char) - 1;
+													mk = x + 1;
+													xt = sep->size();
+												}
+												else
+												{
+													if (memcmp((void*)&ig, (void*)&val[x - 1], sizeof(_char)))
+													{
+														a.loc = (sllint)mk;
+
+														for (; mk < x; mk++)
+														{
+															a.arg.push_back(val[mk]);
+														}
+
+														if (!a.arg.empty())
+														{
+															ret_->push_back(a);
+															a.arg.clear();
+														}
+														x += (sizeof(_char) - 1);
+														mk = x + 1;
+
+														if (ksep)
+														{
+															a.loc = (sllint)mk;
+															a.arg.push_back(sep->at(xt));
+															ret_->push_back(a);
+															a.arg.clear();
+														}
+														xt = sep->size();
+													}
+													else
+													{
+														if (x > 1)
+														{
+															if (!memcmp((void*)&ig, (void*)&val[x - 2], sizeof(_char)))
+															{
+																a.loc = (sllint)mk;
+
+																for (; mk < x; mk++)
+																{
+																	a.arg.push_back(val[mk]);
+																}
+
+																if (!a.arg.empty())
+																{
+																	ret_->push_back(a);
+																	a.arg.clear();
+																}
+																x += (sizeof(_char) - 1);
+																mk = x + 1;
+
+																if (ksep)
+																{
+																	a.loc = (sllint)mk;
+																	a.arg.push_back(sep->at(xt));
+																	ret_->push_back(a);
+																	a.arg.clear();
+																}
+																xt = sep->size();
+															}
+														}
+													}
+												}
+											}
+										}
+									}
+								}
+							}
+						}
+					}
+				}
+			}
+		}
+		break;
+	}
+	case BOT_RTV_VCCHAR:
+	{
+		void* ptr = va_arg(args, void*);
+		std::vector<c_char*>* sep = reinterpret_cast<std::vector<c_char*>*>(ptr);
+
+		if (sep)
+		{
+			for (size_t x = f; x < t + 1; x++)
+			{
+				if (lit > -1)
+				{
+					for (size_t xl = 0; xl < msy.nrts_lit.size(); xl++)
+					{
+						if (!memcmp((void*)&msy.nrts_lit[xl], (void*)&val[x], sizeof(_char)))
+						{
+							if (memcmp((void*)&ig, (void*)&val[x - 1], sizeof(_char)))
+							{
+								if (lit == (slint)xl)
+								{
+									for (size_t xt = 0; xt < sep->size(); xt++)
+									{
+										size_t sl = bot_cstrlen(sep->at(xt));
+
+										if (!strcmp(sep->at(xt), &msy.nrts_lit[xl]))
+										{
+											if (ksep)
+											{
+												a.loc = (sllint)mk;
+
+												for (; mk < x + sl; mk++)
+												{
+													a.arg.push_back(val[mk]);
+												}
+
+												if (!a.arg.empty())
+												{
+													ret_->push_back(a);
+													a.arg.clear();
+												}
+
+												x += (sl - 1);
+												mk = x + 1;
+											}
+											else
+											{
+												a.loc = (sllint)mk + sl;
+
+												for (mk += sl; mk < x; mk++)
+												{
+													a.arg.push_back(val[mk]);
+												}
+
+												if (!a.arg.empty())
+												{
+													ret_->push_back(a);
+													a.arg.clear();
+												}
+
+												x += (sl - 1);
+												mk = x + 1;
+											}
+											xt = sep->size();
+										}
+									}
+									lit = -1;
+									litloc = (slint)x;
+								}
+								xl = msy.nrts_lit.size();
+							}
+							else
+							{
+								if (x > 1)
+								{
+									if (!memcmp((void*)&ig, (void*)&val[x - 2], sizeof(_char)))
+									{
+										if (lit == (slint)xl)
+										{
+											for (size_t xt = 0; xt < sep->size(); xt++)
+											{
+												size_t sl = bot_cstrlen(sep->at(xt));
+
+												if (!strcmp(sep->at(xt), &msy.nrts_lit[xl]))
+												{
+													if (ksep)
+													{
+														a.loc = (sllint)mk;
+
+														for (; mk < x + sl; mk++)
+														{
+															a.arg.push_back(val[mk]);
+														}
+
+														if (!a.arg.empty())
+														{
+															ret_->push_back(a);
+															a.arg.clear();
+														}
+
+														x += (sl - 1);
+														mk = x + 1;
+													}
+													else
+													{
+														a.loc = (sllint)mk + sl;
+
+														for (mk += sl; mk < x; mk++)
+														{
+															a.arg.push_back(val[mk]);
+														}
+
+														if (!a.arg.empty())
+														{
+															ret_->push_back(a);
+															a.arg.clear();
+														}
+
+														x += (sl - 1);
+														mk = x + 1;
+													}
+													xt = sep->size();
+												}
+											}
+											lit = -1;
+											litloc = (slint)x;
+										}
+										xl = msy.nrts_lit.size();
+									}
+								}
+							}
+						}
+					}
+				}
+				else
+				{
+					if (lign > -1)
+					{
+						for (size_t yl = 0; yl < msy.nrts_lign_.size(); yl++)
+						{
+							if (!memcmp((void*)&msy.nrts_lign_[yl][0], (void*)&val[x], sizeof(_char)))
+							{
+								size_t zl = 0;
+
+								while (zl < msy.nrts_lign_[yl].length() && zl < t)
+								{
+									if (memcmp((void*)&msy.nrts_lign_[yl][zl], (void*)&val[x + zl], sizeof(_char)))
+									{
+										zl = msy.nrts_lign_[yl].length();
+									}
+									zl++;
+								}
+
+								if (zl == msy.nrts_lign_[yl].length())
+								{
+									if (lign == (slint)yl)
+									{
+										lign = -1;
+										yl = msy.nrts_lign_.size();
+									}
+								}
+							}
+						}
+					}
+					if (lign < 0)
+					{
+						for (size_t xl = 0; xl < msy.nrts_lit.size(); xl++)
+						{
+							if (!memcmp((void*)&msy.nrts_lit[xl], (void*)&val[x], sizeof(_char)))
+							{
+								for (size_t xt = 0; xt < sep->size(); xt++)
+								{
+									if (!strcmp(sep->at(xt), &msy.nrts_lit[xl]))
+									{
+										a.loc = (sllint)mk;
+
+										for (; mk < x; mk++)
+										{
+											a.arg.push_back(val[mk]);
+										}
+
+										if (!a.arg.empty())
+										{
+											ret_->push_back(a);
+											a.arg.clear();
+										}
+										xt = sep->size();
+									}
+								}
+								lit = (slint)xl;
+								litloc = (slint)x;
+								xl = msy.nrts_lit.size();
+							}
+						}
+						if (lit < 0)
+						{
+							if (lign < 0)
+							{
+								for (size_t yl = 0; yl < msy.nrts_lign.size(); yl++)
+								{
+									if (!memcmp((void*)&msy.nrts_lign[yl][0], (void*)&val[x], sizeof(_char)))
+									{
+										size_t zl = 0;
+
+										while (zl < msy.nrts_lign[yl].length() && zl < t)
+										{
+											if (memcmp((void*)&msy.nrts_lign[yl][zl], (void*)&val[x + zl], sizeof(_char)))
+											{
+												zl = msy.nrts_lign[yl].length();
+											}
+											zl++;
+										}
+
+										if (zl == msy.nrts_lign[yl].length())
+										{
+											lign = (slint)yl;
+											yl = msy.nrts_lign.size();
+										}
+									}
+								}
+								if (lign < 0)
+								{
+									for (size_t xl = 0; xl < msy.nrts_ord.size(); xl++)
+									{
+										if (!memcmp((void*)&msy.nrts_ord[xl], (void*)&val[x], sizeof(_char)))
+										{
+											if (ord.empty())
+											{
+												for (size_t xt = 0; xt < sep->size(); xt++)
+												{
+													if (!strcmp(sep->at(xt), &msy.nrts_ord[xl]) || !strcmp(sep->at(xt), &msy.nrts_ord_[xl]))
+													{
+														a.loc = (sllint)mk;
+
+														for (; mk < x; mk++)
+														{
+															a.arg.push_back(val[mk]);
+														}
+
+														if (!a.arg.empty())
+														{
+															ret_->push_back(a);
+															a.arg.clear();
+														}
+														xt = sep->size();
+													}
+												}
+											}
+											ord.push_back(xl);
+											ordl.push_back(x);
+											xl = msy.nrts_ord.size();
+										}
+									}
+									if (!ord.empty())
+									{
+										for (size_t xl = 0; xl < msy.nrts_ord_.size(); xl++)
+										{
+											if (!memcmp((void*)&msy.nrts_ord_[xl], (void*)&val[x], sizeof(_char)))
+											{
+												if (ord[ord.size() - 1] == xl)
+												{
+													ord.pop_back();
+													ordl.pop_back();
+
+													if (ord.empty())
+													{
+														for (size_t xt = 0; xt < sep->size(); xt++)
+														{
+															if (!strcmp(sep->at(xt), &msy.nrts_ord[xl]) || !strcmp(sep->at(xt), &msy.nrts_ord_[xl]))
+															{
+																size_t sl = bot_cstrlen(sep->at(xt));
+																if (ksep)
+																{
+																	a.loc = (sllint)mk;
+
+																	for (; mk < x + sl; mk++)
+																	{
+																		a.arg.push_back(val[mk]);
+																	}
+
+																	if (!a.arg.empty())
+																	{
+																		ret_->push_back(a);
+																		a.arg.clear();
+																	}
+
+																	x += (sl - 1);
+																	mk = x + 1;
+																}
+																else
+																{
+																	a.loc = (sllint)mk + sl;
+
+																	for (mk += sl; mk < x; mk++)
+																	{
+																		a.arg.push_back(val[mk]);
+																	}
+
+																	if (!a.arg.empty())
+																	{
+																		ret_->push_back(a);
+																		a.arg.clear();
+																	}
+
+																	x += (sl - 1);
+																	mk = x + 1;
+																}
+																xt = sep->size();
+															}
+														}
+													}
+												}
+												xl = msy.nrts_ord_.size();
+											}
+										}
+									}
+									else
+									{
+										for (size_t xt = 0; xt < sep->size(); xt++)
+										{
+											if (!memcmp((void*)&val[x], (void*)&sep->at(xt)[0], sizeof(_char)))
+											{
+												if (!x)
+												{
+													size_t sl = bot_cstrlen(sep->at(xt));
+													size_t y = 1;
+
+													while (y < sl && x + y < t)
+													{
+														if (memcmp((void*)&val[x + y], &sep->at(xt)[y], sizeof(_char)))
+														{
+															y = sl;
+														}
+														y++;
+													}
+
+													if (y == sl)
+													{
+														if (ksep)
+														{
+															a.loc = (sllint)mk;
+															a.arg.append(sep->at(xt));
+															ret_->push_back(a);
+															a.arg.clear();
+														}
+														x += (sl - 1);
+														mk = x + 1;
+														xt = sep->size();
+													}
+												}
+												else
+												{
+													if (memcmp((void*)&ig, (void*)&val[x - 1], sizeof(_char)))
+													{
+														size_t sl = bot_cstrlen(sep->at(xt));
+														size_t y = 1;
+
+														while (y < sl && x + y < t)
+														{
+															if (memcmp((void*)&val[x + y], &sep->at(xt)[y], sizeof(_char)))
+															{
+																y = sl;
+															}
+															y++;
+														}
+
+														if (y == sl)
+														{
+															a.loc = (sllint)mk;
+
+															for (; mk < x; mk++)
+															{
+																a.arg.push_back(val[mk]);
+															}
+
+															if (!a.arg.empty())
+															{
+																ret_->push_back(a);
+																a.arg.clear();
+															}
+															x += (sl - 1);
+															mk = x + 1;
+
+															if (ksep)
+															{
+																a.loc = (sllint)mk;
+																a.arg.append(sep->at(xt));
+																ret_->push_back(a);
+																a.arg.clear();
+															}
+															xt = sep->size();
+														}
+													}
+													else
+													{
+														if (x > 1)
+														{
+															if (!memcmp((void*)&ig, (void*)&val[x - 2], sizeof(_char)))
+															{
+																size_t sl = bot_cstrlen(sep->at(xt));
+																size_t y = 1;
+
+																while (y < sl && x + y < t)
+																{
+																	if (memcmp((void*)&val[x + y], &sep->at(xt)[y], sizeof(_char)))
+																	{
+																		y = sl;
+																	}
+																	y++;
+																}
+
+																if (y == sl)
+																{
+																	a.loc = (sllint)mk;
+
+																	for (; mk < x; mk++)
+																	{
+																		a.arg.push_back(val[mk]);
+																	}
+
+																	if (!a.arg.empty())
+																	{
+																		ret_->push_back(a);
+																		a.arg.clear();
+																	}
+																	x += (sl - 1);
+																	mk = x + 1;
+
+																	if (ksep)
+																	{
+																		a.loc = (sllint)mk;
+																		a.arg.append(sep->at(xt));
+																		ret_->push_back(a);
+																		a.arg.clear();
+																	}
+																	xt = sep->size();
+																}
+															}
+														}
+													}
+												}
+											}
+										}
+									}
+								}
+							}
+						}
+					}
+				}
+			}
+		}
+		break;
+	}
+	case BOT_RTV_VSTR:
+	{
+		void* ptr = va_arg(args, void*);
+		std::vector<std::string>* sep = reinterpret_cast<std::vector<std::string>*>(ptr);
+
+		if (sep)
+		{
+			for (size_t x = f; x < t + 1; x++)
+			{
+				if (lit > -1)
+				{
+					for (size_t xl = 0; xl < msy.nrts_lit.size(); xl++)
+					{
+						if (!memcmp((void*)&msy.nrts_lit[xl], (void*)&val[x], sizeof(_char)))
+						{
+							if (memcmp((void*)&ig, (void*)&val[x - 1], sizeof(_char)))
+							{
+								if (lit == (slint)xl)
+								{
+									for (size_t xt = 0; xt < sep->size(); xt++)
+									{
+										if (!strcmp(sep->at(xt).c_str(), &msy.nrts_lit[xl]))
+										{
+											if (ksep)
+											{
+												a.loc = (sllint)mk;
+
+												for (; mk < x + sep->at(xt).length(); mk++)
+												{
+													a.arg.push_back(val[mk]);
+												}
+
+												if (!a.arg.empty())
+												{
+													ret_->push_back(a);
+													a.arg.clear();
+												}
+
+												x += (sep->at(xt).length() - 1);
+												mk = x + 1;
+											}
+											else
+											{
+												a.loc = (sllint)mk + sep->at(xt).length();
+
+												for (mk += sep->at(xt).length(); mk < x; mk++)
+												{
+													a.arg.push_back(val[mk]);
+												}
+
+												if (!a.arg.empty())
+												{
+													ret_->push_back(a);
+													a.arg.clear();
+												}
+
+												x += (sep->at(xt).length() - 1);
+												mk = x + 1;
+											}
+											xt = sep->size();
+										}
+									}
+									lit = -1;
+									litloc = (slint)x;
+								}
+								xl = msy.nrts_lit.size();
+							}
+							else
+							{
+								if (x > 1)
+								{
+									if (!memcmp((void*)&ig, (void*)&val[x - 2], sizeof(_char)))
+									{
+										if (lit == (slint)xl)
+										{
+											for (size_t xt = 0; xt < sep->size(); xt++)
+											{
+												if (!strcmp(sep->at(xt).c_str(), &msy.nrts_lit[xl]))
+												{
+													if (ksep)
+													{
+														a.loc = (sllint)mk;
+
+														for (; mk < x + sep->at(xt).length(); mk++)
+														{
+															a.arg.push_back(val[mk]);
+														}
+
+														if (!a.arg.empty())
+														{
+															ret_->push_back(a);
+															a.arg.clear();
+														}
+
+														x += (sep->at(xt).length() - 1);
+														mk = x + 1;
+													}
+													else
+													{
+														a.loc = (sllint)mk + sep->at(xt).length();
+
+														for (mk += sep->at(xt).length(); mk < x; mk++)
+														{
+															a.arg.push_back(val[mk]);
+														}
+
+														if (!a.arg.empty())
+														{
+															ret_->push_back(a);
+															a.arg.clear();
+														}
+
+														x += (sep->at(xt).length() - 1);
+														mk = x + 1;
+													}
+													xt = sep->size();
+												}
+											}
+											lit = -1;
+											litloc = (slint)x;
+										}
+										xl = msy.nrts_lit.size();
+									}
+								}
+							}
+						}
+					}
+				}
+				else
+				{
+					if (lign > -1)
+					{
+						for (size_t yl = 0; yl < msy.nrts_lign_.size(); yl++)
+						{
+							if (!memcmp((void*)&msy.nrts_lign_[yl][0], (void*)&val[x], sizeof(_char)))
+							{
+								size_t zl = 0;
+
+								while (zl < msy.nrts_lign_[yl].length() && zl < t)
+								{
+									if (memcmp((void*)&msy.nrts_lign_[yl][zl], (void*)&val[x + zl], sizeof(_char)))
+									{
+										zl = msy.nrts_lign_[yl].length();
+									}
+									zl++;
+								}
+
+								if (zl == msy.nrts_lign_[yl].length())
+								{
+									if (lign == (slint)yl)
+									{
+										lign = -1;
+										yl = msy.nrts_lign_.size();
+									}
+								}
+							}
+						}
+					}
+					if (lign < 0)
+					{
+						for (size_t xl = 0; xl < msy.nrts_lit.size(); xl++)
+						{
+							if (!memcmp((void*)&msy.nrts_lit[xl], (void*)&val[x], sizeof(_char)))
+							{
+								for (size_t xt = 0; xt < sep->size(); xt++)
+								{
+									if (!strcmp(sep->at(xt).c_str(), &msy.nrts_lit[xl]))
+									{
+										a.loc = (sllint)mk;
+
+										for (; mk < x; mk++)
+										{
+											a.arg.push_back(val[mk]);
+										}
+
+										if (!a.arg.empty())
+										{
+											ret_->push_back(a);
+											a.arg.clear();
+										}
+										xt = sep->size();
+									}
+								}
+								lit = (slint)xl;
+								litloc = (slint)x;
+								xl = msy.nrts_lit.size();
+							}
+						}
+						if (lit < 0)
+						{
+							if (lign < 0)
+							{
+								for (size_t yl = 0; yl < msy.nrts_lign.size(); yl++)
+								{
+									if (!memcmp((void*)&msy.nrts_lign[yl][0], (void*)&val[x], sizeof(_char)))
+									{
+										size_t zl = 0;
+
+										while (zl < msy.nrts_lign[yl].length() && zl < t)
+										{
+											if (memcmp((void*)&msy.nrts_lign[yl][zl], (void*)&val[x + zl], sizeof(_char)))
+											{
+												zl = msy.nrts_lign[yl].length();
+											}
+											zl++;
+										}
+
+										if (zl == msy.nrts_lign[yl].length())
+										{
+											lign = (slint)yl;
+											yl = msy.nrts_lign.size();
+										}
+									}
+								}
+								if (lign < 0)
+								{
+									for (size_t xl = 0; xl < msy.nrts_ord.size(); xl++)
+									{
+										if (!memcmp((void*)&msy.nrts_ord[xl], (void*)&val[x], sizeof(_char)))
+										{
+											if (ord.empty())
+											{
+												for (size_t xt = 0; xt < sep->size(); xt++)
+												{
+													if (!strcmp(sep->at(xt).c_str(), &msy.nrts_ord[xl]) || !strcmp(sep->at(xt).c_str(), &msy.nrts_ord_[xl]))
+													{
+														a.loc = (sllint)mk;
+
+														for (; mk < x; mk++)
+														{
+															a.arg.push_back(val[mk]);
+														}
+
+														if (!a.arg.empty())
+														{
+															ret_->push_back(a);
+															a.arg.clear();
+														}
+														xt = sep->size();
+													}
+												}
+											}
+											ord.push_back(xl);
+											ordl.push_back(x);
+											xl = msy.nrts_ord.size();
+										}
+									}
+									if (!ord.empty())
+									{
+										for (size_t xl = 0; xl < msy.nrts_ord_.size(); xl++)
+										{
+											if (!memcmp((void*)&msy.nrts_ord_[xl], (void*)&val[x], sizeof(_char)))
+											{
+												if (ord[ord.size() - 1] == xl)
+												{
+													ord.pop_back();
+													ordl.pop_back();
+
+													if (ord.empty())
+													{
+														for (size_t xt = 0; xt < sep->size(); xt++)
+														{
+															if (!strcmp(sep->at(xt).c_str(), &msy.nrts_ord[xl]) || !strcmp(sep->at(xt).c_str(), &msy.nrts_ord_[xl]))
+															{
+																if (ksep)
+																{
+																	a.loc = (sllint)mk;
+
+																	for (; mk < x + sep->at(xt).length(); mk++)
+																	{
+																		a.arg.push_back(val[mk]);
+																	}
+
+																	if (!a.arg.empty())
+																	{
+																		ret_->push_back(a);
+																		a.arg.clear();
+																	}
+
+																	x += (sep->at(xt).length() - 1);
+																	mk = x + 1;
+																}
+																else
+																{
+																	a.loc = (sllint)mk + sep->at(xt).length();
+
+																	for (mk += sep->at(xt).length(); mk < x; mk++)
+																	{
+																		a.arg.push_back(val[mk]);
+																	}
+
+																	if (!a.arg.empty())
+																	{
+																		ret_->push_back(a);
+																		a.arg.clear();
+																	}
+
+																	x += (sep->at(xt).length() - 1);
+																	mk = x + 1;
+																}
+																xt = sep->size();
+															}
+														}
+													}
+												}
+												xl = msy.nrts_ord_.size();
+											}
+										}
+									}
+									else
+									{
+										for (size_t xt = 0; xt < sep->size(); xt++)
+										{
+											if (!memcmp((void*)&val[x], (void*)&sep->at(xt)[0], sizeof(_char)))
+											{
+												if (!x)
+												{
+													size_t y = 1;
+
+													while (y < sep->at(xt).length() && x + y < t)
+													{
+														if (memcmp((void*)&val[x + y], &sep->at(xt)[y], sizeof(_char)))
+														{
+															y = sep->at(xt).length();
+														}
+														y++;
+													}
+
+													if (y == sep->at(xt).length())
+													{
+														if (ksep)
+														{
+															a.loc = (sllint)mk;
+															a.arg.append(sep->at(xt).c_str());
+															ret_->push_back(a);
+															a.arg.clear();
+														}
+														x += (sep->at(xt).length() - 1);
+														mk = x + 1;
+														xt = sep->size();
+													}
+												}
+												else
+												{
+													if (memcmp((void*)&ig, (void*)&val[x - 1], sizeof(_char)))
+													{
+														size_t y = 1;
+
+														while (y < sep->at(xt).length() && x + y < t)
+														{
+															if (memcmp((void*)&val[x + y], &sep->at(xt)[y], sizeof(_char)))
+															{
+																y = sep->at(xt).length();
+															}
+															y++;
+														}
+
+														if (y == sep->at(xt).length())
+														{
+															a.loc = (sllint)mk;
+
+															for (; mk < x; mk++)
+															{
+																a.arg.push_back(val[mk]);
+															}
+
+															if (!a.arg.empty())
+															{
+																ret_->push_back(a);
+																a.arg.clear();
+															}
+															x += (sep->at(xt).length() - 1);
+															mk = x + 1;
+
+															if (ksep)
+															{
+																a.loc = (sllint)mk;
+																a.arg.append(sep->at(xt).c_str());
+																ret_->push_back(a);
+																a.arg.clear();
+															}
+															xt = sep->size();
+														}
+													}
+													else
+													{
+														if (x > 1)
+														{
+															if (!memcmp((void*)&ig, (void*)&val[x - 2], sizeof(_char)))
+															{
+																size_t y = 1;
+
+																while (y < sep->at(xt).length() && x + y < t)
+																{
+																	if (memcmp((void*)&val[x + y], &sep->at(xt)[y], sizeof(_char)))
+																	{
+																		y = sep->at(xt).length();
+																	}
+																	y++;
+																}
+
+																if (y == sep->at(xt).length())
+																{
+																	a.loc = (sllint)mk;
+
+																	for (; mk < x; mk++)
+																	{
+																		a.arg.push_back(val[mk]);
+																	}
+
+																	if (!a.arg.empty())
+																	{
+																		ret_->push_back(a);
+																		a.arg.clear();
+																	}
+																	x += (sep->at(xt).length() - 1);
+																	mk = x + 1;
+
+																	if (ksep)
+																	{
+																		a.loc = (sllint)mk;
+																		a.arg.append(sep->at(xt).c_str());
+																		ret_->push_back(a);
+																		a.arg.clear();
+																	}
+																	xt = sep->size();
+																}
+															}
+														}
+													}
+												}
+											}
+										}
+									}
+								}
+							}
+						}
+					}
+				}
+			}
+		}
+		break;
+	}
+	default:
+	{
+		break;
+	}
+	}
+
+	a.loc = (sllint)mk;
+
+	for (; mk < t + 1; mk++)
+	{
+		a.arg.push_back(val[mk]);
+	}
+	if (!a.arg.empty())
+	{
+		ret_->push_back(a);
+	}
+	if (lit > -1)
+	{
+		ret = bot_sprintfs(&a.arg, true, "Open literal '%c' at: %u", msy.nrts_lit[lit], (uint)litloc);
+		ret_->push_back(a);
+		a.arg.clear();
+		ret = -1;
+	}
+	else if (!ord.empty())
+	{
+		ret = bot_sprintfs(&a.arg, true, "Open bracket '%c' at: %u", msy.nrts_ord[ord[0]], (uint)ordl[0]);
+		ret_->push_back(a);
+		a.arg.clear();
+		ret = -1;
+	}
+	else
+	{
+		ret = 0;
 	}
 	va_end(args);
 	return ret;
@@ -14038,11 +18319,11 @@ sint machine::BOTFindInFile(BOT_FILE_M* file_, bool indat, size_t f, size_t t, v
 		return -1;
 	}
 
-	if (!t)
+	if (!t || t < f || t > (size_t)file_->fst.filestats.st_size)
 	{
 		if (file_->fst.filestats.st_size)
 		{
-			t = file_->fst.filestats.st_size - 1;
+			t = (size_t)file_->fst.filestats.st_size - 1;
 		}
 		else
 		{
@@ -16668,32 +20949,34 @@ sint machine::Input(c_char* prp, std::string* np, bool itrp)
 	}
 
 	std::vector<std::string> args;
-	std::vector<std::string> vec;
+	std::vector<BOT_ARG> vec;
 	carr_64 tdata;
 	carr_512 instr;
 	std::string nstr;
 	std::string str;
 	sint xc = GetPCliMem(BOT_C_NAME, &nstr);
+	ret = vtool.CombV(&args, VTV_VSTR, VTV_VCHAR, &msy.nrts_sep, VTV_VCHAR, &msy.nrts_lit, VTV_VCHAR, &msy.nrts_ord, VTV_VCHAR, &msy.nrts_ord_, VTV_MAX);
 	sint x = BOTCInput(np, &tdata);
 
 	if (np->length() > 1)
 	{
+		ret = ArgSep(&vec, false, 0, np->length() - 1, np->c_str(), BOT_RTV_VSTR, &args);
+
 		if (!strcmp(np->substr(0, 2).c_str(), "/#"))
 		{
-			ret = vtool.CombV(&args, VTV_VSTR, VTV_VCHAR, &msy.nrts_sep, VTV_CCAR, "/#", VTV_MAX);
-			ret = ArgSep(&vec, false, 0, np->length() - 1, np->c_str(), BOT_RTV_VSTR, &args);
 			np->clear();
 			ret = Command(&vec);
 			np->append(stool.VToStr(&vec, " ").c_str());
 		}
 		else
 		{
-			ret = ArgSep(&vec, true, 0, np->length() - 1, np->c_str(), BOT_RTV_VSTR, &args);
+			
 		}
 	}
 	else
 	{
-		vec.push_back(*np);
+		BOT_ARG a(0, np->c_str());
+		vec.push_back(a);
 	}
 
 	if (itrp)
@@ -16734,12 +21017,12 @@ sint machine::BOTConsole(c_char* prp)
 
 // Str Manip
 
-std::string machine::LEncStrI(c_char* str_, sint opt)
+std::string machine::EStr(c_char* str_)
 {
 	if (debug_lvl >= 1100 && debug_m)
 	{
 		carr_128 ncar;
-		sint oc = bot_sprintf(ncar.carr, ncar.siz, "LEncStrI(string *str_(%i), sint opt(%i))", (sint)str_, opt);
+		sint oc = bot_sprintf(ncar.carr, ncar.siz, "EStr(string *str_(%i))", (sint)str_);
 		oc = Output(ncar.carr, 2);
 	}
 
@@ -16906,7 +21189,8 @@ sint machine::AnalyzeStmt(BOT_STMT *t_)
 	}
 	std::string stmt(t_->stmt.c_str());
 	t_->Clear();
-	std::vector<std::string> rets, args;
+	std::vector<BOT_ARG> rets;
+	std::vector<std::string> args;
 	sint xc = vtool.CombV(&args, VTV_VSTR, VTV_CCAR, " ", VTV_CCAR, "\t", VTV_VSTR, &msy.sql_trans_keywords, VTV_VSTR, &msy.sql_spec_keywords, VTV_MAX);
 	xc = ArgSep(&rets, true, 0, stmt.length() - 1, stmt.c_str(), BOT_RTV_VSTR, &args);
 
@@ -16916,11 +21200,11 @@ sint machine::AnalyzeStmt(BOT_STMT *t_)
 
 		for (size_t x = 0; x < rets.size(); x++)
 		{
-			if (strcmp(" ", rets[x].c_str()) && strcmp("\t", rets[x].c_str()))
+			if (strcmp(" ", rets[x].arg.c_str()) && strcmp("\t", rets[x].arg.c_str()))
 			{
-				args.push_back(rets[x]);
+				args.push_back(rets[x].arg);
 			}
-			rets[x].clear();
+			rets[x].arg.clear();
 		}
 		rets.clear();
 		t_->it_type = vtool.VIV(&msy.sql_trans_keywords, args[0].c_str());
@@ -16949,21 +21233,21 @@ sint machine::AnalyzeStmt(BOT_STMT *t_)
 					{
 						if (rets.size() > 1)
 						{
-							if (!strcmp(rets[1].c_str(), "."))
+							if (!strcmp(rets[1].arg.c_str(), "."))
 							{
-								t_->dbname.append(rets[0].c_str());
+								t_->dbname.append(rets[0].arg.c_str());
 							}
 
 							if (rets.size() > 2)
 							{
 								_char brk = '[';
-								if (!memcmp((void*)&rets[2][0], (void*)&brk, sizeof(_char)))
+								if (!memcmp((void*)&rets[2].arg[0], (void*)&brk, sizeof(_char)))
 								{
-									t_->cont.append(rets[2].substr(1, rets[2].length() - 2).c_str());
+									t_->cont.append(rets[2].arg.substr(1, rets[2].arg.length() - 2).c_str());
 								}
 								else
 								{
-									t_->cont.append(rets[2].c_str());
+									t_->cont.append(rets[2].arg.c_str());
 								}
 							}
 							rets.clear();
@@ -16971,13 +21255,13 @@ sint machine::AnalyzeStmt(BOT_STMT *t_)
 						else
 						{
 							_char brk = '[';
-							if (!memcmp((void*)&rets[0][0], (void*)&brk, sizeof(_char)))
+							if (!memcmp((void*)&rets[0].arg[0], (void*)&brk, sizeof(_char)))
 							{
-								t_->cont.append(rets[0].substr(1, rets[0].length() - 2).c_str());
+								t_->cont.append(rets[0].arg.substr(1, rets[0].arg.length() - 2).c_str());
 							}
 							else
 							{
-								t_->cont.append(rets[0].c_str());
+								t_->cont.append(rets[0].arg.c_str());
 							}
 						}
 					}
@@ -16996,37 +21280,36 @@ sint machine::AnalyzeStmt(BOT_STMT *t_)
 					{
 						if (rets.size() > 1)
 						{
-							t_->dbname.append(rets[0].c_str());
+							t_->dbname.append(rets[0].arg.c_str());
 							_char brk = '[';
-							if (!memcmp((void*)&rets[1][0], (void*)&brk, sizeof(_char)))
+							if (!memcmp((void*)&rets[1].arg[0], (void*)&brk, sizeof(_char)))
 							{
-								t_->cont.append(rets[1].substr(1, rets[1].length() - 2).c_str());
+								t_->cont.append(rets[1].arg.substr(1, rets[1].arg.length() - 2).c_str());
 							}
 							else
 							{
-								t_->cont.append(rets[1].c_str());
+								t_->cont.append(rets[1].arg.c_str());
 							}
 							rets.clear();
 						}
 						else
 						{
 							_char brk = '[';
-							if (!memcmp((void*)&rets[0][0], (void*)&brk, sizeof(_char)))
+							if (!memcmp((void*)&rets[0].arg[0], (void*)&brk, sizeof(_char)))
 							{
-								t_->cont.append(rets[0].substr(1, rets[0].length() - 2).c_str());
+								t_->cont.append(rets[0].arg.substr(1, rets[0].arg.length() - 2).c_str());
 							}
 							else
 							{
-								t_->cont.append(rets[0].c_str());
+								t_->cont.append(rets[0].arg.c_str());
 							}
 						}
 						rets.clear();
-						rc = ArgSep(&t_->cols, false, 0, args[2].length() - 2, args[2].substr(1,args[2].length() - 2).c_str(), BOT_RTV_VCHAR, &msy.sql_opers_keywords);
-						rets.clear();
-						rc = ArgSep(&t_->vals, false, 0, args[4].length() - 2, args[4].substr(1, args[4].length() - 2).c_str(), BOT_RTV_VCHAR, &msy.sql_opers_keywords);
-						rets.clear();
+						std::vector<_char> nargs;
+						rc = vtool.CombV(&nargs, VTV_VCHAR, VTV_VCHAR, &msy.nrts_end, VTV_VCHAR, &msy.nrts_ord, VTV_VCHAR, &msy.nrts_ord_, VTV_VCHAR, &msy.nrts_sep, VTV_MAX);
+						rc = ArgSep(&t_->cols, false, 0, args[2].length() - 2, args[2].substr(1,args[2].length() - 2).c_str(), BOT_RTV_VCHAR, &nargs);
+						rc = ArgSep(&t_->vals, false, 0, args[4].length() - 2, args[4].substr(1, args[4].length() - 2).c_str(), BOT_RTV_VCHAR, &nargs);
 					}
-					rets.clear();
 				}
 				break;
 			}
@@ -17040,7 +21323,7 @@ sint machine::AnalyzeStmt(BOT_STMT *t_)
 
 					if (rc > -1)
 					{
-						rc = vtool.VIV(&msy.sql_cond_qual_keywords, rets[0].c_str());
+						rc = vtool.VIV(&msy.sql_cond_qual_keywords, rets[0].arg.c_str());
 
 						if (rc > -1)
 						{
@@ -17429,7 +21712,7 @@ sint machine::BTS(BOT_STMT *t_)
 
 					for (uint x = 0; x < t_->cols.size(); x++)
 					{
-						statement.append(t_->cols[x]);
+						statement.append(t_->cols[x].c_str());
 						statement.append(" ");
 
 						if (t_->ic_type == 2)
@@ -17442,7 +21725,7 @@ sint machine::BTS(BOT_STMT *t_)
 						{
 							if (t_->ic_type != 2)
 							{
-								statement.append(t_->vals[x]);
+								statement.append(t_->vals[x].c_str());
 								statement.append(", ");
 							}
 						}
@@ -23847,7 +28130,7 @@ sint machine::GetCommands(std::vector<BOTCOMMAND> *Commands_, std::vector<std::s
 
 			if (!Commands_->at(x).cmd.empty())
 			{
-				xc = t.AddCond(0, "CMD", msy.sql_comp_keywords[5].c_str(), LEncStrI(UCASE(CPunc(Commands_->at(x).cmd.c_str()).c_str()).c_str(), -1).c_str());
+				xc = t.AddCond(0, "CMD", msy.sql_comp_keywords[5].c_str(), EStr(UCASE(CPunc(Commands_->at(x).cmd.c_str()).c_str()).c_str()).c_str());
 			}
 			if (Commands_->at(x).cmd_id > 0)
 			{
@@ -24075,7 +28358,7 @@ sint machine::GetLogin(c_char* str_)
 	BOT_STMT t(false, 0, "litebot", "ACCOUNTS", 1);
 	std::string clstr;
 	sint xc = GetPCliMem(BOT_C_LOGIN_NAME, &clstr);
-	t.AddCond(0, "LOGIN_NAME", msy.sql_comp_keywords[5].c_str(), LEncStrI(UCASE(clstr.c_str()).c_str(), -1).c_str());
+	t.AddCond(0, "LOGIN_NAME", msy.sql_comp_keywords[5].c_str(), EStr(UCASE(clstr.c_str()).c_str()).c_str());
 	t.spec = 0;
 	t.rlim = 1;
 	xc = BQS(&t);
@@ -24280,7 +28563,7 @@ sint machine::UpdateAccount(BOT_CLIENT *Client_)
 	BOT_STMT t(false, 1, "litebot", "ACCOUNTS", 1);
 	t.spec = 0;
 	t.act = 0;
-	sint xc = t.AddCond(0, "LOGIN_NAME", msy.sql_comp_keywords[5].c_str(), LEncStrI(Client_->login_name.c_str(), -1).c_str());
+	sint xc = t.AddCond(0, "LOGIN_NAME", msy.sql_comp_keywords[5].c_str(), EStr(Client_->login_name.c_str()).c_str());
 	xc = t.AddCond(0, "ID", msy.sql_comp_keywords[5].c_str(), stool.ITOA(Client_->lid).c_str());
 
 	if (Client_->loggedin)
@@ -24289,7 +28572,7 @@ sint machine::UpdateAccount(BOT_CLIENT *Client_)
 		{
 			std::string str;
 			str.append(UCASE(Client_->login_name.c_str()));
-			xc = t.AddCol("LOGIN_NAME", LEncStrI(str.c_str(), -1).c_str());
+			xc = t.AddCol("LOGIN_NAME", EStr(str.c_str()).c_str());
 		}
 
 		if (Client_->updatepriv)
@@ -24299,7 +28582,7 @@ sint machine::UpdateAccount(BOT_CLIENT *Client_)
 
 		if (Client_->updatelogin)
 		{
-			xc = t.AddCol("LAST_LOGIN", LEncStrI(Client_->logindate.c_str(), -1).c_str());
+			xc = t.AddCol("LAST_LOGIN", EStr(Client_->logindate.c_str()).c_str());
 			xc = t.AddCol("TOTAL_LOGINS", stool.ITOA(Client_->totallogins).c_str());
 			xc = t.AddCol("FAILED_LOGINS", stool.ITOA(0).c_str());
 		}
@@ -24308,7 +28591,7 @@ sint machine::UpdateAccount(BOT_CLIENT *Client_)
 	{
 		if (Client_->updatelogin)
 		{
-			xc = t.AddCol("LAST_FAILED_LOGIN", LEncStrI(Client_->last_failed_login.c_str(), -1).c_str());
+			xc = t.AddCol("LAST_FAILED_LOGIN", EStr(Client_->last_failed_login.c_str()).c_str());
 			xc = t.AddCol("FAILED_LOGINS", stool.ITOA(Client_->failed_logins + 1).c_str());
 		}
 	}
